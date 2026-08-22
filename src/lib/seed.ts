@@ -29,15 +29,25 @@ export async function seedDatabase(db: any) {
 
   // 2. Seed Qualifications
   const qualifications = [
-    { code: "CANHUT", name: "Tenaga Teknis Perencanaan Hutan" },
-    { code: "NENHUT", name: "Tenaga Teknis Pemanenan Hutan" },
-    { code: "BINHUT", name: "Tenaga Teknis Pembinaan Hutan" },
-    { code: "PKB", name: "Penguji Kayu Bulat" },
-    { code: "PKG", name: "Penguji Kayu Gergajian" },
-    { code: "PKL", name: "Penguji Kayu Lapis" },
-    { code: "PCHIP", name: "Penguji Serpih Kayu (PChip)" },
-    { code: "HHBK-GETAH", name: "Hasil Hutan Bukan Kayu Kelompok Getah" },
-    { code: "HHBK-BATANG", name: "Hasil Hutan Bukan Kayu Kelompok Batang" },
+    { code: "KAW", name: "Pemanfaatan Kawasan", description: "Tenaga Teknis Pengelolaan Hutan Pemanfaatan Kawasan" },
+    { code: "JASLING-AIR", name: "Pemanfaatan Jasa Lingkungan Air dan Aliran Air", description: "Tenaga Teknis Pengelolaan Hutan Pemanfaatan Jasa Lingkungan Air dan Aliran Air" },
+    { code: "JASLING-KARBON", name: "Pemanfaatan Jasa Lingkungan Karbon", description: "Tenaga Teknis Pengelolaan Hutan Pemanfaatan Jasa Lingkungan Karbon" },
+    { code: "PAN-WA", name: "Pemandu Wisata Alam", description: "Tenaga Teknis Pengelolaan Hutan Pemandu Wisata Alam" },
+    { code: "CAN-WA", name: "Perencana Wisata Alam", description: "Tenaga Teknis Pengelolaan Hutan Perencana Wisata Alam" },
+    { code: "PAK", name: "Pengujian Arang Kayu", description: "Tenaga Teknis Pengelolaan Hutan Pengujian Arang Kayu" },
+    { code: "PKL", name: "Pengujian Kayu Lapis", description: "Tenaga Teknis Pengelolaan Hutan Pengujian Kayu Lapis" },
+    { code: "PKG", name: "Pengujian Kayu Gergajian", description: "Tenaga Teknis Pengelolaan Hutan Pengujian Kayu Gergajian" },
+    { code: "PKB", name: "Pengujian Kayu Bulat", description: "Tenaga Teknis Pengelolaan Hutan Pengujian Kayu Bulat" },
+    { code: "HHBK-MINYAK", name: "HHBK Kelompok Minyak", description: "Tenaga Teknis Pengelolaan Hutan Pemanfaatan Hasil Hutan Bukan Kayu Kelompok Minyak" },
+    { code: "HHBK-RESIN", name: "HHBK Kelompok Resin", description: "Tenaga Teknis Pengelolaan Hutan Pemanfaatan Hasil Hutan Bukan Kayu Kelompok Resin" },
+    { code: "KURPET", name: "Pengukuran dan Perpetaan Hutan", description: "Tenaga Teknis Pengelolaan Hutan Pengukuran dan Perpetaan Hutan" },
+    { code: "HHBK-KULIT", name: "HHBK Kelompok Kulit", description: "Tenaga Teknis Pengelolaan Hutan Pemanfaatan Hasil Hutan Bukan Kayu Kelompok Kulit" },
+    { code: "HHBK-BATANG", name: "HHBK Kelompok Batang", description: "Tenaga Teknis Pengelolaan Hutan Pemanfaatan Hasil Hutan Bukan Kayu Kelompok Batang" },
+    { code: "HHBK-GETAH", name: "HHBK Kelompok Getah", description: "Tenaga Teknis Pengelolaan Hutan Pemanfaatan Hasil Hutan Bukan Kayu Kelompok Getah" },
+    { code: "PCHIP", name: "Pengujian Serpih Kayu", description: "Tenaga Teknis Pengelolaan Hutan Pengujian Serpih Kayu" },
+    { code: "BINHUT", name: "Pembinaan Hutan", description: "Tenaga Teknis Pengelolaan Hutan Pembinaan Hutan" },
+    { code: "NENHUT", name: "Pemanenan Hutan", description: "Tenaga Teknis Pengelolaan Hutan Pemanenan Hutan" },
+    { code: "CANHUT", name: "Perencanaan Hutan", description: "Tenaga Teknis Pengelolaan Hutan Perencanaan Hutan" },
   ];
 
   const qualMap: Record<string, number> = {};

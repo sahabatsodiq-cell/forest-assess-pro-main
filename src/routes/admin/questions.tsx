@@ -490,9 +490,16 @@ function AdminQuestionsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-bold text-forest-900 border border-forest-100">
-                          {q.qualification_code}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className="w-fit rounded bg-forest-50 px-2 py-0.5 text-[10px] font-bold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
+                            {q.qualification_code}
+                          </span>
+                          {q.competency_unit_code && (
+                            <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" title={q.competency_unit_title}>
+                              {q.competency_unit_code}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3.5 text-muted-foreground">{q.subject_name}</td>
                       <td className="px-4 py-3.5">

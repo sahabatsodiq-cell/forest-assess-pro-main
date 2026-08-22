@@ -298,10 +298,11 @@ export const getQuestionsFn = createServerFn({ method: "POST" })
     const db = await getDb();
 
     let query = `
-      SELECT q.*, qual.code as qualification_code, sub.name as subject_name 
+      SELECT q.*, qual.code as qualification_code, sub.name as subject_name, cu.code as competency_unit_code, cu.title as competency_unit_title
       FROM questions q 
       JOIN qualifications qual ON q.qualification_id = qual.id 
       JOIN subjects sub ON q.subject_id = sub.id 
+      LEFT JOIN competency_units cu ON q.competency_unit_id = cu.id
       WHERE 1=1
     `;
     const params: any[] = [];

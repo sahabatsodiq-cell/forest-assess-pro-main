@@ -379,3 +379,85 @@ export const logExamWarningFn = createServerFn({ method: "POST" })
     });
     return { success: true };
   });
+
+// ------------------------------------------------------------------
+// PARTICIPANT PROFILE & QUALIFICATIONS MANAGEMENT
+// ------------------------------------------------------------------
+export const getParticipantProfileDetailsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    const user = await db.prepare(`
+      SELECT id, name, email, role, participant_number, is_active, created_at
+      FROM users WHERE id = ?
+    `).get(session.userId);
+
+    const userQuals = await db.prepare(`
+      SELECT q.id, q.code, q.name, q.description
+      FROM user_qualifications uq
+      JOIN qualifications q ON uq.qualification_id = q.id
+      WHERE uq.user_id = ?
+      ORDER BY q.code ASC
+    `).all(session.userId);
+
+    const allQuals = await db.prepare(`
+      SELECT id, code, name, description FROM qualifications WHERE status = 'ACTIVE' ORDER BY code ASC
+    `).all();
+
+    return {
+      user,
+      qualifications: Array.isArray(userQuals) ? userQuals : [],
+      allQualifications: Array.isArray(allQuals) ? allQuals : [],
+    };
+  });
+
+export const updateParticipantProfileDetailsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; name: string; participant_number?: string; password?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    if (data.password && data.password.trim() !== "") {
+      const { hashPassword } = await import("../auth");
+      const passHash = hashPassword(data.password);
+      await db.prepare(`
+        UPDATE users SET name = ?, participant_number = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+      `).run(data.name, data.participant_number || null, passHash, session.userId);
+    } else {
+      await db.prepare(`
+        UPDATE users SET name = ?, participant_number = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+      `).run(data.name, data.participant_number || null, session.userId);
+    }
+
+    return { success: true };
+  });
+
+export const addParticipantQualificationFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; qualification_id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    await db.prepare(`
+      INSERT INTO user_qualifications (user_id, qualification_id)
+      VALUES (?, ?) ON CONFLICT DO NOTHING
+    `).run(session.userId, data.qualification_id);
+
+    return { success: true };
+  });
+
+export const removeParticipantQualificationFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; qualification_id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    await db.prepare(`
+      DELETE FROM user_qualifications
+      WHERE user_id = ? AND qualification_id = ?
+    `).run(session.userId, data.qualification_id);
+
+    return { success: true };
+  });

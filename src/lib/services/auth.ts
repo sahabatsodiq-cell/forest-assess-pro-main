@@ -11,7 +11,7 @@ export const loginFn = createServerFn({ method: "POST" })
     }
 
     const db = await getDb();
-    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    const user = await db.prepare("SELECT * FROM users WHERE email = ?").get(email);
 
     if (!user || !verifyPassword(password, user.password_hash)) {
       return { success: false, error: "Email atau password salah." };
@@ -37,10 +37,73 @@ export const loginFn = createServerFn({ method: "POST" })
     };
   });
 
+export const checkFirstUserFn = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const db = await getDb();
+    const countRes = await db.prepare("SELECT COUNT(*)::int as count FROM users").get();
+    const userCount = Number(countRes?.count ?? countRes?.["COUNT(*)"] ?? 0);
+    return { isFirstUser: userCount === 0, userCount };
+  });
+
+export const registerFn = createServerFn({ method: "POST" })
+  .validator((data: { name?: string; email?: string; password?: string; participant_number?: string }) => data)
+  .handler(async ({ data }) => {
+    const { name, email, password, participant_number } = data;
+    if (!name || !email || !password) {
+      return { success: false, error: "Nama, email, dan password wajib diisi." };
+    }
+
+    if (password.length < 6) {
+      return { success: false, error: "Password minimal 6 karakter." };
+    }
+
+    const db = await getDb();
+
+    // Check unique email
+    const existing = await db.prepare("SELECT id FROM users WHERE email = ?").get(email);
+    if (existing) {
+      return { success: false, error: "Email sudah terdaftar. Silakan login." };
+    }
+
+    // Check total users count to determine role: FIRST REGISTERED USER -> AUTOMATIC SUPER_ADMIN / ADMIN
+    const countRes = await db.prepare("SELECT COUNT(*)::int as count FROM users").get();
+    const userCount = Number(countRes?.count ?? countRes?.["COUNT(*)"] ?? 0);
+    const isFirstUser = userCount === 0;
+    const role = isFirstUser ? "SUPER_ADMIN" : "PESERTA";
+
+    const passHash = hashPassword(password);
+    const res = await db.prepare(`
+      INSERT INTO users (name, email, password_hash, role, participant_number, is_active)
+      VALUES (?, ?, ?, ?, ?, 1)
+    `).run(
+      name,
+      email,
+      passHash,
+      role,
+      participant_number || (isFirstUser ? "SA-001" : `REG-${Date.now().toString().slice(-4)}`)
+    );
+
+    const userId = Number(res.lastInsertRowid);
+    const token = createSessionToken(userId, role, email);
+
+    await logAudit(userId, isFirstUser ? "REGISTER_FIRST_ADMIN" : "REGISTER_PESERTA", "users", userId, { role, isFirstUser });
+
+    return {
+      success: true,
+      isFirstUser,
+      role,
+      token,
+      user: {
+        id: userId,
+        name,
+        email,
+        role,
+        participant_number: participant_number || (isFirstUser ? "SA-001" : null),
+      },
+    };
+  });
+
 export const getCurrentUserFn = createServerFn({ method: "GET" })
   .handler(async () => {
-    // In server functions, we can check authenticated state
-    // But since server functions need access to request headers to read cookie,
-    // let's accept token as input parameter or pass token from client storage/cookie
     return null;
   });

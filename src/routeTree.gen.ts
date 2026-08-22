@@ -10,33 +10,230 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ParticipantRouteImport } from './routes/participant'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
+import { Route as AdminBlueprintsRouteImport } from './routes/admin/blueprints'
+import { Route as AdminEnrollmentsRouteImport } from './routes/admin/enrollments'
+import { Route as AdminExamsRouteImport } from './routes/admin/exams'
+import { Route as AdminQualificationsRouteImport } from './routes/admin/qualifications'
+import { Route as AdminQuestionsRouteImport } from './routes/admin/questions'
+import { Route as AdminResultsRouteImport } from './routes/admin/results'
+import { Route as AdminSubjectsRouteImport } from './routes/admin/subjects'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as ExamAttemptIdRouteImport } from './routes/exam/$attemptId'
+import { Route as ParticipantIndexRouteImport } from './routes/participant/index'
+import { Route as ResultsAttemptIdRouteImport } from './routes/results/$attemptId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParticipantRoute = ParticipantRouteImport.update({
+  id: '/participant',
+  path: '/participant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBlueprintsRoute = AdminBlueprintsRouteImport.update({
+  id: '/blueprints',
+  path: '/blueprints',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEnrollmentsRoute = AdminEnrollmentsRouteImport.update({
+  id: '/enrollments',
+  path: '/enrollments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminExamsRoute = AdminExamsRouteImport.update({
+  id: '/exams',
+  path: '/exams',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQualificationsRoute = AdminQualificationsRouteImport.update({
+  id: '/qualifications',
+  path: '/qualifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminResultsRoute = AdminResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSubjectsRoute = AdminSubjectsRouteImport.update({
+  id: '/subjects',
+  path: '/subjects',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ExamAttemptIdRoute = ExamAttemptIdRouteImport.update({
+  id: '/exam/$attemptId',
+  path: '/exam/$attemptId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParticipantIndexRoute = ParticipantIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ParticipantRoute,
+} as any)
+const ResultsAttemptIdRoute = ResultsAttemptIdRouteImport.update({
+  id: '/results/$attemptId',
+  path: '/results/$attemptId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/login': typeof LoginRoute
+  '/participant': typeof ParticipantRouteWithChildren
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/blueprints': typeof AdminBlueprintsRoute
+  '/admin/enrollments': typeof AdminEnrollmentsRoute
+  '/admin/exams': typeof AdminExamsRoute
+  '/admin/qualifications': typeof AdminQualificationsRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/results': typeof AdminResultsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/results/$attemptId': typeof ResultsAttemptIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/participant/': typeof ParticipantIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/blueprints': typeof AdminBlueprintsRoute
+  '/admin/enrollments': typeof AdminEnrollmentsRoute
+  '/admin/exams': typeof AdminExamsRoute
+  '/admin/qualifications': typeof AdminQualificationsRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/results': typeof AdminResultsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/results/$attemptId': typeof ResultsAttemptIdRoute
+  '/admin': typeof AdminIndexRoute
+  '/participant': typeof ParticipantIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/login': typeof LoginRoute
+  '/participant': typeof ParticipantRouteWithChildren
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
+  '/admin/blueprints': typeof AdminBlueprintsRoute
+  '/admin/enrollments': typeof AdminEnrollmentsRoute
+  '/admin/exams': typeof AdminExamsRoute
+  '/admin/qualifications': typeof AdminQualificationsRoute
+  '/admin/questions': typeof AdminQuestionsRoute
+  '/admin/results': typeof AdminResultsRoute
+  '/admin/subjects': typeof AdminSubjectsRoute
+  '/admin/users': typeof AdminUsersRoute
+  '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/results/$attemptId': typeof ResultsAttemptIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/participant/': typeof ParticipantIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/participant'
+    | '/admin/audit-logs'
+    | '/admin/blueprints'
+    | '/admin/enrollments'
+    | '/admin/exams'
+    | '/admin/qualifications'
+    | '/admin/questions'
+    | '/admin/results'
+    | '/admin/subjects'
+    | '/admin/users'
+    | '/exam/$attemptId'
+    | '/results/$attemptId'
+    | '/admin/'
+    | '/participant/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/login'
+    | '/admin/audit-logs'
+    | '/admin/blueprints'
+    | '/admin/enrollments'
+    | '/admin/exams'
+    | '/admin/qualifications'
+    | '/admin/questions'
+    | '/admin/results'
+    | '/admin/subjects'
+    | '/admin/users'
+    | '/exam/$attemptId'
+    | '/results/$attemptId'
+    | '/admin'
+    | '/participant'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/participant'
+    | '/admin/audit-logs'
+    | '/admin/blueprints'
+    | '/admin/enrollments'
+    | '/admin/exams'
+    | '/admin/qualifications'
+    | '/admin/questions'
+    | '/admin/results'
+    | '/admin/subjects'
+    | '/admin/users'
+    | '/exam/$attemptId'
+    | '/results/$attemptId'
+    | '/admin/'
+    | '/participant/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  ParticipantRoute: typeof ParticipantRouteWithChildren
+  ExamAttemptIdRoute: typeof ExamAttemptIdRoute
+  ResultsAttemptIdRoute: typeof ResultsAttemptIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +245,168 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/participant': {
+      id: '/participant'
+      path: '/participant'
+      fullPath: '/participant'
+      preLoaderRoute: typeof ParticipantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit-logs': {
+      id: '/admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/blueprints': {
+      id: '/admin/blueprints'
+      path: '/blueprints'
+      fullPath: '/admin/blueprints'
+      preLoaderRoute: typeof AdminBlueprintsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/enrollments': {
+      id: '/admin/enrollments'
+      path: '/enrollments'
+      fullPath: '/admin/enrollments'
+      preLoaderRoute: typeof AdminEnrollmentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/exams': {
+      id: '/admin/exams'
+      path: '/exams'
+      fullPath: '/admin/exams'
+      preLoaderRoute: typeof AdminExamsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/qualifications': {
+      id: '/admin/qualifications'
+      path: '/qualifications'
+      fullPath: '/admin/qualifications'
+      preLoaderRoute: typeof AdminQualificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/questions': {
+      id: '/admin/questions'
+      path: '/questions'
+      fullPath: '/admin/questions'
+      preLoaderRoute: typeof AdminQuestionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/results': {
+      id: '/admin/results'
+      path: '/results'
+      fullPath: '/admin/results'
+      preLoaderRoute: typeof AdminResultsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/subjects': {
+      id: '/admin/subjects'
+      path: '/subjects'
+      fullPath: '/admin/subjects'
+      preLoaderRoute: typeof AdminSubjectsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/exam/$attemptId': {
+      id: '/exam/$attemptId'
+      path: '/exam/$attemptId'
+      fullPath: '/exam/$attemptId'
+      preLoaderRoute: typeof ExamAttemptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/participant/': {
+      id: '/participant/'
+      path: '/'
+      fullPath: '/participant/'
+      preLoaderRoute: typeof ParticipantIndexRouteImport
+      parentRoute: typeof ParticipantRoute
+    }
+    '/results/$attemptId': {
+      id: '/results/$attemptId'
+      path: '/results/$attemptId'
+      fullPath: '/results/$attemptId'
+      preLoaderRoute: typeof ResultsAttemptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
+  AdminBlueprintsRoute: typeof AdminBlueprintsRoute
+  AdminEnrollmentsRoute: typeof AdminEnrollmentsRoute
+  AdminExamsRoute: typeof AdminExamsRoute
+  AdminQualificationsRoute: typeof AdminQualificationsRoute
+  AdminQuestionsRoute: typeof AdminQuestionsRoute
+  AdminResultsRoute: typeof AdminResultsRoute
+  AdminSubjectsRoute: typeof AdminSubjectsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditLogsRoute: AdminAuditLogsRoute,
+  AdminBlueprintsRoute: AdminBlueprintsRoute,
+  AdminEnrollmentsRoute: AdminEnrollmentsRoute,
+  AdminExamsRoute: AdminExamsRoute,
+  AdminQualificationsRoute: AdminQualificationsRoute,
+  AdminQuestionsRoute: AdminQuestionsRoute,
+  AdminResultsRoute: AdminResultsRoute,
+  AdminSubjectsRoute: AdminSubjectsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface ParticipantRouteChildren {
+  ParticipantIndexRoute: typeof ParticipantIndexRoute
+}
+
+const ParticipantRouteChildren: ParticipantRouteChildren = {
+  ParticipantIndexRoute: ParticipantIndexRoute,
+}
+
+const ParticipantRouteWithChildren = ParticipantRoute._addFileChildren(
+  ParticipantRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  LoginRoute: LoginRoute,
+  ParticipantRoute: ParticipantRouteWithChildren,
+  ExamAttemptIdRoute: ExamAttemptIdRoute,
+  ResultsAttemptIdRoute: ResultsAttemptIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

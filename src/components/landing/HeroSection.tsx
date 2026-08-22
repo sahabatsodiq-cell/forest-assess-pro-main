@@ -39,7 +39,7 @@ export function HeroSection() {
 
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:items-start">
               <a
-                href="#masuk"
+                href="/login"
                 className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-forest-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-700"
               >
                 Masuk Platform

@@ -57,7 +57,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-3">
           <a
-            href="#masuk"
+            href="/login"
             className="hidden rounded-lg bg-forest-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-700 lg:inline-flex"
           >
             Masuk Platform
@@ -88,7 +88,7 @@ export function Navbar() {
                   </a>
                 ))}
                 <a
-                  href="#masuk"
+                  href="/login"
                   onClick={() => setOpen(false)}
                   className="mt-6 rounded-lg bg-forest-900 px-5 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-forest-700"
                 >

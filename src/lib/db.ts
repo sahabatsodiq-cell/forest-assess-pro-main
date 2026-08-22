@@ -189,5 +189,10 @@ export async function getDb() {
   `);
 
   dbInstance = db;
+
+  // Auto seed database if empty
+  const { seedDatabase } = await import("./seed");
+  await seedDatabase(db);
+
   return dbInstance;
 }

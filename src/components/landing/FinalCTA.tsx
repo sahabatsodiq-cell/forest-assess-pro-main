@@ -26,7 +26,7 @@ export function FinalCTA() {
 
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
-              href="#masuk"
+              href="/login"
               className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-forest-900 transition-colors hover:bg-forest-50"
             >
               Masuk ke Platform

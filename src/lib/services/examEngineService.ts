@@ -389,10 +389,51 @@ export const getParticipantProfileDetailsFn = createServerFn({ method: "POST" })
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
 
-    const user = await db.prepare(`
+    let user = await db.prepare(`
       SELECT id, name, email, role, participant_number, is_active, created_at
       FROM users WHERE id = ?
     `).get(session.userId);
+
+    if (user && user.email) {
+      // 1. Auto-sync from master_ganisph by matching email or participant_number
+      const masterRows = await db.prepare(`
+        SELECT * FROM master_ganisph
+        WHERE LOWER(email) = LOWER(?) OR (registration_number IS NOT NULL AND registration_number = ?)
+      `).all(user.email, user.participant_number || "");
+
+      const masterList = Array.isArray(masterRows) ? masterRows : [];
+
+      if (masterList.length > 0) {
+        // Auto-set participant_number if missing
+        const firstReg = masterList.find((m: any) => m.registration_number)?.registration_number;
+        if (firstReg && (!user.participant_number || user.participant_number.trim() === "")) {
+          await db.prepare("UPDATE users SET participant_number = ? WHERE id = ?").run(firstReg, session.userId);
+          user.participant_number = firstReg;
+        }
+
+        // Fetch all active qualifications in system
+        const allQuals = await db.prepare("SELECT id, code, name FROM qualifications").all();
+        const qualArray = Array.isArray(allQuals) ? allQuals : [];
+
+        for (const mItem of masterList) {
+          const mQualNameUpper = (mItem.qualification_name || "").toUpperCase();
+          // Find matching qualification by code or name
+          const matchedQual = qualArray.find((q: any) => {
+            const qCodeUpper = (q.code || "").toUpperCase();
+            const qNameUpper = (q.name || "").toUpperCase();
+            return (
+              mQualNameUpper.includes(qCodeUpper) ||
+              mQualNameUpper.includes(qNameUpper) ||
+              qNameUpper.includes(mQualNameUpper.replace("GANISPH ", ""))
+            );
+          });
+
+          if (matchedQual) {
+            await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?) ON CONFLICT DO NOTHING").run(session.userId, matchedQual.id);
+          }
+        }
+      }
+    }
 
     const userQuals = await db.prepare(`
       SELECT q.id, q.code, q.name, q.description

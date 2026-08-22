@@ -320,7 +320,10 @@ function ParticipantProfilePage() {
           {/* Add Qualification Dialog */}
           <Dialog open={addQualOpen} onOpenChange={setAddQualOpen}>
             <DialogTrigger asChild>
-              <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500">
+              <button 
+                onClick={() => setAddQualOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-forest-700 cursor-pointer dark:bg-forest-700 dark:hover:bg-forest-500"
+              >
                 <Plus className="h-4 w-4" />
                 Tambah Kualifikasi GANISPH
               </button>
@@ -341,10 +344,10 @@ function ParticipantProfilePage() {
                     required
                     value={selectedQualId}
                     onChange={(e) => setSelectedQualId(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                    className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100 font-bold"
                   >
-                    <option value="">-- Pilih Kualifikasi --</option>
-                    {availableToSelect.map((q: any) => (
+                    <option value="">-- Pilih Kualifikasi GANISPH --</option>
+                    {(availableToSelect.length > 0 ? availableToSelect : allQualifications).map((q: any) => (
                       <option key={q.id} value={q.id}>
                         {q.code} — {q.name}
                       </option>

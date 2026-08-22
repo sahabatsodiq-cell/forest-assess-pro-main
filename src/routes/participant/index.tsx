@@ -54,7 +54,7 @@ function ParticipantDashboardIndex() {
   }
 
   const user = data?.user;
-  const enrolledExams = data?.enrolledExams || [];
+  const enrolledExams = Array.isArray(data?.enrolledExams) ? data.enrolledExams : [];
 
   return (
     <div className="space-y-8">

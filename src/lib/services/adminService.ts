@@ -20,13 +20,13 @@ export const getAdminStatsFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
 
-    const totalUsers = db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'PESERTA'").get().count;
-    const totalQuals = db.prepare("SELECT COUNT(*) as count FROM qualifications WHERE status = 'ACTIVE'").get().count;
-    const totalQuestions = db.prepare("SELECT COUNT(*) as count FROM questions WHERE status = 'ACTIVE'").get().count;
-    const totalExams = db.prepare("SELECT COUNT(*) as count FROM exam_packages").get().count;
-    const activeExams = db.prepare("SELECT COUNT(*) as count FROM exam_packages WHERE status = 'PUBLISHED' OR status = 'ACTIVE'").get().count;
-    const totalAttempts = db.prepare("SELECT COUNT(*) as count FROM exam_attempts WHERE status IN ('SUBMITTED', 'AUTO_SUBMITTED')").get().count;
-    const passedAttempts = db.prepare("SELECT COUNT(*) as count FROM exam_attempts a JOIN exam_packages p ON a.exam_id = p.id WHERE a.status IN ('SUBMITTED', 'AUTO_SUBMITTED') AND a.score >= p.passing_grade").get().count;
+    const totalUsers = (await db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'PESERTA'").get())?.count || 0;
+    const totalQuals = (await db.prepare("SELECT COUNT(*) as count FROM qualifications WHERE status = 'ACTIVE'").get())?.count || 0;
+    const totalQuestions = (await db.prepare("SELECT COUNT(*) as count FROM questions WHERE status = 'ACTIVE'").get())?.count || 0;
+    const totalExams = (await db.prepare("SELECT COUNT(*) as count FROM exam_packages").get())?.count || 0;
+    const activeExams = (await db.prepare("SELECT COUNT(*) as count FROM exam_packages WHERE status = 'PUBLISHED' OR status = 'ACTIVE'").get())?.count || 0;
+    const totalAttempts = (await db.prepare("SELECT COUNT(*) as count FROM exam_attempts WHERE status IN ('SUBMITTED', 'AUTO_SUBMITTED')").get())?.count || 0;
+    const passedAttempts = (await db.prepare("SELECT COUNT(*) as count FROM exam_attempts a JOIN exam_packages p ON a.exam_id = p.id WHERE a.status IN ('SUBMITTED', 'AUTO_SUBMITTED') AND a.score >= p.passing_grade").get())?.count || 0;
 
     return {
       totalUsers,
@@ -47,8 +47,9 @@ export const getUsersFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
-    const users = db.prepare("SELECT id, name, email, role, participant_number, is_active, created_at FROM users ORDER BY id DESC").all();
-    return users.map((u: any) => ({ ...u, is_active: u.is_active === 1 }));
+    const users = await db.prepare("SELECT id, name, email, role, participant_number, is_active, created_at FROM users ORDER BY id DESC").all();
+    const userList = Array.isArray(users) ? users : [];
+    return userList.map((u: any) => ({ ...u, is_active: u.is_active === 1 }));
   });
 
 export const createUserFn = createServerFn({ method: "POST" })
@@ -58,11 +59,11 @@ export const createUserFn = createServerFn({ method: "POST" })
     const db = await getDb();
 
     // Check unique email
-    const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(data.email);
+    const existing = await db.prepare("SELECT id FROM users WHERE email = ?").get(data.email);
     if (existing) return { success: false, error: "Email sudah terdaftar." };
 
     const passHash = hashPassword(data.password);
-    const res = db.prepare(`
+    const res = await db.prepare(`
       INSERT INTO users (name, email, password_hash, role, participant_number, is_active)
       VALUES (?, ?, ?, ?, ?, 1)
     `).run(data.name, data.email, passHash, data.role, data.participant_number || null);
@@ -70,7 +71,7 @@ export const createUserFn = createServerFn({ method: "POST" })
     const userId = res.lastInsertRowid;
 
     if (data.qualification_id) {
-      db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?)").run(userId, data.qualification_id);
+      await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?)").run(userId, data.qualification_id);
     }
 
     await logAudit(session.userId, "CREATE_USER", "users", userId as number, { email: data.email, role: data.role });
@@ -85,9 +86,9 @@ export const updateUserFn = createServerFn({ method: "POST" })
 
     if (data.password) {
       const passHash = hashPassword(data.password);
-      db.prepare("UPDATE users SET name = ?, role = ?, participant_number = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.role, data.participant_number || null, passHash, data.id);
+      await db.prepare("UPDATE users SET name = ?, role = ?, participant_number = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.role, data.participant_number || null, passHash, data.id);
     } else {
-      db.prepare("UPDATE users SET name = ?, role = ?, participant_number = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.role, data.participant_number || null, data.id);
+      await db.prepare("UPDATE users SET name = ?, role = ?, participant_number = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.role, data.participant_number || null, data.id);
     }
 
     await logAudit(session.userId, "UPDATE_USER", "users", data.id, { name: data.name, role: data.role });
@@ -99,7 +100,7 @@ export const toggleUserStatusFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
-    db.prepare("UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.is_active ? 1 : 0, data.id);
+    await db.prepare("UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.is_active ? 1 : 0, data.id);
     await logAudit(session.userId, "TOGGLE_USER_STATUS", "users", data.id, { is_active: data.is_active });
     return { success: true };
   });
@@ -112,7 +113,8 @@ export const getQualificationsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
-    return db.prepare("SELECT * FROM qualifications ORDER BY id ASC").all();
+    const res = await db.prepare("SELECT * FROM qualifications ORDER BY id ASC").all();
+    return Array.isArray(res) ? res : [];
   });
 
 export const createQualificationFn = createServerFn({ method: "POST" })
@@ -121,10 +123,10 @@ export const createQualificationFn = createServerFn({ method: "POST" })
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
-    const existing = db.prepare("SELECT id FROM qualifications WHERE code = ?").get(data.code);
+    const existing = await db.prepare("SELECT id FROM qualifications WHERE code = ?").get(data.code);
     if (existing) return { success: false, error: "Kode kualifikasi sudah ada." };
 
-    const res = db.prepare(`
+    const res = await db.prepare(`
       INSERT INTO qualifications (code, name, description, status)
       VALUES (?, ?, ?, 'ACTIVE')
     `).run(data.code.toUpperCase(), data.name, data.description || null);
@@ -138,7 +140,7 @@ export const updateQualificationFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
-    db.prepare("UPDATE qualifications SET name = ?, description = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.description || null, data.status, data.id);
+    await db.prepare("UPDATE qualifications SET name = ?, description = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.description || null, data.status, data.id);
     await logAudit(session.userId, "UPDATE_QUALIFICATION", "qualifications", data.id, { name: data.name });
     return { success: true };
   });
@@ -152,9 +154,11 @@ export const getSubjectsFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
     if (data.qualification_id) {
-      return db.prepare("SELECT s.*, q.code as qualification_code FROM subjects s JOIN qualifications q ON s.qualification_id = q.id WHERE s.qualification_id = ? ORDER BY s.id ASC").all(data.qualification_id);
+      const res = await db.prepare("SELECT s.*, q.code as qualification_code FROM subjects s JOIN qualifications q ON s.qualification_id = q.id WHERE s.qualification_id = ? ORDER BY s.id ASC").all(data.qualification_id);
+      return Array.isArray(res) ? res : [];
     }
-    return db.prepare("SELECT s.*, q.code as qualification_code FROM subjects s JOIN qualifications q ON s.qualification_id = q.id ORDER BY s.id ASC").all();
+    const res = await db.prepare("SELECT s.*, q.code as qualification_code FROM subjects s JOIN qualifications q ON s.qualification_id = q.id ORDER BY s.id ASC").all();
+    return Array.isArray(res) ? res : [];
   });
 
 export const createSubjectFn = createServerFn({ method: "POST" })
@@ -163,7 +167,7 @@ export const createSubjectFn = createServerFn({ method: "POST" })
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
-    const res = db.prepare(`
+    const res = await db.prepare(`
       INSERT INTO subjects (qualification_id, code, name, description, weight, status)
       VALUES (?, ?, ?, ?, ?, 'ACTIVE')
     `).run(data.qualification_id, data.code.toUpperCase(), data.name, data.description || null, data.weight || 0);
@@ -177,7 +181,7 @@ export const updateSubjectFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
-    db.prepare("UPDATE subjects SET name = ?, description = ?, weight = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.description || null, data.weight, data.status, data.id);
+    await db.prepare("UPDATE subjects SET name = ?, description = ?, weight = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.description || null, data.weight, data.status, data.id);
     await logAudit(session.userId, "UPDATE_SUBJECT", "subjects", data.id, { name: data.name });
     return { success: true };
   });
@@ -214,7 +218,8 @@ export const getQuestionsFn = createServerFn({ method: "POST" })
     }
 
     query += " ORDER BY q.id DESC";
-    return db.prepare(query).all(...params);
+    const res = await db.prepare(query).all(...params);
+    return Array.isArray(res) ? res : [];
   });
 
 export const createQuestionFn = createServerFn({ method: "POST" })
@@ -235,7 +240,7 @@ export const createQuestionFn = createServerFn({ method: "POST" })
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
-    const res = db.prepare(`
+    const res = await db.prepare(`
       INSERT INTO questions (qualification_id, subject_id, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation, status, created_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
     `).run(
@@ -267,50 +272,46 @@ export const importQuestionsCsvFn = createServerFn({ method: "POST" })
       return { success: false, error: "File CSV kosong atau tidak memiliki baris data." };
     }
 
-    // Skip header line if present
     const dataLines = lines[0]?.toLowerCase().includes("question") ? lines.slice(1) : lines;
 
     let importedCount = 0;
     const errors: string[] = [];
 
-    const insertStmt = db.prepare(`
-      INSERT INTO questions (qualification_id, subject_id, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation, status, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
-    `);
+    for (let idx = 0; idx < dataLines.length; idx++) {
+      const line = dataLines[idx];
+      const parts = line.split(",").map((p) => p.trim().replace(/^"|"$/g, ""));
+      if (parts.length < 6) {
+        errors.push(`Baris ${idx + 1}: Format tidak lengkap.`);
+        continue;
+      }
 
-    db.transaction(() => {
-      dataLines.forEach((line, idx) => {
-        const parts = line.split(",").map((p) => p.trim().replace(/^"|"$/g, ""));
-        if (parts.length < 6) {
-          errors.push(`Baris ${idx + 1}: Format tidak lengkap.`);
-          return;
-        }
+      const [question_text, option_a, option_b, option_c, option_d, correct_answer, difficultyStr, explanation] = parts;
+      const correct = correct_answer?.toUpperCase() as "A" | "B" | "C" | "D";
+      const difficulty = (difficultyStr?.toUpperCase() || "MEDIUM") as "EASY" | "MEDIUM" | "HARD";
 
-        const [question_text, option_a, option_b, option_c, option_d, correct_answer, difficultyStr, explanation] = parts;
-        const correct = correct_answer?.toUpperCase() as "A" | "B" | "C" | "D";
-        const difficulty = (difficultyStr?.toUpperCase() || "MEDIUM") as "EASY" | "MEDIUM" | "HARD";
+      if (!["A", "B", "C", "D"].includes(correct)) {
+        errors.push(`Baris ${idx + 1}: Jawaban benar ('${correct_answer}') harus A, B, C, atau D.`);
+        continue;
+      }
 
-        if (!["A", "B", "C", "D"].includes(correct)) {
-          errors.push(`Baris ${idx + 1}: Jawaban benar ('${correct_answer}') harus A, B, C, atau D.`);
-          return;
-        }
-
-        insertStmt.run(
-          data.qualification_id,
-          data.subject_id,
-          question_text,
-          option_a,
-          option_b,
-          option_c,
-          option_d,
-          correct,
-          ["EASY", "MEDIUM", "HARD"].includes(difficulty) ? difficulty : "MEDIUM",
-          explanation || null,
-          session.userId
-        );
-        importedCount++;
-      });
-    })();
+      await db.prepare(`
+        INSERT INTO questions (qualification_id, subject_id, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation, status, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
+      `).run(
+        data.qualification_id,
+        data.subject_id,
+        question_text,
+        option_a,
+        option_b,
+        option_c,
+        option_d,
+        correct,
+        ["EASY", "MEDIUM", "HARD"].includes(difficulty) ? difficulty : "MEDIUM",
+        explanation || null,
+        session.userId
+      );
+      importedCount++;
+    }
 
     await logAudit(session.userId, "IMPORT_QUESTIONS", "questions", null, { importedCount });
     return { success: true, importedCount, errors };
@@ -330,10 +331,12 @@ export const getBlueprintsFn = createServerFn({ method: "POST" })
       query += " WHERE b.qualification_id = ?";
       params.push(data.qualification_id);
     }
-    const blueprints = db.prepare(query).all(...params);
+    const res = await db.prepare(query).all(...params);
+    const blueprints = Array.isArray(res) ? res : [];
 
     for (const b of blueprints) {
-      b.items = db.prepare("SELECT i.*, s.name as subject_name FROM blueprint_items i JOIN subjects s ON i.subject_id = s.id WHERE i.blueprint_id = ?").all(b.id);
+      const itemsRes = await db.prepare("SELECT i.*, s.name as subject_name FROM blueprint_items i JOIN subjects s ON i.subject_id = s.id WHERE i.blueprint_id = ?").all(b.id);
+      b.items = Array.isArray(itemsRes) ? itemsRes : [];
     }
 
     return blueprints;
@@ -353,9 +356,10 @@ export const createBlueprintFn = createServerFn({ method: "POST" })
 
     // Verify question counts available in database
     for (const item of data.items) {
-      const avail = db.prepare("SELECT COUNT(*) as count FROM questions WHERE subject_id = ? AND difficulty = ? AND status = 'ACTIVE'").get(item.subject_id, item.difficulty).count;
+      const availRow = await db.prepare("SELECT COUNT(*) as count FROM questions WHERE subject_id = ? AND difficulty = ? AND status = 'ACTIVE'").get(item.subject_id, item.difficulty);
+      const avail = Number(availRow?.count || 0);
       if (avail < item.question_count) {
-        const sub = db.prepare("SELECT name FROM subjects WHERE id = ?").get(item.subject_id);
+        const sub = await db.prepare("SELECT name FROM subjects WHERE id = ?").get(item.subject_id);
         return {
           success: false,
           error: `Bank soal tidak mencukupi untuk materi ${sub?.name || item.subject_id} (${item.difficulty}). Dibutuhkan: ${item.question_count}, Tersedia: ${avail}.`,
@@ -365,22 +369,19 @@ export const createBlueprintFn = createServerFn({ method: "POST" })
 
     const totalQuestions = data.items.reduce((sum, i) => sum + i.question_count, 0);
 
-    let blueprintId = 0;
-    db.transaction(() => {
-      const res = db.prepare(`
-        INSERT INTO exam_blueprints (qualification_id, name, description, total_questions)
+    const res = await db.prepare(`
+      INSERT INTO exam_blueprints (qualification_id, name, description, total_questions)
+      VALUES (?, ?, ?, ?)
+    `).run(data.qualification_id, data.name, data.description || null, totalQuestions);
+
+    const blueprintId = res.lastInsertRowid as number;
+
+    for (const item of data.items) {
+      await db.prepare(`
+        INSERT INTO blueprint_items (blueprint_id, subject_id, difficulty, question_count)
         VALUES (?, ?, ?, ?)
-      `).run(data.qualification_id, data.name, data.description || null, totalQuestions);
-
-      blueprintId = res.lastInsertRowid as number;
-
-      for (const item of data.items) {
-        db.prepare(`
-          INSERT INTO blueprint_items (blueprint_id, subject_id, difficulty, question_count)
-          VALUES (?, ?, ?, ?)
-        `).run(blueprintId, item.subject_id, item.difficulty, item.question_count);
-      }
-    })();
+      `).run(blueprintId, item.subject_id, item.difficulty, item.question_count);
+    }
 
     await logAudit(session.userId, "CREATE_BLUEPRINT", "exam_blueprints", blueprintId, { name: data.name, totalQuestions });
     return { success: true, blueprintId };
@@ -394,13 +395,14 @@ export const getExamsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
-    return db.prepare(`
+    const res = await db.prepare(`
       SELECT p.*, q.code as qualification_code, b.name as blueprint_name, b.total_questions
       FROM exam_packages p
       JOIN qualifications q ON p.qualification_id = q.id
       JOIN exam_blueprints b ON p.blueprint_id = b.id
       ORDER BY p.id DESC
     `).all();
+    return Array.isArray(res) ? res : [];
   });
 
 export const createExamFn = createServerFn({ method: "POST" })
@@ -421,10 +423,10 @@ export const createExamFn = createServerFn({ method: "POST" })
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
-    const existing = db.prepare("SELECT id FROM exam_packages WHERE code = ?").get(data.code);
+    const existing = await db.prepare("SELECT id FROM exam_packages WHERE code = ?").get(data.code);
     if (existing) return { success: false, error: "Kode paket ujian sudah digunakan." };
 
-    const res = db.prepare(`
+    const res = await db.prepare(`
       INSERT INTO exam_packages (qualification_id, blueprint_id, name, code, description, instructions, duration_minutes, passing_grade, start_at, end_at, status, created_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'DRAFT', ?)
     `).run(
@@ -451,19 +453,22 @@ export const publishExamFn = createServerFn({ method: "POST" })
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
-    const exam = db.prepare("SELECT * FROM exam_packages WHERE id = ?").get(data.exam_id);
+    const exam = await db.prepare("SELECT * FROM exam_packages WHERE id = ?").get(data.exam_id);
     if (!exam) return { success: false, error: "Paket ujian tidak ditemukan." };
 
     // Verify blueprint and question availability
-    const items = db.prepare("SELECT * FROM blueprint_items WHERE blueprint_id = ?").all(exam.blueprint_id);
-    for (const item of items) {
-      const avail = db.prepare("SELECT COUNT(*) as count FROM questions WHERE subject_id = ? AND difficulty = ? AND status = 'ACTIVE'").get(item.subject_id, item.difficulty).count;
+    const items = await db.prepare("SELECT * FROM blueprint_items WHERE blueprint_id = ?").all(exam.blueprint_id);
+    const itemsList = Array.isArray(items) ? items : [];
+
+    for (const item of itemsList) {
+      const availRow = await db.prepare("SELECT COUNT(*) as count FROM questions WHERE subject_id = ? AND difficulty = ? AND status = 'ACTIVE'").get(item.subject_id, item.difficulty);
+      const avail = Number(availRow?.count || 0);
       if (avail < item.question_count) {
         return { success: false, error: "Tidak dapat mempublikasikan ujian. Soal dalam bank soal tidak mencukupi untuk blueprint." };
       }
     }
 
-    db.prepare("UPDATE exam_packages SET status = 'PUBLISHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.exam_id);
+    await db.prepare("UPDATE exam_packages SET status = 'PUBLISHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.exam_id);
     await logAudit(session.userId, "PUBLISH_EXAM", "exam_packages", data.exam_id, { code: exam.code });
     return { success: true };
   });
@@ -487,7 +492,8 @@ export const getEnrollmentsFn = createServerFn({ method: "POST" })
       query += " WHERE e.exam_id = ?";
       params.push(data.exam_id);
     }
-    return db.prepare(query).all(...params);
+    const res = await db.prepare(query).all(...params);
+    return Array.isArray(res) ? res : [];
   });
 
 export const enrollParticipantFn = createServerFn({ method: "POST" })
@@ -497,15 +503,15 @@ export const enrollParticipantFn = createServerFn({ method: "POST" })
     const db = await getDb();
 
     // Verify participant qualification matches exam qualification
-    const exam = db.prepare("SELECT qualification_id FROM exam_packages WHERE id = ?").get(data.exam_id);
-    const userQual = db.prepare("SELECT qualification_id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?").get(data.user_id, exam.qualification_id);
+    const exam = await db.prepare("SELECT qualification_id FROM exam_packages WHERE id = ?").get(data.exam_id);
+    const userQual = await db.prepare("SELECT qualification_id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?").get(data.user_id, exam.qualification_id);
 
     if (!userQual) {
       return { success: false, error: "Peserta tidak memiliki kualifikasi yang sesuai dengan paket ujian ini." };
     }
 
     try {
-      const res = db.prepare("INSERT INTO exam_enrollments (exam_id, user_id) VALUES (?, ?)").run(data.exam_id, data.user_id);
+      const res = await db.prepare("INSERT INTO exam_enrollments (exam_id, user_id) VALUES (?, ?)").run(data.exam_id, data.user_id);
       await logAudit(session.userId, "ENROLL_PARTICIPANT", "exam_enrollments", res.lastInsertRowid as number, { exam_id: data.exam_id, user_id: data.user_id });
       return { success: true };
     } catch (e: any) {
@@ -518,7 +524,7 @@ export const deleteEnrollmentFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
-    db.prepare("DELETE FROM exam_enrollments WHERE id = ?").run(data.id);
+    await db.prepare("DELETE FROM exam_enrollments WHERE id = ?").run(data.id);
     await logAudit(session.userId, "DELETE_ENROLLMENT", "exam_enrollments", data.id);
     return { success: true };
   });
@@ -531,7 +537,7 @@ export const getAdminResultsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
-    return db.prepare(`
+    const res = await db.prepare(`
       SELECT a.*, u.name as user_name, u.email as user_email, u.participant_number,
              p.name as exam_name, p.code as exam_code, p.passing_grade, b.total_questions,
              q.code as qualification_code
@@ -543,6 +549,7 @@ export const getAdminResultsFn = createServerFn({ method: "POST" })
       WHERE a.status IN ('SUBMITTED', 'AUTO_SUBMITTED')
       ORDER BY a.submitted_at DESC
     `).all();
+    return Array.isArray(res) ? res : [];
   });
 
 export const getAuditLogsFn = createServerFn({ method: "POST" })
@@ -550,10 +557,11 @@ export const getAuditLogsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
-    return db.prepare(`
+    const res = await db.prepare(`
       SELECT l.*, u.name as user_name, u.email as user_email
       FROM audit_logs l
       LEFT JOIN users u ON l.user_id = u.id
       ORDER BY l.id DESC LIMIT 100
     `).all();
+    return Array.isArray(res) ? res : [];
   });

@@ -21,26 +21,27 @@ class PostgresAdapter {
     const converted = convertSql(sqlStr);
 
     return {
-      all(...args: any[]) {
+      async all(...args: any[]) {
         const flatArgs = args.flat();
-        return adapter.sql.unsafe(converted, flatArgs);
+        const rows = await adapter.sql.unsafe(converted, flatArgs);
+        return Array.from(rows);
       },
-      get(...args: any[]) {
+      async get(...args: any[]) {
         const flatArgs = args.flat();
-        const res = adapter.sql.unsafe(converted, flatArgs);
-        return res.then((rows: any[]) => rows[0] || null);
+        const rows = await adapter.sql.unsafe(converted, flatArgs);
+        return rows[0] || null;
       },
-      run(...args: any[]) {
+      async run(...args: any[]) {
         const flatArgs = args.flat();
         let insertSql = converted;
         if (/^\s*INSERT\s+INTO/i.test(insertSql) && !/RETURNING/i.test(insertSql)) {
           insertSql += " RETURNING id";
         }
-        const res = adapter.sql.unsafe(insertSql, flatArgs);
-        return res.then((rows: any[]) => ({
+        const rows = await adapter.sql.unsafe(insertSql, flatArgs);
+        return {
           lastInsertRowid: rows[0]?.id || 0,
           changes: rows.count || 0,
-        }));
+        };
       },
     };
   }

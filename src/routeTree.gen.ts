@@ -26,6 +26,9 @@ import { Route as AdminSubjectsRouteImport } from './routes/admin/subjects'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as ExamAttemptIdRouteImport } from './routes/exam/$attemptId'
 import { Route as ParticipantIndexRouteImport } from './routes/participant/index'
+import { Route as ParticipantExamsRouteImport } from './routes/participant/exams'
+import { Route as ParticipantProfileRouteImport } from './routes/participant/profile'
+import { Route as ParticipantResultsRouteImport } from './routes/participant/results'
 import { Route as ResultsAttemptIdRouteImport } from './routes/results/$attemptId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -113,6 +116,21 @@ const ParticipantIndexRoute = ParticipantIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ParticipantRoute,
 } as any)
+const ParticipantExamsRoute = ParticipantExamsRouteImport.update({
+  id: '/exams',
+  path: '/exams',
+  getParentRoute: () => ParticipantRoute,
+} as any)
+const ParticipantProfileRoute = ParticipantProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ParticipantRoute,
+} as any)
+const ParticipantResultsRoute = ParticipantResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => ParticipantRoute,
+} as any)
 const ResultsAttemptIdRoute = ResultsAttemptIdRouteImport.update({
   id: '/results/$attemptId',
   path: '/results/$attemptId',
@@ -135,6 +153,9 @@ export interface FileRoutesByFullPath {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/participant/exams': typeof ParticipantExamsRoute
+  '/participant/profile': typeof ParticipantProfileRoute
+  '/participant/results': typeof ParticipantResultsRoute
   '/results/$attemptId': typeof ResultsAttemptIdRoute
   '/admin/': typeof AdminIndexRoute
   '/participant/': typeof ParticipantIndexRoute
@@ -153,6 +174,9 @@ export interface FileRoutesByTo {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/participant/exams': typeof ParticipantExamsRoute
+  '/participant/profile': typeof ParticipantProfileRoute
+  '/participant/results': typeof ParticipantResultsRoute
   '/results/$attemptId': typeof ResultsAttemptIdRoute
   '/admin': typeof AdminIndexRoute
   '/participant': typeof ParticipantIndexRoute
@@ -174,6 +198,9 @@ export interface FileRoutesById {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/participant/exams': typeof ParticipantExamsRoute
+  '/participant/profile': typeof ParticipantProfileRoute
+  '/participant/results': typeof ParticipantResultsRoute
   '/results/$attemptId': typeof ResultsAttemptIdRoute
   '/admin/': typeof AdminIndexRoute
   '/participant/': typeof ParticipantIndexRoute
@@ -196,6 +223,9 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/users'
     | '/exam/$attemptId'
+    | '/participant/exams'
+    | '/participant/profile'
+    | '/participant/results'
     | '/results/$attemptId'
     | '/admin/'
     | '/participant/'
@@ -214,6 +244,9 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/users'
     | '/exam/$attemptId'
+    | '/participant/exams'
+    | '/participant/profile'
+    | '/participant/results'
     | '/results/$attemptId'
     | '/admin'
     | '/participant'
@@ -234,6 +267,9 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/users'
     | '/exam/$attemptId'
+    | '/participant/exams'
+    | '/participant/profile'
+    | '/participant/results'
     | '/results/$attemptId'
     | '/admin/'
     | '/participant/'
@@ -369,6 +405,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParticipantIndexRouteImport
       parentRoute: typeof ParticipantRoute
     }
+    '/participant/exams': {
+      id: '/participant/exams'
+      path: '/exams'
+      fullPath: '/participant/exams'
+      preLoaderRoute: typeof ParticipantExamsRouteImport
+      parentRoute: typeof ParticipantRoute
+    }
+    '/participant/profile': {
+      id: '/participant/profile'
+      path: '/profile'
+      fullPath: '/participant/profile'
+      preLoaderRoute: typeof ParticipantProfileRouteImport
+      parentRoute: typeof ParticipantRoute
+    }
+    '/participant/results': {
+      id: '/participant/results'
+      path: '/results'
+      fullPath: '/participant/results'
+      preLoaderRoute: typeof ParticipantResultsRouteImport
+      parentRoute: typeof ParticipantRoute
+    }
     '/results/$attemptId': {
       id: '/results/$attemptId'
       path: '/results/$attemptId'
@@ -410,10 +467,16 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ParticipantRouteChildren {
+  ParticipantExamsRoute: typeof ParticipantExamsRoute
+  ParticipantProfileRoute: typeof ParticipantProfileRoute
+  ParticipantResultsRoute: typeof ParticipantResultsRoute
   ParticipantIndexRoute: typeof ParticipantIndexRoute
 }
 
 const ParticipantRouteChildren: ParticipantRouteChildren = {
+  ParticipantExamsRoute: ParticipantExamsRoute,
+  ParticipantProfileRoute: ParticipantProfileRoute,
+  ParticipantResultsRoute: ParticipantResultsRoute,
   ParticipantIndexRoute: ParticipantIndexRoute,
 }
 

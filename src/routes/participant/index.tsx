@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getParticipantDashboardFn, startExamAttemptFn } from "@/lib/services/examEngineService";
-import { Award, Play, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { GraduationCap, Activity, CheckCircle2, ArrowRight, Play, Award } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/participant/")({
@@ -50,110 +50,136 @@ function ParticipantDashboardIndex() {
   };
 
   if (loading) {
-    return <div className="text-xs text-muted-foreground">Memuat dashboard peserta...</div>;
+    return <div className="p-8 text-xs text-muted-foreground">Memuat dashboard peserta...</div>;
   }
 
   const user = data?.user;
   const enrolledExams = Array.isArray(data?.enrolledExams) ? data.enrolledExams : [];
 
+  const availableCount = enrolledExams.filter((e: any) => !e.attempt_status || e.attempt_status === "NOT_STARTED").length;
+  const inProgressCount = enrolledExams.filter((e: any) => e.attempt_status === "IN_PROGRESS").length;
+  const completedCount = enrolledExams.filter((e: any) => e.attempt_status === "SUBMITTED" || e.attempt_status === "AUTO_SUBMITTED").length;
+
   return (
     <div className="space-y-8">
-      {/* Header Profile Banner */}
-      <div className="rounded-xl border border-forest-100 bg-forest-50/40 p-6 md:p-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <span className="inline-block rounded bg-forest-900 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-              Peserta Asesmen
-            </span>
-            <h1 className="mt-2 font-display text-2xl font-black text-charcoal">
-              Selamat Datang, {user?.name}
-            </h1>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Nomor Registrasi: <span className="font-mono font-bold text-charcoal">{user?.participant_number || user?.email}</span>
-            </p>
-          </div>
+      {/* Welcome Banner */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/40 pb-6 dark:border-charcoal/60">
+        <div>
+          <h1 className="font-display text-2xl font-black text-charcoal dark:text-forest-100 flex items-center gap-2">
+            Hai, {user?.name || "Peserta"} 👋
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground dark:text-forest-100/70">
+            Siap lanjut ujian kompetensi kamu hari ini?
+          </p>
+        </div>
 
-          {user?.qualification_code && (
-            <div className="rounded-lg border border-forest-100 bg-white p-4 text-right">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Kualifikasi Utama</div>
-              <div className="font-display text-lg font-extrabold text-forest-900">{user.qualification_code}</div>
-              <div className="text-[10px] text-muted-foreground max-w-[200px] truncate">{user.qualification_name}</div>
-            </div>
-          )}
+        <Link
+          to="/participant/exams"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-forest-900 px-5 py-2.5 text-xs font-bold text-white shadow transition-transform hover:scale-105 hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500"
+        >
+          <span>Lihat Ujian Saya</span>
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+
+      {/* Stats Cards Row */}
+      <div className="grid gap-5 sm:grid-cols-3">
+        {/* Available Exams */}
+        <div className="rounded-xl border border-border/50 bg-white p-6 shadow-sm dark:bg-charcoal dark:border-charcoal/60">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-forest-50 text-forest-900 dark:bg-forest-900/40 dark:text-forest-100">
+            <GraduationCap className="h-5 w-5" />
+          </div>
+          <div className="mt-4 font-mono text-3xl font-black text-charcoal dark:text-forest-100">
+            {availableCount}
+          </div>
+          <div className="mt-1 font-mono text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:text-forest-100/70">
+            UJIAN TERSEDIA
+          </div>
+        </div>
+
+        {/* In Progress */}
+        <div className="rounded-xl border border-border/50 bg-white p-6 shadow-sm dark:bg-charcoal dark:border-charcoal/60">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+            <Activity className="h-5 w-5" />
+          </div>
+          <div className="mt-4 font-mono text-3xl font-black text-charcoal dark:text-forest-100">
+            {inProgressCount}
+          </div>
+          <div className="mt-1 font-mono text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:text-forest-100/70">
+            SEDANG BERLANGSUNG
+          </div>
+        </div>
+
+        {/* Completed */}
+        <div className="rounded-xl border border-border/50 bg-white p-6 shadow-sm dark:bg-charcoal dark:border-charcoal/60">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 text-green-800 dark:bg-green-950/40 dark:text-green-300">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          <div className="mt-4 font-mono text-3xl font-black text-charcoal dark:text-forest-100">
+            {completedCount}
+          </div>
+          <div className="mt-1 font-mono text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:text-forest-100/70">
+            SELESAI
+          </div>
         </div>
       </div>
 
-      {/* Enrolled Exams List */}
-      <div>
-        <h2 className="font-display text-lg font-bold text-charcoal mb-4">Ujian Terdaftar</h2>
+      {/* Available Exams Section */}
+      <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm space-y-4 dark:bg-charcoal dark:border-charcoal/60">
+        <h2 className="font-display text-base font-bold text-charcoal dark:text-forest-100">
+          Ujian yang bisa kamu kerjakan
+        </h2>
 
         {enrolledExams.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
-            Anda belum terdaftar dalam paket ujian kompetensi manapun. Silakan hubungi pengelola asesmen.
-          </div>
+          <p className="text-xs text-muted-foreground dark:text-forest-100/70 py-4">
+            Belum ada ujian yang tersedia untuk kamu.
+          </p>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             {enrolledExams.map((exam: any) => {
               const isSubmitted = exam.attempt_status === "SUBMITTED" || exam.attempt_status === "AUTO_SUBMITTED";
               const isInProgress = exam.attempt_status === "IN_PROGRESS";
 
               return (
-                <div key={exam.id} className="rounded-xl border border-border/60 bg-white p-6 shadow-sm flex flex-col justify-between space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-bold text-forest-900 border border-forest-100">
-                        {exam.qualification_code}
+                <div key={exam.id} className="rounded-xl border border-border/50 bg-forest-50/20 p-5 space-y-3 dark:bg-charcoal/60 dark:border-charcoal/60">
+                  <div className="flex items-center justify-between">
+                    <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-bold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
+                      {exam.qualification_code}
+                    </span>
+                    {isSubmitted ? (
+                      <span className="rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-bold text-green-700 dark:bg-green-950/40 dark:text-green-300">
+                        SELESAI
                       </span>
-                      {isSubmitted ? (
-                        <span className="rounded-full bg-green-50 px-2.5 py-0.5 text-[9px] font-bold text-green-700">
-                          SELESAI
-                        </span>
-                      ) : isInProgress ? (
-                        <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[9px] font-bold text-amber-700 animate-pulse">
-                          BERLANGSUNG
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[9px] font-bold text-blue-700">
-                          SIAP DIMULAI
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="mt-3 font-display text-base font-bold text-charcoal">{exam.name}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">{exam.instructions}</p>
+                    ) : isInProgress ? (
+                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-700 animate-pulse dark:bg-amber-950/40 dark:text-amber-300">
+                        BERLANGSUNG
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                        SIAP
+                      </span>
+                    )}
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 rounded-lg bg-forest-50/10 p-3 text-center border border-border/30 text-xs">
-                    <div>
-                      <div className="text-[9px] font-bold text-muted-foreground">DURASI</div>
-                      <div className="font-bold text-charcoal">{exam.duration_minutes} Menit</div>
-                    </div>
-                    <div>
-                      <div className="text-[9px] font-bold text-muted-foreground">SOAL</div>
-                      <div className="font-bold text-charcoal">{exam.total_questions} Soal</div>
-                    </div>
-                    <div>
-                      <div className="text-[9px] font-bold text-muted-foreground">PASSING GRADE</div>
-                      <div className="font-bold text-forest-900">{exam.passing_grade}%</div>
-                    </div>
-                  </div>
+                  <h3 className="font-display text-sm font-bold text-charcoal dark:text-forest-100">{exam.name}</h3>
 
-                  <div className="border-t border-border/20 pt-3 flex items-center justify-between">
+                  <div className="pt-2">
                     {isSubmitted ? (
                       <Link
                         to={`/results/${exam.attempt_id}` as any}
-                        className="w-full text-center rounded-lg border border-forest-900 bg-white py-2 text-xs font-semibold text-forest-900 hover:bg-forest-50 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-forest-900 hover:underline dark:text-forest-300"
                       >
-                        Lihat Hasil Ujian (Skor: {exam.attempt_score})
+                        <span>Lihat Hasil (Skor: {exam.attempt_score})</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     ) : (
                       <button
                         onClick={() => handleStartExam(exam.id)}
                         disabled={actionLoading === exam.id}
-                        className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 transition-colors"
+                        className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
                       >
-                        <Play className="h-4 w-4" />
-                        {actionLoading === exam.id ? "Menyiapkan Ujian..." : isInProgress ? "Lanjutkan Ujian" : "Mulai Ujian"}
+                        <Play className="h-3.5 w-3.5" />
+                        {actionLoading === exam.id ? "Menyiapkan..." : isInProgress ? "Lanjutkan Ujian" : "Mulai Ujian"}
                       </button>
                     )}
                   </div>

@@ -678,6 +678,68 @@ export const publishExamFn = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const updateExamFn = createServerFn({ method: "POST" })
+  .validator((data: {
+    token: string;
+    id: number;
+    qualification_id: number;
+    name: string;
+    code: string;
+    description?: string;
+    instructions?: string;
+    duration_minutes: number;
+    passing_grade: number;
+    status?: string;
+  }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    const exam = await db.prepare("SELECT * FROM exam_packages WHERE id = ?").get(data.id);
+    if (!exam) return { success: false, error: "Paket ujian tidak ditemukan." };
+
+    await db.prepare(`
+      UPDATE exam_packages SET
+        qualification_id = ?,
+        name = ?,
+        code = ?,
+        description = ?,
+        instructions = ?,
+        duration_minutes = ?,
+        passing_grade = ?,
+        status = COALESCE(?, status),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(
+      data.qualification_id,
+      data.name,
+      data.code.toUpperCase(),
+      data.description || null,
+      data.instructions || null,
+      data.duration_minutes,
+      data.passing_grade,
+      data.status || null,
+      data.id
+    );
+
+    await logAudit(session.userId, "UPDATE_EXAM", "exam_packages", data.id, { code: data.code });
+    return { success: true };
+  });
+
+export const deleteExamFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    const exam = await db.prepare("SELECT * FROM exam_packages WHERE id = ?").get(data.id);
+    if (!exam) return { success: false, error: "Paket ujian tidak ditemukan." };
+
+    await db.prepare("DELETE FROM exam_packages WHERE id = ?").run(data.id);
+    await logAudit(session.userId, "DELETE_EXAM", "exam_packages", data.id, { code: exam.code });
+    return { success: true };
+  });
+
 // ------------------------------------------------------------------
 // ENROLLMENTS
 // ------------------------------------------------------------------

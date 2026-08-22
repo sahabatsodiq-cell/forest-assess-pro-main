@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getExamsFn, createExamFn, publishExamFn, getQualificationsFn, getBlueprintsFn } from "@/lib/services/adminService";
-import { Package, Plus, PlayCheck, Clock, Check } from "lucide-react";
+import {
+  getExamsFn,
+  createExamFn,
+  updateExamFn,
+  deleteExamFn,
+  publishExamFn,
+  getQualificationsFn,
+} from "@/lib/services/adminService";
+import { Package, Plus, Edit2, Trash2, Check, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -13,40 +20,29 @@ function AdminExamsPage() {
   const [exams, setExams] = useState<any[]>([]);
   const [qualifications, setQualifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
 
-  // Form State
+  // Create Modal State
+  const [createOpen, setCreateOpen] = useState(false);
   const [qualificationId, setQualificationId] = useState<number | "">("");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [instructions, setInstructions] = useState("Bacalah setiap soal dengan teliti dan pilih satu jawaban yang paling tepat.");
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [passingGrade, setPassingGrade] = useState(70);
-  const [startAt, setStartAt] = useState(new Date().toISOString().slice(0, 16));
-  const [endAt, setEndAt] = useState(new Date(Date.now() + 60 * 60000).toISOString().slice(0, 16)); // +60 min
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  const updateEndAt = (newStart: string, dur: number) => {
-    if (!newStart) return;
-    const startMs = new Date(newStart).getTime();
-    if (isNaN(startMs)) return;
-    const endMs = startMs + dur * 60 * 1000;
-    const d = new Date(endMs);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const formatted = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    setEndAt(formatted);
-  };
-
-  const handleStartAtChange = (val: string) => {
-    setStartAt(val);
-    updateEndAt(val, durationMinutes);
-  };
-
-  const handleDurationChange = (dur: number) => {
-    setDurationMinutes(dur);
-    updateEndAt(startAt, dur);
-  };
+  // Edit Modal State
+  const [editOpen, setEditOpen] = useState(false);
+  const [editItem, setEditItem] = useState<any>(null);
+  const [editQualId, setEditQualId] = useState<number | "">("");
+  const [editName, setEditName] = useState("");
+  const [editCode, setEditCode] = useState("");
+  const [editInstructions, setEditInstructions] = useState("");
+  const [editDurationMinutes, setEditDurationMinutes] = useState(60);
+  const [editPassingGrade, setEditPassingGrade] = useState(70);
+  const [editStatus, setEditStatus] = useState("PUBLISHED");
+  const [editLoading, setEditLoading] = useState(false);
 
   const loadData = async () => {
     const token = localStorage.getItem("askganis_token");
@@ -69,6 +65,7 @@ function AdminExamsPage() {
     loadData();
   }, []);
 
+  // Handle Create Exam
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!qualificationId) {
@@ -90,14 +87,12 @@ function AdminExamsPage() {
           instructions,
           duration_minutes: Number(durationMinutes),
           passing_grade: Number(passingGrade),
-          start_at: new Date(startAt).toISOString(),
-          end_at: new Date(endAt).toISOString(),
         },
       });
 
       if (res.success) {
         toast.success("Paket ujian berhasil dibuat!");
-        setOpen(false);
+        setCreateOpen(false);
         setName("");
         setCode("");
         loadData();
@@ -111,6 +106,76 @@ function AdminExamsPage() {
     }
   };
 
+  // Open Edit Modal
+  const openEditModal = (item: any) => {
+    setEditItem(item);
+    setEditQualId(item.qualification_id);
+    setEditName(item.name || "");
+    setEditCode(item.code || "");
+    setEditInstructions(item.instructions || "");
+    setEditDurationMinutes(item.duration_minutes || 60);
+    setEditPassingGrade(item.passing_grade || 70);
+    setEditStatus(item.status || "PUBLISHED");
+    setEditOpen(true);
+  };
+
+  // Handle Edit Exam
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editItem || !editQualId) return;
+
+    setEditLoading(true);
+    const token = localStorage.getItem("askganis_token") || "";
+
+    try {
+      const res = await updateExamFn({
+        data: {
+          token,
+          id: editItem.id,
+          qualification_id: Number(editQualId),
+          name: editName,
+          code: editCode,
+          instructions: editInstructions,
+          duration_minutes: Number(editDurationMinutes),
+          passing_grade: Number(editPassingGrade),
+          status: editStatus,
+        },
+      });
+
+      if (res.success) {
+        toast.success("Paket ujian berhasil diperbarui!");
+        setEditOpen(false);
+        setEditItem(null);
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal memperbarui paket ujian.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // Handle Delete Exam
+  const handleDelete = async (examId: number, examName: string) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus Paket Ujian ${examName}?`)) return;
+
+    const token = localStorage.getItem("askganis_token") || "";
+    try {
+      const res = await deleteExamFn({ data: { token, id: examId } });
+      if (res.success) {
+        toast.success(`Paket Ujian ${examName} berhasil dihapus.`);
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menghapus paket ujian.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan.");
+    }
+  };
+
+  // Handle Publish Exam
   const handlePublish = async (examId: number) => {
     const token = localStorage.getItem("askganis_token") || "";
     try {
@@ -119,7 +184,7 @@ function AdminExamsPage() {
         toast.success("Paket ujian berhasil dipublikasikan & aktif!");
         loadData();
       } else {
-        toast.error(res.error || "Gagal mempublikasikan ujian.");
+        toast.error(res.error || "Gagal mempublikasikan paket ujian.");
       }
     } catch (err: any) {
       toast.error(err.message || "Terjadi kesalahan.");
@@ -136,42 +201,45 @@ function AdminExamsPage() {
             Manajemen Paket Ujian Asesmen
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Kelola paket ujian teori, jadwal pelaksanaan, durasi, dan passing grade.
+            Kelola paket ujian teori, status publikasi, durasi, dan passing grade.
           </p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
+        {/* Create Dialog */}
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700">
+            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-forest-700">
               <Plus className="h-4 w-4" />
               Buat Paket Ujian
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-md bg-white p-6 max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-md bg-white p-6">
             <DialogHeader>
               <DialogTitle className="font-display text-base font-bold text-charcoal">
                 Buat Paket Ujian Baru
               </DialogTitle>
             </DialogHeader>
 
-            {formError && (
-              <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700 border border-red-100">
-                {formError}
-              </div>
-            )}
+            <form onSubmit={handleCreate} className="mt-4 space-y-4">
+              {formError && (
+                <div className="rounded-md bg-red-50 p-3 text-xs text-red-700 border border-red-200">
+                  {formError}
+                </div>
+              )}
 
-            <form onSubmit={handleCreate} className="mt-2 space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase text-charcoal">Kualifikasi Target</label>
                 <select
                   required
                   value={qualificationId}
                   onChange={(e) => setQualificationId(Number(e.target.value))}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold"
                 >
-                  <option value="">Pilih Kualifikasi...</option>
+                  <option value="">-- Pilih Kualifikasi --</option>
                   {qualifications.map((q) => (
-                    <option key={q.id} value={q.id}>{q.code} — {q.name}</option>
+                    <option key={q.id} value={q.id}>
+                      {q.code} — {q.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -185,7 +253,7 @@ function AdminExamsPage() {
                     placeholder="PKB"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono"
+                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono font-bold"
                   />
                 </div>
                 <div>
@@ -234,22 +302,151 @@ function AdminExamsPage() {
                   rows={2}
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                  className="mt-1 w-full rounded-md border border-border p-2 text-xs"
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={formLoading}
-                className="w-full rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
-              >
-                {formLoading ? "Menyimpan..." : "Simpan Draf Ujian"}
-              </button>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(false)}
+                  className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex-1 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
+                >
+                  {formLoading ? "Menyimpan..." : "Simpan Paket Ujian"}
+                </button>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* Edit Modal */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md bg-white p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-base font-bold text-charcoal">
+              Edit Paket Ujian Asesmen
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleEdit} className="mt-4 space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase text-charcoal">Kualifikasi Target</label>
+              <select
+                required
+                value={editQualId}
+                onChange={(e) => setEditQualId(Number(e.target.value))}
+                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold"
+              >
+                <option value="">-- Pilih Kualifikasi --</option>
+                {qualifications.map((q) => (
+                  <option key={q.id} value={q.id}>
+                    {q.code} — {q.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold uppercase text-charcoal">Kode Ujian</label>
+                <input
+                  type="text"
+                  required
+                  value={editCode}
+                  onChange={(e) => setEditCode(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono font-bold"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-charcoal">Nama Ujian</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold uppercase text-charcoal">Durasi (Menit)</label>
+                <input
+                  type="number"
+                  required
+                  min={5}
+                  max={300}
+                  value={editDurationMinutes}
+                  onChange={(e) => setEditDurationMinutes(Number(e.target.value))}
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-charcoal">Passing Grade (%)</label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  max={100}
+                  value={editPassingGrade}
+                  onChange={(e) => setEditPassingGrade(Number(e.target.value))}
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold text-forest-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-charcoal">Status Publikasi</label>
+              <select
+                value={editStatus}
+                onChange={(e) => setEditStatus(e.target.value)}
+                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold"
+              >
+                <option value="PUBLISHED">PUBLISHED (Tampil Di Akun Peserta)</option>
+                <option value="DRAFT">DRAFT (Sembunyikan)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-charcoal">Instruksi Ujian</label>
+              <textarea
+                rows={2}
+                value={editInstructions}
+                onChange={(e) => setEditInstructions(e.target.value)}
+                className="mt-1 w-full rounded-md border border-border p-2 text-xs"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={editLoading}
+                className="flex-1 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
+              >
+                {editLoading ? "Menyimpan..." : "Simpan Perubahan"}
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Exam Packages Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {loading ? (
           <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Memuat paket ujian...</div>
@@ -257,12 +454,12 @@ function AdminExamsPage() {
           <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Belum ada paket ujian.</div>
         ) : (
           exams.map((e) => (
-            <div key={e.id} className="rounded-xl border border-border/60 bg-white p-6 shadow-sm space-y-4">
+            <div key={e.id} className="rounded-xl border border-border/60 bg-white p-6 shadow-sm space-y-4 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
-                <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-bold text-forest-900 border border-forest-100">
+                <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-extrabold text-forest-900 border border-forest-100">
                   {e.qualification_code} — {e.code}
                 </span>
-                <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold ${
+                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
                   e.status === 'PUBLISHED' ? 'bg-green-50 text-green-700 border border-green-100' :
                   e.status === 'DRAFT' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
                   'bg-gray-50 text-gray-700'
@@ -291,16 +488,31 @@ function AdminExamsPage() {
                 </div>
               </div>
 
+              {/* Action Toolbar */}
               <div className="flex items-center justify-between border-t border-border/20 pt-3">
-                <div className="text-[10px] text-muted-foreground">
-                  <div>Mulai: {new Date(e.start_at).toLocaleDateString("id-ID")}</div>
-                  <div>Selesai: {new Date(e.end_at).toLocaleDateString("id-ID")}</div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openEditModal(e)}
+                    className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors"
+                    title="Edit Paket Ujian"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(e.id, e.name)}
+                    className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 hover:bg-red-100 transition-colors"
+                    title="Hapus Paket Ujian"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Hapus
+                  </button>
                 </div>
 
                 {e.status === "DRAFT" && (
                   <button
                     onClick={() => handlePublish(e.id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-forest-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-forest-700"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-forest-900 px-3 py-1 text-xs font-semibold text-white hover:bg-forest-700"
                   >
                     <Check className="h-3.5 w-3.5" />
                     Publikasikan

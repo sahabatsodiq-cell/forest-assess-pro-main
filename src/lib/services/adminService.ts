@@ -138,6 +138,65 @@ export const getQualificationsFn = createServerFn({ method: "POST" })
     return Array.isArray(res) ? res : [];
   });
 
+// ------------------------------------------------------------------
+// MASTER GANISPH CRUD
+// ------------------------------------------------------------------
+export const getMasterGanisphFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; qualification_name?: string }) => data)
+  .handler(async ({ data }) => {
+    verifyAdminSession(data.token);
+    const db = await getDb();
+    let query = "SELECT * FROM master_ganisph";
+    const params: any[] = [];
+    if (data.qualification_name && data.qualification_name !== "ALL") {
+      query += " WHERE qualification_name = ?";
+      params.push(data.qualification_name);
+    }
+    query += " ORDER BY id DESC";
+    const res = await db.prepare(query).all(...params);
+    return Array.isArray(res) ? res : [];
+  });
+
+export const createMasterGanisphFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; name: string; qualification_name: string; registration_number?: string; email?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+    const res = await db.prepare(`
+      INSERT INTO master_ganisph (name, qualification_name, registration_number, email)
+      VALUES (?, ?, ?, ?)
+      RETURNING id
+    `).run(data.name, data.qualification_name, data.registration_number || null, data.email || null);
+
+    await logAudit(session.userId, "CREATE_MASTER_GANISPH", "master_ganisph", (res as any).lastInsertRowid as number, { name: data.name });
+    return { success: true };
+  });
+
+export const updateMasterGanisphFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number; name: string; qualification_name: string; registration_number?: string; email?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+    await db.prepare(`
+      UPDATE master_ganisph
+      SET name = ?, qualification_name = ?, registration_number = ?, email = ?
+      WHERE id = ?
+    `).run(data.name, data.qualification_name, data.registration_number || null, data.email || null, data.id);
+
+    await logAudit(session.userId, "UPDATE_MASTER_GANISPH", "master_ganisph", data.id, { name: data.name });
+    return { success: true };
+  });
+
+export const deleteMasterGanisphFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+    await db.prepare("DELETE FROM master_ganisph WHERE id = ?").run(data.id);
+    await logAudit(session.userId, "DELETE_MASTER_GANISPH", "master_ganisph", data.id);
+    return { success: true };
+  });
+
 export const createQualificationFn = createServerFn({ method: "POST" })
   .validator((data: { token: string; code: string; name: string; description?: string }) => data)
   .handler(async ({ data }) => {

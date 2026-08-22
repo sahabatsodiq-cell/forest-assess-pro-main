@@ -1,0 +1,2 @@
+==Start of OCR for page 1==')
+end_idx = text.find('==End of PDF==

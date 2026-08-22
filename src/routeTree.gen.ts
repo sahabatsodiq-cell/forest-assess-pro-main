@@ -19,6 +19,7 @@ import { Route as AdminBlueprintsRouteImport } from './routes/admin/blueprints'
 import { Route as AdminCompetencyUnitsRouteImport } from './routes/admin/competency-units'
 import { Route as AdminEnrollmentsRouteImport } from './routes/admin/enrollments'
 import { Route as AdminExamsRouteImport } from './routes/admin/exams'
+import { Route as AdminMasterGanisphRouteImport } from './routes/admin/master-ganisph'
 import { Route as AdminQualificationsRouteImport } from './routes/admin/qualifications'
 import { Route as AdminQuestionsRouteImport } from './routes/admin/questions'
 import { Route as AdminResultsRouteImport } from './routes/admin/results'
@@ -79,6 +80,11 @@ const AdminEnrollmentsRoute = AdminEnrollmentsRouteImport.update({
 const AdminExamsRoute = AdminExamsRouteImport.update({
   id: '/exams',
   path: '/exams',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMasterGanisphRoute = AdminMasterGanisphRouteImport.update({
+  id: '/master-ganisph',
+  path: '/master-ganisph',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminQualificationsRoute = AdminQualificationsRouteImport.update({
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/admin/competency-units': typeof AdminCompetencyUnitsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
+  '/admin/master-ganisph': typeof AdminMasterGanisphRoute
   '/admin/qualifications': typeof AdminQualificationsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/results': typeof AdminResultsRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/admin/competency-units': typeof AdminCompetencyUnitsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
+  '/admin/master-ganisph': typeof AdminMasterGanisphRoute
   '/admin/qualifications': typeof AdminQualificationsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/results': typeof AdminResultsRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/admin/competency-units': typeof AdminCompetencyUnitsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
+  '/admin/master-ganisph': typeof AdminMasterGanisphRoute
   '/admin/qualifications': typeof AdminQualificationsRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/admin/results': typeof AdminResultsRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/admin/competency-units'
     | '/admin/enrollments'
     | '/admin/exams'
+    | '/admin/master-ganisph'
     | '/admin/qualifications'
     | '/admin/questions'
     | '/admin/results'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/admin/competency-units'
     | '/admin/enrollments'
     | '/admin/exams'
+    | '/admin/master-ganisph'
     | '/admin/qualifications'
     | '/admin/questions'
     | '/admin/results'
@@ -261,6 +272,7 @@ export interface FileRouteTypes {
     | '/admin/competency-units'
     | '/admin/enrollments'
     | '/admin/exams'
+    | '/admin/master-ganisph'
     | '/admin/qualifications'
     | '/admin/questions'
     | '/admin/results'
@@ -356,6 +368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminExamsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/master-ganisph': {
+      id: '/admin/master-ganisph'
+      path: '/master-ganisph'
+      fullPath: '/admin/master-ganisph'
+      preLoaderRoute: typeof AdminMasterGanisphRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/qualifications': {
       id: '/admin/qualifications'
       path: '/qualifications'
@@ -442,6 +461,7 @@ interface AdminRouteChildren {
   AdminCompetencyUnitsRoute: typeof AdminCompetencyUnitsRoute
   AdminEnrollmentsRoute: typeof AdminEnrollmentsRoute
   AdminExamsRoute: typeof AdminExamsRoute
+  AdminMasterGanisphRoute: typeof AdminMasterGanisphRoute
   AdminQualificationsRoute: typeof AdminQualificationsRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   AdminResultsRoute: typeof AdminResultsRoute
@@ -456,6 +476,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCompetencyUnitsRoute: AdminCompetencyUnitsRoute,
   AdminEnrollmentsRoute: AdminEnrollmentsRoute,
   AdminExamsRoute: AdminExamsRoute,
+  AdminMasterGanisphRoute: AdminMasterGanisphRoute,
   AdminQualificationsRoute: AdminQualificationsRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   AdminResultsRoute: AdminResultsRoute,

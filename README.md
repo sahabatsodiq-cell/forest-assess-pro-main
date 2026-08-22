@@ -3608,11 +3608,6 @@ dan secara jelas memposisikan:
 
  Hasil akhir harus berupa landing page yang benar-benar dapat dijalankan, responsive, accessible, SEO-ready, dan siap menjadi public-facing homepage aplikasi AskGanisPH.
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/88eec715-7029-4605-88e8-1120bd08b645).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.

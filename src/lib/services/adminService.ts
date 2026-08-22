@@ -42,18 +42,29 @@ export const getAdminStatsFn = createServerFn({ method: "POST" })
 // ------------------------------------------------------------------
 // USERS CRUD
 // ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// USERS CRUD
+// ------------------------------------------------------------------
 export const getUsersFn = createServerFn({ method: "POST" })
   .validator((data: { token: string }) => data)
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
-    const users = await db.prepare("SELECT id, name, email, role, participant_number, is_active, created_at FROM users ORDER BY id DESC").all();
+    const users = await db.prepare(`
+      SELECT u.id, u.name, u.email, u.role, u.participant_number, u.is_active, u.created_at,
+             string_agg(q.code, ', ') as qualification_codes
+      FROM users u
+      LEFT JOIN user_qualifications uq ON u.id = uq.user_id
+      LEFT JOIN qualifications q ON uq.qualification_id = q.id
+      GROUP BY u.id
+      ORDER BY u.id DESC
+    `).all();
     const userList = Array.isArray(users) ? users : [];
-    return userList.map((u: any) => ({ ...u, is_active: u.is_active === 1 }));
+    return userList.map((u: any) => ({ ...u, is_active: u.is_active === 1 || u.is_active === true }));
   });
 
 export const createUserFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; name: string; email: string; password: string; role: string; participant_number?: string; qualification_id?: number }) => data)
+  .validator((data: { token: string; name: string; email: string; password: string; role: string; participant_number?: string; qualification_ids?: number[] }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
@@ -66,12 +77,15 @@ export const createUserFn = createServerFn({ method: "POST" })
     const res = await db.prepare(`
       INSERT INTO users (name, email, password_hash, role, participant_number, is_active)
       VALUES (?, ?, ?, ?, ?, 1)
+      RETURNING id
     `).run(data.name, data.email, passHash, data.role, data.participant_number || null);
 
-    const userId = res.lastInsertRowid;
+    const userId = (res as any).lastInsertRowid;
 
-    if (data.qualification_id) {
-      await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?)").run(userId, data.qualification_id);
+    if (Array.isArray(data.qualification_ids) && data.qualification_ids.length > 0) {
+      for (const qId of data.qualification_ids) {
+        await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?) ON CONFLICT DO NOTHING").run(userId, qId);
+      }
     }
 
     await logAudit(session.userId, "CREATE_USER", "users", userId as number, { email: data.email, role: data.role });
@@ -79,7 +93,7 @@ export const createUserFn = createServerFn({ method: "POST" })
   });
 
 export const updateUserFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; id: number; name: string; role: string; participant_number?: string; password?: string }) => data)
+  .validator((data: { token: string; id: number; name: string; role: string; participant_number?: string; password?: string; qualification_ids?: number[] }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
@@ -89,6 +103,13 @@ export const updateUserFn = createServerFn({ method: "POST" })
       await db.prepare("UPDATE users SET name = ?, role = ?, participant_number = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.role, data.participant_number || null, passHash, data.id);
     } else {
       await db.prepare("UPDATE users SET name = ?, role = ?, participant_number = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.role, data.participant_number || null, data.id);
+    }
+
+    if (Array.isArray(data.qualification_ids)) {
+      await db.prepare("DELETE FROM user_qualifications WHERE user_id = ?").run(data.id);
+      for (const qId of data.qualification_ids) {
+        await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?) ON CONFLICT DO NOTHING").run(data.id, qId);
+      }
     }
 
     await logAudit(session.userId, "UPDATE_USER", "users", data.id, { name: data.name, role: data.role });

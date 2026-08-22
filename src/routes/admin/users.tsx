@@ -22,7 +22,7 @@ function AdminUsersPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("PESERTA");
   const [participantNumber, setParticipantNumber] = useState("");
-  const [qualificationId, setQualificationId] = useState<number | undefined>(undefined);
+  const [selectedQualIds, setSelectedQualIds] = useState<number[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
 
@@ -63,7 +63,7 @@ function AdminUsersPage() {
           password,
           role,
           participant_number: participantNumber || undefined,
-          qualification_id: qualificationId ? Number(qualificationId) : undefined,
+          qualification_ids: selectedQualIds.length > 0 ? selectedQualIds : undefined,
         },
       });
 
@@ -73,6 +73,7 @@ function AdminUsersPage() {
         setEmail("");
         setPassword("");
         setParticipantNumber("");
+        setSelectedQualIds([]);
         loadData();
       } else {
         setFormError(res.error || "Gagal membuat pengguna.");
@@ -84,20 +85,25 @@ function AdminUsersPage() {
     }
   };
 
-  const handleToggleActive = async (id: number, currentStatus: boolean) => {
+  const handleToggleStatus = async (user: any) => {
     const token = localStorage.getItem("askganis_token") || "";
     try {
-      await toggleUserStatusFn({ data: { token, id, is_active: !currentStatus } });
+      await toggleUserStatusFn({
+        data: { token, id: user.id, is_active: !user.is_active },
+      });
       loadData();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
-    return matchesSearch && matchesRole;
+  const filtered = users.filter((u) => {
+    const matchSearch =
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.qualification_codes && u.qualification_codes.toLowerCase().includes(search.toLowerCase()));
+    const matchRole = roleFilter === "ALL" || u.role === roleFilter;
+    return matchSearch && matchRole;
   });
 
   return (
@@ -191,19 +197,29 @@ function AdminUsersPage() {
 
               {role === "PESERTA" && (
                 <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Kualifikasi Utama</label>
-                  <select
-                    value={qualificationId || ""}
-                    onChange={(e) => setQualificationId(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
-                  >
-                    <option value="">Pilih Kualifikasi...</option>
-                    {qualifications.map((q) => (
-                      <option key={q.id} value={q.id}>
-                        {q.code} — {q.name}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-xs font-bold uppercase text-charcoal">Kualifikasi Dimiliki (Multi-Select)</label>
+                  <div className="mt-2 grid grid-cols-2 gap-2 max-h-36 overflow-y-auto rounded-md border border-border p-2.5">
+                    {qualifications.map((q) => {
+                      const isChecked = selectedQualIds.includes(q.id);
+                      return (
+                        <label key={q.id} className="flex items-center gap-2 text-xs cursor-pointer text-charcoal">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {
+                              if (isChecked) {
+                                setSelectedQualIds(selectedQualIds.filter((id) => id !== q.id));
+                              } else {
+                                setSelectedQualIds([...selectedQualIds, q.id]);
+                              }
+                            }}
+                            className="rounded border-gray-300 text-forest-700 focus:ring-forest-500"
+                          />
+                          <span className="font-bold font-mono">{q.code}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -225,7 +241,7 @@ function AdminUsersPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Cari nama atau email..."
+            placeholder="Cari nama, email, atau kualifikasi..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none"
@@ -256,19 +272,20 @@ function AdminUsersPage() {
                   <th className="px-6 py-3.5">Nama & Email</th>
                   <th className="px-4 py-3.5">Role</th>
                   <th className="px-4 py-3.5">No. Registrasi</th>
+                  <th className="px-4 py-3.5">Kualifikasi Dimiliki</th>
                   <th className="px-4 py-3.5">Status</th>
                   <th className="px-6 py-3.5 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20 text-xs">
-                {filteredUsers.length === 0 ? (
+                {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
                       Tidak ada pengguna yang sesuai.
                     </td>
                   </tr>
                 ) : (
-                  filteredUsers.map((u) => (
+                  filtered.map((u) => (
                     <tr key={u.id} className="hover:bg-forest-50/10 transition-colors">
                       <td className="px-6 py-3.5">
                         <div className="font-bold text-charcoal">{u.name}</div>
@@ -288,15 +305,28 @@ function AdminUsersPage() {
                         {u.participant_number || "-"}
                       </td>
                       <td className="px-4 py-3.5">
+                        {u.qualification_codes ? (
+                          <div className="flex flex-wrap gap-1">
+                            {u.qualification_codes.split(", ").map((qc: string) => (
+                              <span key={qc} className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-extrabold text-forest-900 border border-forest-100">
+                                {qc}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic text-[11px]">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5">
                         <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
                           u.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
                         }`}>
-                          {u.is_active ? 'AKTIFF' : 'NONAKTIF'}
+                          {u.is_active ? 'AKTIF' : 'NONAKTIF'}
                         </span>
                       </td>
                       <td className="px-6 py-3.5 text-right">
                         <button
-                          onClick={() => handleToggleActive(u.id, u.is_active)}
+                          onClick={() => handleToggleStatus(u)}
                           className={`rounded px-2.5 py-1 text-[11px] font-semibold border transition-colors ${
                             u.is_active 
                               ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'

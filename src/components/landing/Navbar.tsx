@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/lib/theme-context";
+import { LanguageToggle, useI18n } from "@/lib/i18n-context";
 
 const navLinks = [
   { label: "Beranda", href: "#beranda" },
@@ -12,6 +14,7 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const { t } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -55,12 +58,14 @@ export function Navbar() {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 lg:gap-3">
+          <LanguageToggle />
+          <ThemeToggle />
           <a
             href="/login"
-            className="hidden rounded-lg bg-forest-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-700 lg:inline-flex"
+            className="hidden rounded-lg bg-forest-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest-700 lg:inline-flex dark:bg-forest-700 dark:hover:bg-forest-500"
           >
-            Masuk Platform
+            {t("nav_login")}
           </a>
 
           <Sheet open={open} onOpenChange={setOpen}>

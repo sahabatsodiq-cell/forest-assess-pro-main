@@ -4,6 +4,8 @@ import { getAttemptDetailsFn, saveAnswerFn, submitExamAttemptFn, logExamWarningF
 import { Clock, ChevronLeft, ChevronRight, Check, AlertTriangle, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/lib/theme-context";
+import { LanguageToggle } from "@/lib/i18n-context";
 
 export const Route = createFileRoute("/exam/$attemptId")({
   component: ExaminationEnginePage,
@@ -200,7 +202,9 @@ function ExaminationEnginePage() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageToggle />
+            <ThemeToggle />
             <div className={`flex items-center gap-2 rounded-lg bg-white/10 px-3.5 py-1.5 font-mono text-sm font-bold ${
               (remainingSeconds || 0) < 300 ? 'text-red-300 animate-pulse' : 'text-white'
             }`}>

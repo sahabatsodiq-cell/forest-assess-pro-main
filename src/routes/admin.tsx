@@ -5,6 +5,8 @@ import {
   Layers, Package, UserCheck, BarChart3, History, LogOut, Menu
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ThemeToggle } from "@/lib/theme-context";
+import { LanguageToggle, useI18n } from "@/lib/i18n-context";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -24,6 +26,7 @@ const adminNav = [
 ];
 
 function AdminLayout() {
+  const { t } = useI18n();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -129,17 +132,19 @@ function AdminLayout() {
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LanguageToggle />
+            <ThemeToggle />
             <div className="text-right text-xs">
-              <div className="font-bold text-charcoal">{user?.name}</div>
-              <div className="text-[10px] text-forest-700 font-semibold">{user?.role}</div>
+              <div className="font-bold text-charcoal dark:text-forest-100">{user?.name}</div>
+              <div className="text-[10px] text-forest-700 font-semibold dark:text-forest-300">{user?.role}</div>
             </div>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-charcoal hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-charcoal hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors dark:bg-charcoal dark:text-forest-100 dark:border-charcoal/60 dark:hover:bg-red-950/40"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Keluar</span>
+              <span className="hidden sm:inline">{t("nav_logout")}</span>
             </button>
           </div>
         </header>

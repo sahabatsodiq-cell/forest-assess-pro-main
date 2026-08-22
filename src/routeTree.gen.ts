@@ -16,6 +16,7 @@ import { Route as ParticipantRouteImport } from './routes/participant'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
 import { Route as AdminBlueprintsRouteImport } from './routes/admin/blueprints'
+import { Route as AdminCompetencyUnitsRouteImport } from './routes/admin/competency-units'
 import { Route as AdminEnrollmentsRouteImport } from './routes/admin/enrollments'
 import { Route as AdminExamsRouteImport } from './routes/admin/exams'
 import { Route as AdminQualificationsRouteImport } from './routes/admin/qualifications'
@@ -60,6 +61,11 @@ const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
 const AdminBlueprintsRoute = AdminBlueprintsRouteImport.update({
   id: '/blueprints',
   path: '/blueprints',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCompetencyUnitsRoute = AdminCompetencyUnitsRouteImport.update({
+  id: '/competency-units',
+  path: '/competency-units',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminEnrollmentsRoute = AdminEnrollmentsRouteImport.update({
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/participant': typeof ParticipantRouteWithChildren
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/blueprints': typeof AdminBlueprintsRoute
+  '/admin/competency-units': typeof AdminCompetencyUnitsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/qualifications': typeof AdminQualificationsRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/blueprints': typeof AdminBlueprintsRoute
+  '/admin/competency-units': typeof AdminCompetencyUnitsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/qualifications': typeof AdminQualificationsRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/participant': typeof ParticipantRouteWithChildren
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/blueprints': typeof AdminBlueprintsRoute
+  '/admin/competency-units': typeof AdminCompetencyUnitsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/qualifications': typeof AdminQualificationsRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/participant'
     | '/admin/audit-logs'
     | '/admin/blueprints'
+    | '/admin/competency-units'
     | '/admin/enrollments'
     | '/admin/exams'
     | '/admin/qualifications'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/audit-logs'
     | '/admin/blueprints'
+    | '/admin/competency-units'
     | '/admin/enrollments'
     | '/admin/exams'
     | '/admin/qualifications'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/participant'
     | '/admin/audit-logs'
     | '/admin/blueprints'
+    | '/admin/competency-units'
     | '/admin/enrollments'
     | '/admin/exams'
     | '/admin/qualifications'
@@ -285,6 +297,13 @@ declare module '@tanstack/react-router' {
       path: '/blueprints'
       fullPath: '/admin/blueprints'
       preLoaderRoute: typeof AdminBlueprintsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/competency-units': {
+      id: '/admin/competency-units'
+      path: '/competency-units'
+      fullPath: '/admin/competency-units'
+      preLoaderRoute: typeof AdminCompetencyUnitsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/enrollments': {
@@ -363,6 +382,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminBlueprintsRoute: typeof AdminBlueprintsRoute
+  AdminCompetencyUnitsRoute: typeof AdminCompetencyUnitsRoute
   AdminEnrollmentsRoute: typeof AdminEnrollmentsRoute
   AdminExamsRoute: typeof AdminExamsRoute
   AdminQualificationsRoute: typeof AdminQualificationsRoute
@@ -376,6 +396,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminBlueprintsRoute: AdminBlueprintsRoute,
+  AdminCompetencyUnitsRoute: AdminCompetencyUnitsRoute,
   AdminEnrollmentsRoute: AdminEnrollmentsRoute,
   AdminExamsRoute: AdminExamsRoute,
   AdminQualificationsRoute: AdminQualificationsRoute,

@@ -156,6 +156,98 @@ export const deleteQualificationFn = createServerFn({ method: "POST" })
   });
 
 // ------------------------------------------------------------------
+// COMPETENCY UNITS (UNIT KOMPETENSI) CRUD
+// ------------------------------------------------------------------
+export const getCompetencyUnitsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; qualification_id?: number }) => data)
+  .handler(async ({ data }) => {
+    verifyAdminSession(data.token);
+    const db = await getDb();
+
+    if (data.qualification_id) {
+      const rows = await db.prepare(`
+        SELECT cu.*, string_agg(q.code, ', ') as qualification_codes
+        FROM competency_units cu
+        JOIN qualification_competency_units qcu ON cu.id = qcu.competency_unit_id
+        JOIN qualifications q ON qcu.qualification_id = q.id
+        WHERE qcu.qualification_id = $1
+        GROUP BY cu.id
+        ORDER BY cu.code ASC
+      `).all(data.qualification_id);
+      return Array.from(rows);
+    } else {
+      const rows = await db.prepare(`
+        SELECT cu.*, string_agg(q.code, ', ') as qualification_codes
+        FROM competency_units cu
+        LEFT JOIN qualification_competency_units qcu ON cu.id = qcu.competency_unit_id
+        LEFT JOIN qualifications q ON qcu.qualification_id = q.id
+        GROUP BY cu.id
+        ORDER BY cu.code ASC
+      `).all();
+      return Array.from(rows);
+    }
+  });
+
+export const createCompetencyUnitFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; code: string; title: string; description?: string; qualification_ids?: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    const existing = await db.prepare("SELECT id FROM competency_units WHERE code = $1").get(data.code);
+    if (existing) {
+      return { success: false, error: "Kode unit kompetensi sudah terdaftar." };
+    }
+
+    const res = await db.prepare(`
+      INSERT INTO competency_units (code, title, description, status)
+      VALUES ($1, $2, $3, 'ACTIVE')
+      RETURNING id
+    `).run(data.code, data.title, data.description || null);
+
+    const unitId = (res as any).lastInsertRowid;
+
+    if (Array.isArray(data.qualification_ids) && data.qualification_ids.length > 0) {
+      for (const qId of data.qualification_ids) {
+        await db.prepare("INSERT INTO qualification_competency_units (qualification_id, competency_unit_id) VALUES ($1, $2) ON CONFLICT DO NOTHING").run(qId, unitId);
+      }
+    }
+
+    await logAudit(session.userId, "CREATE_COMPETENCY_UNIT", "competency_units", unitId, { code: data.code });
+    return { success: true };
+  });
+
+export const updateCompetencyUnitFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number; title: string; description?: string; status: string; qualification_ids?: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    await db.prepare("UPDATE competency_units SET title = $1, description = $2, status = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4").run(data.title, data.description || null, data.status, data.id);
+
+    if (Array.isArray(data.qualification_ids)) {
+      await db.prepare("DELETE FROM qualification_competency_units WHERE competency_unit_id = $1").run(data.id);
+      for (const qId of data.qualification_ids) {
+        await db.prepare("INSERT INTO qualification_competency_units (qualification_id, competency_unit_id) VALUES ($1, $2) ON CONFLICT DO NOTHING").run(qId, data.id);
+      }
+    }
+
+    await logAudit(session.userId, "UPDATE_COMPETENCY_UNIT", "competency_units", data.id, { title: data.title });
+    return { success: true };
+  });
+
+export const deleteCompetencyUnitFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    await db.prepare("DELETE FROM competency_units WHERE id = $1").run(data.id);
+    await logAudit(session.userId, "DELETE_COMPETENCY_UNIT", "competency_units", data.id);
+    return { success: true };
+  });
+
+// ------------------------------------------------------------------
 // SUBJECTS CRUD
 // ------------------------------------------------------------------
 export const getSubjectsFn = createServerFn({ method: "POST" })

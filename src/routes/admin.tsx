@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { 
-  LayoutDashboard, Users, Award, BookOpen, Database, 
+  LayoutDashboard, Users, Award, ListChecks, BookOpen, Database, 
   Layers, Package, UserCheck, BarChart3, History, LogOut, Menu
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -16,6 +16,7 @@ const adminNav = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
   { label: "Pengguna", to: "/admin/users", icon: Users },
   { label: "Kualifikasi", to: "/admin/qualifications", icon: Award },
+  { label: "Unit Kompetensi", to: "/admin/competency-units", icon: ListChecks },
   { label: "Materi", to: "/admin/subjects", icon: BookOpen },
   { label: "Bank Soal", to: "/admin/questions", icon: Database },
   { label: "Blueprint", to: "/admin/blueprints", icon: Layers },

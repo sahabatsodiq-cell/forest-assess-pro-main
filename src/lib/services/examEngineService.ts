@@ -431,14 +431,19 @@ export const getParticipantProfileDetailsFn = createServerFn({ method: "POST" })
           });
 
           if (matchedQual) {
-            await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?) ON CONFLICT DO NOTHING").run(session.userId, matchedQual.id);
+            await db.prepare(`
+              INSERT INTO user_qualifications (user_id, qualification_id, registration_number)
+              VALUES (?, ?, ?)
+              ON CONFLICT (user_id, qualification_id) DO UPDATE SET
+                registration_number = COALESCE(user_qualifications.registration_number, EXCLUDED.registration_number)
+            `).run(session.userId, matchedQual.id, mItem.registration_number || null);
           }
         }
       }
     }
 
     const userQuals = await db.prepare(`
-      SELECT q.id, q.code, q.name, q.description
+      SELECT uq.id as uq_id, q.id as qualification_id, q.code, q.name, q.description, uq.registration_number
       FROM user_qualifications uq
       JOIN qualifications q ON uq.qualification_id = q.id
       WHERE uq.user_id = ?
@@ -478,15 +483,31 @@ export const updateParticipantProfileDetailsFn = createServerFn({ method: "POST"
   });
 
 export const addParticipantQualificationFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; qualification_id: number }) => data)
+  .validator((data: { token: string; qualification_id: number; registration_number?: string }) => data)
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
 
     await db.prepare(`
-      INSERT INTO user_qualifications (user_id, qualification_id)
-      VALUES (?, ?) ON CONFLICT DO NOTHING
-    `).run(session.userId, data.qualification_id);
+      INSERT INTO user_qualifications (user_id, qualification_id, registration_number)
+      VALUES (?, ?, ?)
+      ON CONFLICT (user_id, qualification_id) DO UPDATE SET
+        registration_number = EXCLUDED.registration_number
+    `).run(session.userId, data.qualification_id, data.registration_number || null);
+
+    return { success: true };
+  });
+
+export const updateParticipantQualificationRegNoFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; qualification_id: number; registration_number: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    await db.prepare(`
+      UPDATE user_qualifications SET registration_number = ?
+      WHERE user_id = ? AND qualification_id = ?
+    `).run(data.registration_number, session.userId, data.qualification_id);
 
     return { success: true };
   });

@@ -55,7 +55,7 @@ function LoginPage() {
         if (res.user.role === "SUPER_ADMIN" || res.user.role === "ADMIN") {
           navigate({ to: "/admin" });
         } else {
-          navigate({ to: "/participant" });
+          navigate({ to: "/participant/profile" });
         }
       } else {
         setError(res.error || "Login gagal.");
@@ -83,8 +83,8 @@ function LoginPage() {
           toast.success("Pendaftaran berhasil! Akun Anda didaftarkan sebagai ADMIN UTAMA.", { duration: 5000 });
           navigate({ to: "/admin" });
         } else {
-          toast.success("Pendaftaran akun berhasil!");
-          navigate({ to: "/participant" });
+          toast.success("Pendaftaran akun berhasil! Silakan lengkapi profil Anda.");
+          navigate({ to: "/participant/profile" });
         }
       } else {
         setError(res.error || "Pendaftaran gagal.");

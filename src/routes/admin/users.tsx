@@ -184,13 +184,13 @@ function AdminUsersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">No. Registrasi / NIP</label>
+                  <label className="block text-xs font-bold uppercase text-charcoal">Nomor KTP / NIK</label>
                   <input
                     type="text"
                     value={participantNumber}
                     onChange={(e) => setParticipantNumber(e.target.value)}
-                    placeholder="REG-2026-XXX"
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+                    placeholder="6371xxxxxxxxxxxx"
+                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono focus:border-forest-700 focus:outline-none"
                   />
                 </div>
               </div>
@@ -271,7 +271,7 @@ function AdminUsersPage() {
                 <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   <th className="px-6 py-3.5">Nama & Email</th>
                   <th className="px-4 py-3.5">Role</th>
-                  <th className="px-4 py-3.5">No. Registrasi</th>
+                  <th className="px-4 py-3.5">Nomor KTP / NIK</th>
                   <th className="px-4 py-3.5">Kualifikasi Dimiliki</th>
                   <th className="px-4 py-3.5">Status</th>
                   <th className="px-6 py-3.5 text-right">Aksi</th>
@@ -301,21 +301,23 @@ function AdminUsersPage() {
                           {u.role}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 font-mono text-muted-foreground">
+                      <td className="px-4 py-3.5 font-mono text-muted-foreground font-bold">
                         {u.participant_number || "-"}
                       </td>
                       <td className="px-4 py-3.5">
                         {u.qualification_codes ? (
-                          <div className="flex flex-wrap gap-1">
-                            {u.qualification_codes.split(", ").map((qc: string) => (
-                              <span key={qc} className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-extrabold text-forest-900 border border-forest-100">
-                                {qc}
+                          <div className="flex flex-wrap items-center gap-1">
+                            {u.qualification_codes.split("; ").map((qc: string, idx: number, arr: string[]) => (
+                              <span key={qc} className="inline-flex items-center gap-1">
+                                <span className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-extrabold text-forest-900 border border-forest-100 shadow-xs">
+                                  {qc}
+                                </span>
+                                {idx < arr.length - 1 && <span className="text-forest-900 font-extrabold text-xs font-mono mr-0.5">;</span>}
                               </span>
                             ))}
                           </div>
                         ) : (
                           <span className="text-gray-400 italic text-[11px]">-</span>
-                        )}
                       </td>
                       <td className="px-4 py-3.5">
                         <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${

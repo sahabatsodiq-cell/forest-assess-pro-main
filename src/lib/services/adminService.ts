@@ -52,7 +52,7 @@ export const getUsersFn = createServerFn({ method: "POST" })
     const db = await getDb();
     const users = await db.prepare(`
       SELECT u.id, u.name, u.email, u.role, u.participant_number, u.is_active, u.created_at,
-             string_agg(q.code, ', ') as qualification_codes
+             string_agg(q.code, '; ') as qualification_codes
       FROM users u
       LEFT JOIN user_qualifications uq ON u.id = uq.user_id
       LEFT JOIN qualifications q ON uq.qualification_id = q.id

@@ -35,6 +35,49 @@ function getReverseMapping(mappingStr: string): Record<string, string> {
   return map;
 }
 
+async function syncMasterGanisphQualifications(db: any, userId: number) {
+  const user = await db.prepare("SELECT id, name, email, participant_number FROM users WHERE id = ?").get(userId);
+  if (!user || !user.email) return;
+
+  const masterRows = await db.prepare(`
+    SELECT * FROM master_ganisph
+    WHERE LOWER(email) = LOWER(?) OR (registration_number IS NOT NULL AND registration_number = ?)
+  `).all(user.email, user.participant_number || "");
+
+  const masterList = Array.isArray(masterRows) ? masterRows : [];
+  if (masterList.length === 0) return;
+
+  const firstReg = masterList.find((m: any) => m.registration_number)?.registration_number;
+  if (firstReg && (!user.participant_number || user.participant_number.trim() === "")) {
+    await db.prepare("UPDATE users SET participant_number = ? WHERE id = ?").run(firstReg, userId);
+  }
+
+  const allQuals = await db.prepare("SELECT id, code, name FROM qualifications").all();
+  const qualArray = Array.isArray(allQuals) ? allQuals : [];
+
+  for (const mItem of masterList) {
+    const mQualNameUpper = (mItem.qualification_name || "").toUpperCase();
+    const matchedQual = qualArray.find((q: any) => {
+      const qCodeUpper = (q.code || "").toUpperCase();
+      const qNameUpper = (q.name || "").toUpperCase();
+      return (
+        mQualNameUpper.includes(qCodeUpper) ||
+        mQualNameUpper.includes(qNameUpper) ||
+        qNameUpper.includes(mQualNameUpper.replace("GANISPH ", ""))
+      );
+    });
+
+    if (matchedQual) {
+      await db.prepare(`
+        INSERT INTO user_qualifications (user_id, qualification_id, registration_number)
+        VALUES (?, ?, ?)
+        ON CONFLICT (user_id, qualification_id) DO UPDATE SET
+          registration_number = COALESCE(user_qualifications.registration_number, EXCLUDED.registration_number)
+      `).run(userId, matchedQual.id, mItem.registration_number || null);
+    }
+  }
+}
+
 // ------------------------------------------------------------------
 // PARTICIPANT DASHBOARD & EXAM LIST
 // ------------------------------------------------------------------
@@ -43,6 +86,9 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
+
+    // Auto-sync qualifications from master_ganisph first!
+    await syncMasterGanisphQualifications(db, session.userId);
 
     // Get user details & qualification
     const user = await db.prepare(`
@@ -132,9 +178,23 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
       `).all(item.subject_id, item.difficulty, item.question_count);
 
       for (const q of questions) {
-        // Generate randomized option mapping per attempt question
         const optionMapping = generateOptionMapping();
+        await db.prepare(`
+          INSERT INTO attempt_questions (attempt_id, question_id, display_order, option_mapping)
+          VALUES (?, ?, ?, ?)
+        `).run(attemptId, q.id, order++, optionMapping);
+      }
+    }
 
+    // Fallback: If no questions were selected from blueprint_items, pull all active questions in system
+    const currentQuestionCount = await db.prepare("SELECT COUNT(*) as count FROM attempt_questions WHERE attempt_id = ?").get(attemptId);
+    if (Number(currentQuestionCount?.count || 0) === 0) {
+      const fallbackQuestions = await db.prepare(`
+        SELECT id FROM questions WHERE status = 'ACTIVE' ORDER BY RANDOM() LIMIT 50
+      `).all();
+
+      for (const q of fallbackQuestions) {
+        const optionMapping = generateOptionMapping();
         await db.prepare(`
           INSERT INTO attempt_questions (attempt_id, question_id, display_order, option_mapping)
           VALUES (?, ?, ?, ?)

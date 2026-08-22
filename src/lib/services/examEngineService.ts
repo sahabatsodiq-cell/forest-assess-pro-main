@@ -186,14 +186,23 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
       }
     }
 
-    // Fallback: If no questions were selected from blueprint_items, pull all active questions in system
+    // Fallback: If no questions were selected from blueprint_items, pull active questions for this qualification or linked competency units
     const currentQuestionCount = await db.prepare("SELECT COUNT(*) as count FROM attempt_questions WHERE attempt_id = ?").get(attemptId);
     if (Number(currentQuestionCount?.count || 0) === 0) {
       const fallbackQuestions = await db.prepare(`
-        SELECT id FROM questions WHERE status = 'ACTIVE' ORDER BY RANDOM() LIMIT 50
-      `).all();
+        SELECT DISTINCT q.id 
+        FROM questions q
+        LEFT JOIN qualification_competency_units qcu ON q.competency_unit_id = qcu.competency_unit_id
+        WHERE q.status = 'ACTIVE'
+          AND (q.qualification_id = ? OR qcu.qualification_id = ?)
+        ORDER BY RANDOM() LIMIT 50
+      `).all(exam.qualification_id, exam.qualification_id);
 
-      for (const q of fallbackQuestions) {
+      const finalQuestions = (Array.isArray(fallbackQuestions) && fallbackQuestions.length > 0)
+        ? fallbackQuestions
+        : await db.prepare("SELECT id FROM questions WHERE status = 'ACTIVE' ORDER BY RANDOM() LIMIT 50").all();
+
+      for (const q of finalQuestions) {
         const optionMapping = generateOptionMapping();
         await db.prepare(`
           INSERT INTO attempt_questions (attempt_id, question_id, display_order, option_mapping)

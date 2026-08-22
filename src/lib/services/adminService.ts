@@ -378,18 +378,24 @@ export const getQuestionsFn = createServerFn({ method: "POST" })
     const db = await getDb();
 
     let query = `
-      SELECT q.*, qual.code as qualification_code, sub.name as subject_name, cu.code as competency_unit_code, cu.title as competency_unit_title
+      SELECT q.*, qual.code as qualification_code, sub.name as subject_name, cu.code as competency_unit_code, cu.title as competency_unit_title,
+             (
+               SELECT string_agg(DISTINCT q_sub.code, '; ')
+               FROM qualification_competency_units qcu
+               JOIN qualifications q_sub ON qcu.qualification_id = q_sub.id
+               WHERE qcu.competency_unit_id = q.competency_unit_id
+             ) as linked_qualification_codes
       FROM questions q 
-      JOIN qualifications qual ON q.qualification_id = qual.id 
-      JOIN subjects sub ON q.subject_id = sub.id 
+      LEFT JOIN qualifications qual ON q.qualification_id = qual.id 
+      LEFT JOIN subjects sub ON q.subject_id = sub.id 
       LEFT JOIN competency_units cu ON q.competency_unit_id = cu.id
       WHERE 1=1
     `;
     const params: any[] = [];
 
     if (data.qualification_id) {
-      query += " AND q.qualification_id = ?";
-      params.push(data.qualification_id);
+      query += " AND (q.qualification_id = ? OR q.competency_unit_id IN (SELECT competency_unit_id FROM qualification_competency_units WHERE qualification_id = ?))";
+      params.push(data.qualification_id, data.qualification_id);
     }
     if (data.subject_id) {
       query += " AND q.subject_id = ?";

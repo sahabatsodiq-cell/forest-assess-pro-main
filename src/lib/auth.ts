@@ -4,18 +4,31 @@ import { getDb } from "./db";
 const SESSION_COOKIE_NAME = "session_token";
 const JWT_SECRET = process.env.JWT_SECRET || "askganisph-secret-key-for-local-dev-2026";
 
-// Simple PBKDF2 hashing
+const PBKDF2_ITERATIONS = 600000;
+
+// OWASP 2026 Compliant PBKDF2 Hashing
 export function hashPassword(password: string): string {
   const salt = crypto.randomBytes(16).toString("hex");
-  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
-  return `${salt}:${hash}`;
+  const hash = crypto.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, 64, "sha512").toString("hex");
+  return `${salt}:${hash}:${PBKDF2_ITERATIONS}`;
 }
 
 export function verifyPassword(password: string, storedHash: string): boolean {
-  const [salt, hash] = storedHash.split(":");
-  if (!salt || !hash) return false;
-  const verifyHash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
-  return hash === verifyHash;
+  const parts = storedHash.split(":");
+  if (parts.length < 2) return false;
+  const salt = parts[0];
+  const hash = parts[1];
+  const iterations = parts[2] ? parseInt(parts[2], 10) : 1000;
+  
+  try {
+    const verifyHash = crypto.pbkdf2Sync(password, salt, iterations, 64, "sha512").toString("hex");
+    const hashBuf = Buffer.from(hash, "hex");
+    const verifyBuf = Buffer.from(verifyHash, "hex");
+    if (hashBuf.length !== verifyBuf.length) return false;
+    return crypto.timingSafeEqual(hashBuf, verifyBuf);
+  } catch {
+    return false;
+  }
 }
 
 // Encrypt and sign tokens (Simple AES-GCM secure encryption)

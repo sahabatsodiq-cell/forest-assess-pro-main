@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getParticipantDashboardFn, startExamAttemptFn } from "@/lib/services/examEngineService";
 import { Award, Play, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/participant/")({
   component: ParticipantDashboardIndex,
@@ -39,10 +40,10 @@ function ParticipantDashboardIndex() {
       if (res.success && res.attemptId) {
         navigate({ to: `/exam/${res.attemptId}` as any });
       } else {
-        alert(res.error || "Gagal memulai sesi ujian.");
+        toast.error(res.error || "Gagal memulai sesi ujian.");
       }
     } catch (err: any) {
-      alert(err.message || "Terjadi kesalahan.");
+      toast.error(err.message || "Terjadi kesalahan.");
     } finally {
       setActionLoading(null);
     }

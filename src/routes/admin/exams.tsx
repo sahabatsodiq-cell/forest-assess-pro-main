@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getExamsFn, createExamFn, publishExamFn, getQualificationsFn, getBlueprintsFn } from "@/lib/services/adminService";
 import { Package, Plus, PlayCheck, Clock, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/exams")({
   component: AdminExamsPage,
@@ -81,6 +82,7 @@ function AdminExamsPage() {
       });
 
       if (res.success) {
+        toast.success("Paket ujian berhasil dibuat!");
         setOpen(false);
         setName("");
         setCode("");
@@ -100,12 +102,13 @@ function AdminExamsPage() {
     try {
       const res = await publishExamFn({ data: { token, exam_id: examId } });
       if (res.success) {
+        toast.success("Paket ujian berhasil dipublikasikan!");
         loadData();
       } else {
-        alert(res.error || "Gagal mempublikasikan ujian.");
+        toast.error(res.error || "Gagal mempublikasikan ujian.");
       }
     } catch (err: any) {
-      alert(err.message || "Terjadi kesalahan.");
+      toast.error(err.message || "Terjadi kesalahan.");
     }
   };
 

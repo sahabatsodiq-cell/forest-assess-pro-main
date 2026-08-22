@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getAttemptDetailsFn, saveAnswerFn, submitExamAttemptFn } from "@/lib/services/examEngineService";
-import { Clock, ChevronLeft, ChevronRight, Check, AlertTriangle } from "lucide-react";
+import { getAttemptDetailsFn, saveAnswerFn, submitExamAttemptFn, logExamWarningFn } from "@/lib/services/examEngineService";
+import { Clock, ChevronLeft, ChevronRight, Check, AlertTriangle, EyeOff } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/exam/$attemptId")({
   component: ExaminationEnginePage,
@@ -18,6 +19,7 @@ function ExaminationEnginePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [warningCount, setWarningCount] = useState(0);
 
   // Server-authoritative timer countdown
   const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
@@ -43,11 +45,12 @@ function ExaminationEnginePage() {
         const diffSec = Math.max(0, Math.floor((endedAtMs - serverNowMs) / 1000));
         setRemainingSeconds(diffSec);
       } else {
-        alert(res.error || "Gagal memuat sesi ujian.");
+        toast.error(res.error || "Gagal memuat sesi ujian.");
         navigate({ to: "/participant" });
       }
     } catch (err) {
       console.error(err);
+      toast.error("Terjadi kesalahan saat terhubung ke server.");
     } finally {
       setLoading(false);
     }
@@ -56,6 +59,38 @@ function ExaminationEnginePage() {
   useEffect(() => {
     loadAttempt();
   }, [attemptId]);
+
+  // Anti-Cheating: Tab-Switching & Window Blur Detection
+  useEffect(() => {
+    if (!attempt || attempt.status !== "IN_PROGRESS") return;
+
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        setWarningCount((prev) => prev + 1);
+        toast.error("Peringatan Integritas Ujian! Anda meninggalkan tab/layar ujian.", {
+          description: "Aktivitas perpindahan layar ini telah dicatat dalam Audit Log pengawas.",
+          duration: 6000,
+        });
+
+        const token = localStorage.getItem("askganis_token") || "";
+        try {
+          await logExamWarningFn({
+            data: {
+              token,
+              attempt_id: Number(attemptId),
+              warning_type: "TAB_SWITCH",
+              details: `Peserta meninggalkan tab ujian. Total Peringatan: ${warningCount + 1}`,
+            },
+          });
+        } catch (err) {
+          console.error("Warning log failed:", err);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [attempt, attemptId, warningCount]);
 
   // Timer Countdown Effect
   useEffect(() => {
@@ -79,7 +114,7 @@ function ExaminationEnginePage() {
     const token = localStorage.getItem("askganis_token") || "";
     try {
       await submitExamAttemptFn({ data: { token, attempt_id: Number(attemptId) } });
-      alert("Waktu ujian telah habis. Jawaban Anda telah dikumpulkan secara otomatis.");
+      toast.warning("Waktu ujian telah habis. Jawaban Anda telah dikumpulkan secara otomatis.");
       navigate({ to: `/results/${attemptId}` as any });
     } catch (err) {
       console.error(err);
@@ -105,13 +140,14 @@ function ExaminationEnginePage() {
       });
 
       if (!res.success && res.error) {
-        alert(res.error);
+        toast.error(res.error);
         if (res.error.includes("habis")) {
           navigate({ to: `/results/${attemptId}` as any });
         }
       }
     } catch (err) {
       console.error(err);
+      toast.error("Gagal menyimpan jawaban.");
     } finally {
       setSaving(false);
     }
@@ -122,12 +158,14 @@ function ExaminationEnginePage() {
     try {
       const res = await submitExamAttemptFn({ data: { token, attempt_id: Number(attemptId) } });
       if (res.success) {
+        toast.success("Ujian berhasil dikumpulkan!");
         navigate({ to: `/results/${attemptId}` as any });
       } else {
-        alert("Gagal mengumpulkan ujian.");
+        toast.error(res.error || "Gagal mengumpulkan ujian.");
       }
     } catch (err) {
       console.error(err);
+      toast.error("Terjadi kesalahan server saat submit.");
     }
   };
 

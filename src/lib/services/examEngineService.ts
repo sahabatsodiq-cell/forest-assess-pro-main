@@ -9,6 +9,32 @@ function verifyParticipantSession(token: string) {
   return session;
 }
 
+// Option Shuffling Helpers
+function generateOptionMapping(): string {
+  const keys = ["A", "B", "C", "D"];
+  const shuffled = [...keys].sort(() => Math.random() - 0.5);
+  return keys.map((k, i) => `${k}:${shuffled[i]}`).join(",");
+}
+
+function parseOptionMapping(mappingStr: string): Record<string, string> {
+  const map: Record<string, string> = { A: "A", B: "B", C: "C", D: "D" };
+  if (!mappingStr) return map;
+  mappingStr.split(",").forEach((pair) => {
+    const [display, orig] = pair.split(":");
+    if (display && orig) map[display] = orig;
+  });
+  return map;
+}
+
+function getReverseMapping(mappingStr: string): Record<string, string> {
+  const map: Record<string, string> = {};
+  const forward = parseOptionMapping(mappingStr);
+  Object.entries(forward).forEach(([display, orig]) => {
+    map[orig] = display;
+  });
+  return map;
+}
+
 // ------------------------------------------------------------------
 // PARTICIPANT DASHBOARD & EXAM LIST
 // ------------------------------------------------------------------
@@ -106,8 +132,8 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
         `).all(item.subject_id, item.difficulty, item.question_count);
 
         for (const q of questions) {
-          // Standard mapping (can be shuffled)
-          const optionMapping = "A:A,B:B,C:C,D:D";
+          // Generate randomized option mapping per attempt question
+          const optionMapping = generateOptionMapping();
 
           db.prepare(`
             INSERT INTO attempt_questions (attempt_id, question_id, display_order, option_mapping)
@@ -155,7 +181,7 @@ export const getAttemptDetailsFn = createServerFn({ method: "POST" })
 
     // Fetch attempt questions WITHOUT correct_answer!
     const questions = db.prepare(`
-      SELECT aq.id as attempt_question_id, aq.display_order, aq.selected_answer,
+      SELECT aq.id as attempt_question_id, aq.display_order, aq.selected_answer, aq.option_mapping,
              q.id as question_id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d,
              s.name as subject_name
       FROM attempt_questions aq
@@ -165,10 +191,34 @@ export const getAttemptDetailsFn = createServerFn({ method: "POST" })
       ORDER BY aq.display_order ASC
     `).all(data.attempt_id);
 
+    // Apply option mapping so participant receives randomized display choices
+    const transformedQuestions = questions.map((q: any) => {
+      const forwardMap = parseOptionMapping(q.option_mapping);
+      const reverseMap = getReverseMapping(q.option_mapping);
+
+      const origOptions: Record<string, string> = {
+        A: q.option_a,
+        B: q.option_b,
+        C: q.option_c,
+        D: q.option_d,
+      };
+
+      const displaySelected = q.selected_answer && reverseMap[q.selected_answer] ? reverseMap[q.selected_answer] : q.selected_answer;
+
+      return {
+        ...q,
+        option_a: origOptions[forwardMap["A"]] || q.option_a,
+        option_b: origOptions[forwardMap["B"]] || q.option_b,
+        option_c: origOptions[forwardMap["C"]] || q.option_c,
+        option_d: origOptions[forwardMap["D"]] || q.option_d,
+        selected_answer: displaySelected,
+      };
+    });
+
     return {
       success: true,
       attempt,
-      questions,
+      questions: transformedQuestions,
       serverNow: nowIso,
     };
   });
@@ -198,7 +248,15 @@ export const saveAnswerFn = createServerFn({ method: "POST" })
       return { success: false, error: "Waktu ujian telah habis. Jawaban Anda telah dikumpulkan secara otomatis." };
     }
 
-    db.prepare("UPDATE attempt_questions SET selected_answer = ? WHERE id = ? AND attempt_id = ?").run(data.selected_answer, data.attempt_question_id, data.attempt_id);
+    // Get option mapping to convert display answer to original option key
+    const aq = db.prepare("SELECT option_mapping FROM attempt_questions WHERE id = ? AND attempt_id = ?").get(data.attempt_question_id, data.attempt_id);
+    let realAnswer = data.selected_answer;
+    if (data.selected_answer && aq?.option_mapping) {
+      const forwardMap = parseOptionMapping(aq.option_mapping);
+      realAnswer = (forwardMap[data.selected_answer] as any) || data.selected_answer;
+    }
+
+    db.prepare("UPDATE attempt_questions SET selected_answer = ? WHERE id = ? AND attempt_id = ?").run(realAnswer, data.attempt_question_id, data.attempt_id);
 
     return { success: true };
   });
@@ -301,4 +359,18 @@ export const getParticipantResultDetailFn = createServerFn({ method: "POST" })
       success: true,
       result,
     };
+  });
+
+// ------------------------------------------------------------------
+// LOG EXAM WARNING (ANTI-CHEATING)
+// ------------------------------------------------------------------
+export const logExamWarningFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; attempt_id: number; warning_type: string; details?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    await logAudit(session.userId, `WARNING_${data.warning_type.toUpperCase()}`, "exam_attempts", data.attempt_id, {
+      warning_type: data.warning_type,
+      details: data.details || "Peserta meninggalkan layar/tab ujian.",
+    });
+    return { success: true };
   });

@@ -325,8 +325,12 @@ export const getBlueprintsFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
     let query = "SELECT b.*, q.code as qualification_code FROM exam_blueprints b JOIN qualifications q ON b.qualification_id = q.id";
-    if (data.qualification_id) query += ` WHERE b.qualification_id = ${data.qualification_id}`;
-    const blueprints = db.prepare(query).all();
+    const params: any[] = [];
+    if (data.qualification_id) {
+      query += " WHERE b.qualification_id = ?";
+      params.push(data.qualification_id);
+    }
+    const blueprints = db.prepare(query).all(...params);
 
     for (const b of blueprints) {
       b.items = db.prepare("SELECT i.*, s.name as subject_name FROM blueprint_items i JOIN subjects s ON i.subject_id = s.id WHERE i.blueprint_id = ?").all(b.id);
@@ -478,8 +482,12 @@ export const getEnrollmentsFn = createServerFn({ method: "POST" })
       JOIN users u ON e.user_id = u.id
       JOIN exam_packages p ON e.exam_id = p.id
     `;
-    if (data.exam_id) query += ` WHERE e.exam_id = ${data.exam_id}`;
-    return db.prepare(query).all();
+    const params: any[] = [];
+    if (data.exam_id) {
+      query += " WHERE e.exam_id = ?";
+      params.push(data.exam_id);
+    }
+    return db.prepare(query).all(...params);
   });
 
 export const enrollParticipantFn = createServerFn({ method: "POST" })

@@ -318,6 +318,7 @@ function AdminUsersPage() {
                           </div>
                         ) : (
                           <span className="text-gray-400 italic text-[11px]">-</span>
+                        )}
                       </td>
                       <td className="px-4 py-3.5">
                         <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${

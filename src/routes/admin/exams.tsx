@@ -210,7 +210,7 @@ function AdminExamsPage() {
                     min={5}
                     max={300}
                     value={durationMinutes}
-                    onChange={(e) => handleDurationChange(Number(e.target.value))}
+                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
                     className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
                   />
                 </div>
@@ -224,29 +224,6 @@ function AdminExamsPage() {
                     value={passingGrade}
                     onChange={(e) => setPassingGrade(Number(e.target.value))}
                     className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold text-forest-900"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Waktu Mulai</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={startAt}
-                    onChange={(e) => handleStartAtChange(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-2 py-1.5 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Waktu Selesai</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={endAt}
-                    onChange={(e) => setEndAt(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-2 py-1.5 text-xs font-bold bg-forest-50/40 text-forest-900"
                   />
                 </div>
               </div>

@@ -53,18 +53,21 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
       WHERE u.id = ?
     `).get(session.userId);
 
-    // Get enrolled exams
+    // Get published exams for matching user qualifications OR explicit enrollment
     const enrolledExams = await db.prepare(`
-      SELECT p.*, q.code as qualification_code, b.total_questions,
+      SELECT DISTINCT p.*, q.code as qualification_code, q.name as qualification_name, COALESCE(b.total_questions, 50) as total_questions,
              a.id as attempt_id, a.status as attempt_status, a.score as attempt_score
-      FROM exam_enrollments e
-      JOIN exam_packages p ON e.exam_id = p.id
+      FROM exam_packages p
       JOIN qualifications q ON p.qualification_id = q.id
-      JOIN exam_blueprints b ON p.blueprint_id = b.id
+      LEFT JOIN exam_blueprints b ON p.blueprint_id = b.id
       LEFT JOIN exam_attempts a ON (a.exam_id = p.id AND a.user_id = ?)
-      WHERE e.user_id = ?
+      WHERE (p.status = 'PUBLISHED' OR p.status = 'ACTIVE')
+        AND (
+          p.qualification_id IN (SELECT qualification_id FROM user_qualifications WHERE user_id = ?)
+          OR p.id IN (SELECT exam_id FROM exam_enrollments WHERE user_id = ?)
+        )
       ORDER BY p.id DESC
-    `).all(session.userId, session.userId);
+    `).all(session.userId, session.userId, session.userId);
 
     return {
       user,
@@ -81,19 +84,18 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
 
-    // 1. Check enrollment
-    const enrollment = await db.prepare("SELECT * FROM exam_enrollments WHERE exam_id = ? AND user_id = ?").get(data.exam_id, session.userId);
-    if (!enrollment) return { success: false, error: "Anda tidak terdaftar dalam ujian ini." };
-
-    // 2. Check exam package status & schedule
+    // 1. Check exam package status
     const exam = await db.prepare("SELECT * FROM exam_packages WHERE id = ?").get(data.exam_id);
     if (!exam || (exam.status !== "PUBLISHED" && exam.status !== "ACTIVE")) {
       return { success: false, error: "Ujian tidak aktif atau belum dipublikasikan." };
     }
 
-    const nowIso = new Date().toISOString();
-    if (exam.start_at > nowIso || exam.end_at < nowIso) {
-      return { success: false, error: "Ujian berada di luar jadwal pelaksanaan." };
+    // 2. Check enrollment or matching qualification
+    const userQual = await db.prepare("SELECT qualification_id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?").get(session.userId, exam.qualification_id);
+    const enrollment = await db.prepare("SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?").get(data.exam_id, session.userId);
+
+    if (!userQual && !enrollment) {
+      return { success: false, error: "Anda tidak terdaftar atau tidak memiliki kualifikasi untuk ujian ini." };
     }
 
     // 3. Check existing attempt

@@ -600,8 +600,8 @@ export const createExamFn = createServerFn({ method: "POST" })
     instructions?: string;
     duration_minutes: number;
     passing_grade: number;
-    start_at: string;
-    end_at: string;
+    start_at?: string;
+    end_at?: string;
   }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
@@ -612,12 +612,10 @@ export const createExamFn = createServerFn({ method: "POST" })
 
     let bpId = data.blueprint_id;
     if (!bpId) {
-      // Find or create default blueprint for this qualification
       const existingBp = await db.prepare("SELECT id FROM exam_blueprints WHERE qualification_id = ? ORDER BY id ASC").get(data.qualification_id);
       if (existingBp) {
         bpId = existingBp.id;
       } else {
-        // Create auto blueprint
         const qual = await db.prepare("SELECT code, name FROM qualifications WHERE id = ?").get(data.qualification_id);
         const newBp = await db.prepare(`
           INSERT INTO exam_blueprints (qualification_id, name, description, total_questions)
@@ -627,6 +625,10 @@ export const createExamFn = createServerFn({ method: "POST" })
         bpId = (newBp as any).lastInsertRowid;
       }
     }
+
+    const nowIso = new Date().toISOString();
+    const startAt = data.start_at || nowIso;
+    const endAt = data.end_at || new Date(Date.now() + 10 * 365 * 86400000).toISOString();
 
     const res = await db.prepare(`
       INSERT INTO exam_packages (qualification_id, blueprint_id, name, code, description, instructions, duration_minutes, passing_grade, start_at, end_at, status, created_by)
@@ -641,8 +643,8 @@ export const createExamFn = createServerFn({ method: "POST" })
       data.instructions || null,
       data.duration_minutes,
       data.passing_grade,
-      data.start_at,
-      data.end_at,
+      startAt,
+      endAt,
       session.userId
     );
 

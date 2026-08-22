@@ -503,7 +503,7 @@ export const getParticipantProfileDetailsFn = createServerFn({ method: "POST" })
     }
 
     const userQuals = await db.prepare(`
-      SELECT uq.id as uq_id, q.id as qualification_id, q.code, q.name, q.description, uq.registration_number
+      SELECT uq.qualification_id, q.id as qualification_id, q.code, q.name, q.description, uq.registration_number
       FROM user_qualifications uq
       JOIN qualifications q ON uq.qualification_id = q.id
       WHERE uq.user_id = ?

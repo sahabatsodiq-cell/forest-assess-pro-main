@@ -145,6 +145,16 @@ export const updateQualificationFn = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const deleteQualificationFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+    await db.prepare("DELETE FROM qualifications WHERE id = ?").run(data.id);
+    await logAudit(session.userId, "DELETE_QUALIFICATION", "qualifications", data.id);
+    return { success: true };
+  });
+
 // ------------------------------------------------------------------
 // SUBJECTS CRUD
 // ------------------------------------------------------------------

@@ -279,6 +279,7 @@ export const importQuestionsCsvFn = createServerFn({ method: "POST" })
 
     for (let idx = 0; idx < dataLines.length; idx++) {
       const line = dataLines[idx];
+      if (!line) continue;
       const parts = line.split(",").map((p) => p.trim().replace(/^"|"$/g, ""));
       if (parts.length < 6) {
         errors.push(`Baris ${idx + 1}: Format tidak lengkap.`);

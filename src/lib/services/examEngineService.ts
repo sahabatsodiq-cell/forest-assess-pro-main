@@ -204,12 +204,17 @@ export const getAttemptDetailsFn = createServerFn({ method: "POST" })
 
       const displaySelected = q.selected_answer && reverseMap[q.selected_answer] ? reverseMap[q.selected_answer] : q.selected_answer;
 
+      const keyA = forwardMap["A"] || "A";
+      const keyB = forwardMap["B"] || "B";
+      const keyC = forwardMap["C"] || "C";
+      const keyD = forwardMap["D"] || "D";
+
       return {
         ...q,
-        option_a: origOptions[forwardMap["A"]] || q.option_a,
-        option_b: origOptions[forwardMap["B"]] || q.option_b,
-        option_c: origOptions[forwardMap["C"]] || q.option_c,
-        option_d: origOptions[forwardMap["D"]] || q.option_d,
+        option_a: origOptions[keyA] || q.option_a,
+        option_b: origOptions[keyB] || q.option_b,
+        option_c: origOptions[keyC] || q.option_c,
+        option_d: origOptions[keyD] || q.option_d,
         selected_answer: displaySelected,
       };
     });

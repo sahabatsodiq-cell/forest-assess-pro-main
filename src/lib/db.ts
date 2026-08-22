@@ -58,7 +58,7 @@ export async function getDb() {
 
   if (dbInstance) return dbInstance;
 
-  const databaseUrl = process.env.DATABASE_URL || "postgresql://postgres.lfuzlvmytjbxuakpanfo:bobbY_%23%24%25%5E%26123456789%2B-%2A%2F@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres";
+  const databaseUrl = process.env["DATABASE_URL"] || "postgresql://postgres.lfuzlvmytjbxuakpanfo:bobbY_%23%24%25%5E%26123456789%2B-%2A%2F@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres";
 
   if (databaseUrl) {
     console.log("Initializing Supabase PostgreSQL adapter...");
@@ -70,6 +70,7 @@ export async function getDb() {
 
   // Fallback to better-sqlite3 for local file database if no DATABASE_URL
   console.log("Initializing local SQLite database...");
+  // @ts-ignore
   const Database = (await import("better-sqlite3")).default;
   const dbPath = path.resolve(process.cwd(), "db.sqlite");
   const db = new Database(dbPath);

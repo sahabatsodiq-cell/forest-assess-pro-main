@@ -12,35 +12,52 @@ export const Route = createFileRoute("/admin/exams")({
 function AdminExamsPage() {
   const [exams, setExams] = useState<any[]>([]);
   const [qualifications, setQualifications] = useState<any[]>([]);
-  const [blueprints, setBlueprints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
 
   // Form State
   const [qualificationId, setQualificationId] = useState<number | "">("");
-  const [blueprintId, setBlueprintId] = useState<number | "">("");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [instructions, setInstructions] = useState("Bacalah setiap soal dengan teliti dan pilih satu jawaban yang paling tepat.");
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [passingGrade, setPassingGrade] = useState(70);
   const [startAt, setStartAt] = useState(new Date().toISOString().slice(0, 16));
-  const [endAt, setEndAt] = useState(new Date(Date.now() + 86400000 * 30).toISOString().slice(0, 16)); // +30 days
+  const [endAt, setEndAt] = useState(new Date(Date.now() + 60 * 60000).toISOString().slice(0, 16)); // +60 min
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+
+  const updateEndAt = (newStart: string, dur: number) => {
+    if (!newStart) return;
+    const startMs = new Date(newStart).getTime();
+    if (isNaN(startMs)) return;
+    const endMs = startMs + dur * 60 * 1000;
+    const d = new Date(endMs);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const formatted = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    setEndAt(formatted);
+  };
+
+  const handleStartAtChange = (val: string) => {
+    setStartAt(val);
+    updateEndAt(val, durationMinutes);
+  };
+
+  const handleDurationChange = (dur: number) => {
+    setDurationMinutes(dur);
+    updateEndAt(startAt, dur);
+  };
 
   const loadData = async () => {
     const token = localStorage.getItem("askganis_token");
     if (!token) return;
     try {
-      const [eData, qData, bData] = await Promise.all([
+      const [eData, qData] = await Promise.all([
         getExamsFn({ data: { token } }),
         getQualificationsFn({ data: { token } }),
-        getBlueprintsFn({ data: { token } }),
       ]);
       setExams(eData);
       setQualifications(qData);
-      setBlueprints(bData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -52,12 +69,10 @@ function AdminExamsPage() {
     loadData();
   }, []);
 
-  const availableBlueprints = blueprints.filter((b) => !qualificationId || b.qualification_id === Number(qualificationId));
-
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!qualificationId || !blueprintId) {
-      setFormError("Pilih kualifikasi dan blueprint terlebih dahulu.");
+    if (!qualificationId) {
+      setFormError("Pilih kualifikasi target terlebih dahulu.");
       return;
     }
 
@@ -70,7 +85,6 @@ function AdminExamsPage() {
         data: {
           token,
           qualification_id: Number(qualificationId),
-          blueprint_id: Number(blueprintId),
           name,
           code,
           instructions,
@@ -102,7 +116,7 @@ function AdminExamsPage() {
     try {
       const res = await publishExamFn({ data: { token, exam_id: examId } });
       if (res.success) {
-        toast.success("Paket ujian berhasil dipublikasikan!");
+        toast.success("Paket ujian berhasil dipublikasikan & aktif!");
         loadData();
       } else {
         toast.error(res.error || "Gagal mempublikasikan ujian.");
@@ -113,10 +127,14 @@ function AdminExamsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-black text-charcoal">Manajemen Paket Ujian</h1>
+          <h1 className="font-display text-2xl font-black text-charcoal flex items-center gap-2">
+            <Package className="h-6 w-6 text-forest-700" />
+            Manajemen Paket Ujian Asesmen
+          </h1>
           <p className="mt-1 text-xs text-muted-foreground">
             Kelola paket ujian teori, jadwal pelaksanaan, durasi, dan passing grade.
           </p>
@@ -148,30 +166,12 @@ function AdminExamsPage() {
                 <select
                   required
                   value={qualificationId}
-                  onChange={(e) => {
-                    setQualificationId(Number(e.target.value));
-                    setBlueprintId("");
-                  }}
+                  onChange={(e) => setQualificationId(Number(e.target.value))}
                   className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
                 >
                   <option value="">Pilih Kualifikasi...</option>
                   {qualifications.map((q) => (
                     <option key={q.id} value={q.id}>{q.code} — {q.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Blueprint Ujian</label>
-                <select
-                  required
-                  value={blueprintId}
-                  onChange={(e) => setBlueprintId(Number(e.target.value))}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                >
-                  <option value="">Pilih Blueprint...</option>
-                  {availableBlueprints.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name} ({b.total_questions} Soal)</option>
                   ))}
                 </select>
               </div>
@@ -182,7 +182,7 @@ function AdminExamsPage() {
                   <input
                     type="text"
                     required
-                    placeholder="EXAM-CAN-01"
+                    placeholder="PKB"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                     className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono"
@@ -193,7 +193,7 @@ function AdminExamsPage() {
                   <input
                     type="text"
                     required
-                    placeholder="Ujian Teori Utama..."
+                    placeholder="Pengujian Kayu Bulat Rimba"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
@@ -210,7 +210,7 @@ function AdminExamsPage() {
                     min={5}
                     max={300}
                     value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                    onChange={(e) => handleDurationChange(Number(e.target.value))}
                     className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
                   />
                 </div>
@@ -235,7 +235,7 @@ function AdminExamsPage() {
                     type="datetime-local"
                     required
                     value={startAt}
-                    onChange={(e) => setStartAt(e.target.value)}
+                    onChange={(e) => handleStartAtChange(e.target.value)}
                     className="mt-1 w-full rounded-md border border-border px-2 py-1.5 text-xs"
                   />
                 </div>
@@ -246,7 +246,7 @@ function AdminExamsPage() {
                     required
                     value={endAt}
                     onChange={(e) => setEndAt(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-2 py-1.5 text-xs"
+                    className="mt-1 w-full rounded-md border border-border px-2 py-1.5 text-xs font-bold bg-forest-50/40 text-forest-900"
                   />
                 </div>
               </div>

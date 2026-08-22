@@ -521,10 +521,10 @@ export const getExamsFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
     const res = await db.prepare(`
-      SELECT p.*, q.code as qualification_code, b.name as blueprint_name, b.total_questions
+      SELECT p.*, q.code as qualification_code, COALESCE(b.name, 'Default Blueprint') as blueprint_name, COALESCE(b.total_questions, 50) as total_questions
       FROM exam_packages p
       JOIN qualifications q ON p.qualification_id = q.id
-      JOIN exam_blueprints b ON p.blueprint_id = b.id
+      LEFT JOIN exam_blueprints b ON p.blueprint_id = b.id
       ORDER BY p.id DESC
     `).all();
     return Array.isArray(res) ? res : [];
@@ -534,7 +534,7 @@ export const createExamFn = createServerFn({ method: "POST" })
   .validator((data: {
     token: string;
     qualification_id: number;
-    blueprint_id: number;
+    blueprint_id?: number;
     name: string;
     code: string;
     description?: string;
@@ -551,12 +551,31 @@ export const createExamFn = createServerFn({ method: "POST" })
     const existing = await db.prepare("SELECT id FROM exam_packages WHERE code = ?").get(data.code);
     if (existing) return { success: false, error: "Kode paket ujian sudah digunakan." };
 
+    let bpId = data.blueprint_id;
+    if (!bpId) {
+      // Find or create default blueprint for this qualification
+      const existingBp = await db.prepare("SELECT id FROM exam_blueprints WHERE qualification_id = ? ORDER BY id ASC").get(data.qualification_id);
+      if (existingBp) {
+        bpId = existingBp.id;
+      } else {
+        // Create auto blueprint
+        const qual = await db.prepare("SELECT code, name FROM qualifications WHERE id = ?").get(data.qualification_id);
+        const newBp = await db.prepare(`
+          INSERT INTO exam_blueprints (qualification_id, name, description, total_questions)
+          VALUES (?, ?, 'Blueprint Otomatis', 50)
+          RETURNING id
+        `).run(data.qualification_id, `Blueprint ${qual?.code || 'Kualifikasi'}`);
+        bpId = (newBp as any).lastInsertRowid;
+      }
+    }
+
     const res = await db.prepare(`
       INSERT INTO exam_packages (qualification_id, blueprint_id, name, code, description, instructions, duration_minutes, passing_grade, start_at, end_at, status, created_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'DRAFT', ?)
+      RETURNING id
     `).run(
       data.qualification_id,
-      data.blueprint_id,
+      bpId,
       data.name,
       data.code.toUpperCase(),
       data.description || null,
@@ -568,7 +587,7 @@ export const createExamFn = createServerFn({ method: "POST" })
       session.userId
     );
 
-    await logAudit(session.userId, "CREATE_EXAM", "exam_packages", res.lastInsertRowid as number, { code: data.code });
+    await logAudit(session.userId, "CREATE_EXAM", "exam_packages", (res as any).lastInsertRowid as number, { code: data.code });
     return { success: true };
   });
 

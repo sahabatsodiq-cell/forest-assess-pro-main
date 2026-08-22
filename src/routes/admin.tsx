@@ -19,7 +19,6 @@ const adminNav = [
   { label: "Unit Kompetensi", to: "/admin/competency-units", icon: ListChecks },
   { label: "Materi", to: "/admin/subjects", icon: BookOpen },
   { label: "Bank Soal", to: "/admin/questions", icon: Database },
-  { label: "Blueprint", to: "/admin/blueprints", icon: Layers },
   { label: "Paket Ujian", to: "/admin/exams", icon: Package },
   { label: "Pendaftaran", to: "/admin/enrollments", icon: UserCheck },
   { label: "Hasil Ujian", to: "/admin/results", icon: BarChart3 },

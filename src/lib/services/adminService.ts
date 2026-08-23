@@ -146,13 +146,18 @@ export const getMasterGanisphFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
-    let query = "SELECT * FROM master_ganisph";
+    let query = `
+      SELECT mg.id, mg.name, mg.qualification_name, mg.registration_number, mg.email,
+             u.participant_number AS user_nik
+      FROM master_ganisph mg
+      LEFT JOIN users u ON LOWER(mg.email) = LOWER(u.email)
+    `;
     const params: any[] = [];
     if (data.qualification_name && data.qualification_name !== "ALL") {
-      query += " WHERE qualification_name = ?";
+      query += " WHERE mg.qualification_name = ?";
       params.push(data.qualification_name);
     }
-    query += " ORDER BY id DESC";
+    query += " ORDER BY mg.id DESC";
     const res = await db.prepare(query).all(...params);
     return Array.isArray(res) ? res : [];
   });

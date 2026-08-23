@@ -21,6 +21,17 @@ export const loginFn = createServerFn({ method: "POST" })
       return { success: false, error: "Akun Anda telah dinonaktifkan." };
     }
 
+    // Auto-sync name from master_ganisph if user name is empty or generic
+    if (!user.name || user.name.trim() === "" || /^(Peserta|REG-)/i.test(user.name.trim())) {
+      const masterRow = await db.prepare(`
+        SELECT name FROM master_ganisph WHERE LOWER(email) = LOWER(?) LIMIT 1
+      `).get(email);
+      if (masterRow?.name) {
+        await db.prepare("UPDATE users SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(masterRow.name, user.id);
+        user.name = masterRow.name;
+      }
+    }
+
     const token = createSessionToken(user.id, user.role, user.email);
     await logAudit(user.id, "LOGIN", "users", user.id, { role: user.role });
 

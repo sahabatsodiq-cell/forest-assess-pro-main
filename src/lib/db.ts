@@ -34,14 +34,28 @@ class PostgresAdapter {
       async run(...args: any[]) {
         const flatArgs = args.flat();
         let insertSql = converted;
+        let appendedReturning = false;
         if (/^\s*INSERT\s+INTO/i.test(insertSql) && !/RETURNING/i.test(insertSql)) {
           insertSql += " RETURNING id";
+          appendedReturning = true;
         }
-        const rows = await adapter.sql.unsafe(insertSql, flatArgs);
-        return {
-          lastInsertRowid: rows[0]?.id || 0,
-          changes: rows.count || 0,
-        };
+        try {
+          const rows = await adapter.sql.unsafe(insertSql, flatArgs);
+          return {
+            lastInsertRowid: rows[0]?.id || 0,
+            changes: rows.count || 0,
+          };
+        } catch (err: any) {
+          // Fallback for tables without an 'id' column (e.g. composite-key junction tables)
+          if (appendedReturning && (err.code === "42703" || err.message?.includes('column "id" does not exist'))) {
+            const rows = await adapter.sql.unsafe(converted, flatArgs);
+            return {
+              lastInsertRowid: 0,
+              changes: rows.count || 0,
+            };
+          }
+          throw err;
+        }
       },
     };
   }

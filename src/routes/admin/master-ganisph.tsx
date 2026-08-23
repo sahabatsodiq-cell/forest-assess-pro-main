@@ -7,7 +7,7 @@ import {
   deleteMasterGanisphFn,
   getQualificationsFn,
 } from "@/lib/services/adminService";
-import { UserCheck, Plus, Search, Edit2, Trash2, Mail, Hash, Award, Check } from "lucide-react";
+import { UserCheck, Plus, Search, Edit2, Trash2, Mail, Hash, Award, Check, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -21,6 +21,10 @@ function AdminMasterGanisphPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [qualFilter, setQualFilter] = useState("ALL");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Create Modal
   const [createOpen, setCreateOpen] = useState(false);
@@ -60,6 +64,11 @@ function AdminMasterGanisphPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, qualFilter, pageSize]);
 
   // Handle Create
   const handleCreate = async (e: React.FormEvent) => {
@@ -168,11 +177,37 @@ function AdminMasterGanisphPage() {
       item.name.toLowerCase().includes(search.toLowerCase()) ||
       (item.email && item.email.toLowerCase().includes(search.toLowerCase())) ||
       (item.registration_number && item.registration_number.toLowerCase().includes(search.toLowerCase())) ||
-      (item.qualification_name && item.qualification_name.toLowerCase().includes(search.toLowerCase()));
+      (item.qualification_name && item.qualification_name.toLowerCase().includes(search.toLowerCase())) ||
+      (item.user_nik && item.user_nik.toLowerCase().includes(search.toLowerCase()));
 
     const matchQual = qualFilter === "ALL" || item.qualification_name === qualFilter;
     return matchSearch && matchQual;
   });
+
+  // Pagination calculations
+  const totalItems = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIdx = (safeCurrentPage - 1) * pageSize;
+  const endIdx = Math.min(startIdx + pageSize, totalItems);
+  const paginatedData = filtered.slice(startIdx, endIdx);
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (safeCurrentPage > 3) pages.push("...");
+      for (let i = Math.max(2, safeCurrentPage - 1); i <= Math.min(totalPages - 1, safeCurrentPage + 1); i++) {
+        pages.push(i);
+      }
+      if (safeCurrentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   return (
     <div className="space-y-8">
@@ -349,7 +384,7 @@ function AdminMasterGanisphPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Cari Nama, No. Register, Email, atau Kualifikasi..."
+            placeholder="Cari Nama, No. Register, Email, NIK, atau Kualifikasi..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none"
@@ -373,65 +408,142 @@ function AdminMasterGanisphPage() {
         {loading ? (
           <div className="p-8 text-center text-xs text-muted-foreground">Memuat database Master GANISPH...</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <th className="px-6 py-3.5 w-16">NO</th>
-                  <th className="px-6 py-3.5">NAMA LENGKAP</th>
-                  <th className="px-6 py-3.5">KUALIFIKASI GANISPH</th>
-                  <th className="px-6 py-3.5">NOMOR REGISTER</th>
-                  <th className="px-6 py-3.5">EMAIL</th>
-                  <th className="px-6 py-3.5 text-right w-28">AKSI</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20 text-xs">
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
-                      Tidak ada data GANISPH yang sesuai dengan kriteria pencarian.
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3.5 w-16">NO</th>
+                    <th className="px-6 py-3.5">NAMA LENGKAP</th>
+                    <th className="px-6 py-3.5">KUALIFIKASI GANISPH</th>
+                    <th className="px-6 py-3.5">NOMOR REGISTER</th>
+                    <th className="px-6 py-3.5">EMAIL</th>
+                    <th className="px-6 py-3.5">NOMOR KTP / NIK</th>
+                    <th className="px-6 py-3.5 text-right w-28">AKSI</th>
                   </tr>
-                ) : (
-                  filtered.map((item, idx) => (
-                    <tr key={item.id} className="hover:bg-forest-50/10 transition-colors">
-                      <td className="px-6 py-3.5 font-mono text-muted-foreground">{idx + 1}</td>
-                      <td className="px-6 py-3.5 font-bold text-charcoal">{item.name}</td>
-                      <td className="px-6 py-3.5">
-                        <span className="rounded bg-forest-50 px-2 py-0.5 text-[11px] font-bold text-forest-900 border border-forest-100">
-                          {item.qualification_name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3.5 font-mono font-bold text-gray-700">
-                        {item.registration_number || "-"}
-                      </td>
-                      <td className="px-6 py-3.5 text-muted-foreground font-mono">
-                        {item.email || "-"}
-                      </td>
-                      <td className="px-6 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => openEditModal(item)}
-                            className="rounded p-1 text-blue-600 hover:bg-blue-50 transition-colors"
-                            title="Edit Data GANISPH"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item.id, item.name)}
-                            className="rounded p-1 text-red-600 hover:bg-red-50 transition-colors"
-                            title="Hapus Data GANISPH"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
+                </thead>
+                <tbody className="divide-y divide-border/20 text-xs">
+                  {paginatedData.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                        Tidak ada data GANISPH yang sesuai dengan kriteria pencarian.
                       </td>
                     </tr>
-                  ))
+                  ) : (
+                    paginatedData.map((item, idx) => (
+                      <tr key={item.id} className="hover:bg-forest-50/10 transition-colors">
+                        <td className="px-6 py-3.5 font-mono text-muted-foreground">{startIdx + idx + 1}</td>
+                        <td className="px-6 py-3.5 font-bold text-charcoal">{item.name}</td>
+                        <td className="px-6 py-3.5">
+                          <span className="rounded bg-forest-50 px-2 py-0.5 text-[11px] font-bold text-forest-900 border border-forest-100">
+                            {item.qualification_name}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3.5 font-mono font-bold text-gray-700">
+                          {item.registration_number || "-"}
+                        </td>
+                        <td className="px-6 py-3.5 text-muted-foreground font-mono">
+                          {item.email || "-"}
+                        </td>
+                        <td className="px-6 py-3.5">
+                          {item.user_nik ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-100 font-mono">
+                              <CreditCard className="h-3 w-3" />
+                              {item.user_nik}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground/50 text-[11px] italic">Belum diisi</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3.5 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => openEditModal(item)}
+                              className="rounded p-1 text-blue-600 hover:bg-blue-50 transition-colors"
+                              title="Edit Data GANISPH"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item.id, item.name)}
+                              className="rounded p-1 text-red-600 hover:bg-red-50 transition-colors"
+                              title="Hapus Data GANISPH"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Footer */}
+            <div className="flex flex-col gap-3 border-t border-border/30 bg-gray-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+              {/* Left: Page size selector & info */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Tampilkan</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="rounded-md border border-border bg-white px-2 py-1 text-xs font-medium text-charcoal focus:border-forest-700 focus:outline-none"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <span className="text-xs text-muted-foreground">per halaman</span>
+                </div>
+                <span className="hidden sm:inline text-xs text-muted-foreground">
+                  | Menampilkan {totalItems === 0 ? 0 : startIdx + 1}–{endIdx} dari {totalItems} data
+                </span>
+              </div>
+
+              {/* Right: Page navigation */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safeCurrentPage <= 1}
+                  className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  Sebelumnya
+                </button>
+
+                {getPageNumbers().map((page, i) =>
+                  typeof page === "string" ? (
+                    <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-xs text-muted-foreground select-none">
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
+                        page === safeCurrentPage
+                          ? "bg-forest-900 text-white shadow-sm"
+                          : "border border-border bg-white text-charcoal hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
                 )}
-              </tbody>
-            </table>
-          </div>
+
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safeCurrentPage >= totalPages}
+                  className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Selanjutnya
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

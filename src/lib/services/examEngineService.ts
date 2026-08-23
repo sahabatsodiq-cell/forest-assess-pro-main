@@ -47,6 +47,12 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
   const masterList = Array.isArray(masterRows) ? masterRows : [];
   if (masterList.length === 0) return;
 
+  // Auto-set name from master_ganisph if user's name is empty or generic
+  const masterName = masterList[0]?.name;
+  if (masterName && (!user.name || user.name.trim() === "" || /^(Peserta|REG-)/i.test(user.name.trim()))) {
+    await db.prepare("UPDATE users SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(masterName, userId);
+  }
+
   const firstReg = masterList.find((m: any) => m.registration_number)?.registration_number;
   if (firstReg && (!user.participant_number || user.participant_number.trim() === "")) {
     await db.prepare("UPDATE users SET participant_number = ? WHERE id = ?").run(firstReg, userId);
@@ -475,6 +481,13 @@ export const getParticipantProfileDetailsFn = createServerFn({ method: "POST" })
       const masterList = Array.isArray(masterRows) ? masterRows : [];
 
       if (masterList.length > 0) {
+        // Auto-set name from master_ganisph if user's name is empty or generic
+        const masterName = masterList[0]?.name;
+        if (masterName && (!user.name || user.name.trim() === "" || /^(Peserta|REG-)/i.test(user.name.trim()))) {
+          await db.prepare("UPDATE users SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(masterName, session.userId);
+          user.name = masterName;
+        }
+
         // Auto-set participant_number if missing
         const firstReg = masterList.find((m: any) => m.registration_number)?.registration_number;
         if (firstReg && (!user.participant_number || user.participant_number.trim() === "")) {

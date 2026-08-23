@@ -49,6 +49,17 @@ function ParticipantProfilePage() {
         setName(res.user.name || "");
         setEmail(res.user.email || "");
         setParticipantNumber(res.user.participant_number || "");
+
+        // Sync localStorage cache with server-synced data (e.g. name from master_ganisph)
+        const cachedUserStr = localStorage.getItem("askganis_user");
+        if (cachedUserStr) {
+          const cachedUser = JSON.parse(cachedUserStr);
+          if (res.user.name && res.user.name !== cachedUser.name) {
+            cachedUser.name = res.user.name;
+            cachedUser.participant_number = res.user.participant_number;
+            localStorage.setItem("askganis_user", JSON.stringify(cachedUser));
+          }
+        }
       }
     } catch (err) {
       console.error(err);

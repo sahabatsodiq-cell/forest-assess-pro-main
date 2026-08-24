@@ -2,11 +2,11 @@ import postgres from "postgres";
 
 const connectionString = process.env.DATABASE_URL || "postgresql://postgres.lfuzlvmytjbxuakpanfo:bobbY_%23%24%25%5E%26123456789%2B-%2A%2F@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres";
 
-console.log("Connecting to Supabase PostgreSQL Cloud to insert K3 questions for unit A.02GNS01.001.1...");
+console.log("Connecting to Supabase PostgreSQL Cloud to update K3 questions...");
 const sql = postgres(connectionString, { ssl: "require" });
 
 const questionsData = [
-  // Pilihan Ganda (1-10)
+  // SOAL A: PILIHAN GANDA (1 - 10)
   {
     question_text: "Alat pelindung diri (APD) yang berguna untuk melindungi pekerja dari debu atau aroma bau yang menyengat dan tidak sedap adalah :",
     option_a: "Masker",
@@ -15,17 +15,17 @@ const questionsData = [
     option_d: "Safety glasses",
     correct_answer: "A",
     difficulty: "EASY",
-    explanation: "Masker berfungsi melindungi saluran pernapasan dari hirupan debu, partikel micro, dan bau kimia/organik menyengat."
+    explanation: "Masker berfungsi melindungi saluran pernapasan dari hirupan debu, partikel mikro, dan bau menyengat."
   },
   {
-    question_text: "Pernyataan berikut yang bukan merupakan karakteristik dari risiko adalah :",
+    question_text: "Pernyataan berikut yang bukan merupakan karateristik dari risiko adalah :",
     option_a: "Merupakan suatu kejadian",
     option_b: "Kejadian tersebut mengandung kemungkinan akan terjadi",
     option_c: "Jika terjadi akan menimbulkan kerugian",
     option_d: "Menimbulkan kehilangan nyawa",
     correct_answer: "D",
     difficulty: "MEDIUM",
-    explanation: "Risiko adalah probabilitas terjadinya kejadian yang merugikan. Kehilangan nyawa merupakan salah satu dampak ekstrem, bukan karakteristik definisi risiko secara umum."
+    explanation: "Risiko adalah probabilitas terjadinya kejadian yang merugikan. Kehilangan nyawa merupakan salah satu dampak ekstrem, bukan definisi karakteristik umum."
   },
   {
     question_text: "Suatu usaha untuk menemukan atau mengetahui risiko-risiko yang mungkin timbul dalam kegiatan yang dilakukan oleh perusahaan atau perorangan disebut :",
@@ -35,7 +35,7 @@ const questionsData = [
     option_d: "Pengendalian risiko",
     correct_answer: "B",
     difficulty: "EASY",
-    explanation: "Identifikasi risiko adalah tahapan menemukan, mengenali, dan mencatat bahaya serta kemungkinan risiko dalam lokasi/kegiatan kerja."
+    explanation: "Identifikasi risiko adalah proses menemukan, mengenali, dan mencatat risiko-risiko dalam kegiatan kerja."
   },
   {
     question_text: "Berdasarkan gambar area kerja berbahaya, penandaan atau pemasangan tanda alat-alat keselamatan yang seharusnya dipasang pada lokasi tersebut kecuali :",
@@ -45,7 +45,7 @@ const questionsData = [
     option_d: "Tanda dilarang masuk",
     correct_answer: "C",
     difficulty: "MEDIUM",
-    explanation: "Pemasangan tanda keselamatan mencakup rambu larangan dan batasan akses (tanda daerah terbatas, selain petugas dilarang masuk, dilarang masuk)."
+    explanation: "Penandaan alat keselamatan meliputi rambu larangan/akses (Tanda daerah terbatas, selain petugas dilarang masuk, dilarang masuk)."
   },
   {
     question_text: "Beberapa masalah K3 ketika GANISPH bekerja di lingkungan perkantoran antara lain, kecuali :",
@@ -55,17 +55,17 @@ const questionsData = [
     option_d: "Posisi kerja yang tidak ergonomis",
     correct_answer: "C",
     difficulty: "EASY",
-    explanation: "Penataan dokumen dan peralatan yang rapi merupakan tindakan pencegahan kecelakaan kerja (penerapan 5R/5S), bukan masalah K3."
+    explanation: "Penataan dokumen dan peralatan yang rapi merupakan penerapan 5R/5S pencegahan kecelakaan, bukan masalah K3."
   },
   {
-    question_text: "Potensi risiko yang mungkin terjadi dalam kegiatan pengukuran dan pengujian kayu bundar di air, kecuali :",
-    option_a: "Scale stick nyempung sungai",
-    option_b: "Terlindas alat berat",
-    option_c: "Terpeleset di atas batang kayu",
-    option_d: "Bahaya tenggelam",
+    question_text: "Potensi risiko yang mungkin terjadi dalam kegiatan timber cruising, kecuali :",
+    option_a: "Diserang binatang buas",
+    option_b: "Terpapar bahan berbahaya",
+    option_c: "Topografi lapangan / medan yang berat",
+    option_d: "Jalan licin dan bergelombang",
     correct_answer: "B",
     difficulty: "MEDIUM",
-    explanation: "Pengukuran kayu di badan air/sungai berisiko tergelincir, alat jatuh, dan tenggelam. Terlindas alat berat terjadi pada pengujian darat/TPN."
+    explanation: "Kegiatan timber cruising di hutan rawan serangan binatang buas, medan berat, dan jalan licin. Terpapar bahan berbahaya bukan risiko utama cruising."
   },
   {
     question_text: "Secara umum terdapat 5 faktor bahaya K3 di tempat kerja yaitu :",
@@ -75,7 +75,7 @@ const questionsData = [
     option_d: "Bahaya biologis, kimia, fisik/mekanik, religi dan sosial-psikologis",
     correct_answer: "A",
     difficulty: "MEDIUM",
-    explanation: "5 Faktor bahaya K3 standar tempat kerja adalah Biologis, Kimia, Fisik/Mekanik, Biomekanik/Ergonomi, dan Sosial-Psikologis."
+    explanation: "5 Faktor bahaya K3 tempat kerja: Biologis, Kimia, Fisik/Mekanik, Biomekanik/Ergonomi, dan Sosial-Psikologis."
   },
   {
     question_text: "Faktor bahaya kimia dalam K3 adalah kecuali :",
@@ -95,7 +95,7 @@ const questionsData = [
     option_d: "Desain tempat kerja/alat/mesin",
     correct_answer: "C",
     difficulty: "EASY",
-    explanation: "Material berbahaya termasuk faktor bahaya Kimia, bukan faktor bahaya Ergonomi/Biomekanik."
+    explanation: "Material berbahaya termasuk faktor bahaya Kimia."
   },
   {
     question_text: "Siapa saja yang seharusnya terlibat dalam penerapan atau pelaksanaan K3 :",
@@ -105,151 +105,121 @@ const questionsData = [
     option_d: "Bagian administrasi",
     correct_answer: "A",
     difficulty: "EASY",
-    explanation: "Penerapan K3 adalah tanggung jawab bersama yang wajib dilaksanakan oleh seluruh personil tanpa kecuali."
+    explanation: "Penerapan K3 merupakan kewajiban dan tanggung jawab seluruh personil dalam organisasi."
   },
 
-  // Soal Benar/Salah (1-7)
+  // SOAL B: PILIHAN BENAR ATAU SALAH (1 - 7)
   {
-    question_text: "[Benar/Salah] Salah satu Alat Pelindung Diri (APD) yang diperlukan pada saat bekerja di tempat ketinggian adalah full body harness.",
+    question_text: "[Benar/Salah] Salah satu Alat Pelindung Diri yang diperlukan pada saat bekerja di tempat ketinggian adalah full body harness",
     option_a: "Benar",
     option_b: "Salah",
     option_c: "-",
     option_d: "-",
     correct_answer: "A",
     difficulty: "EASY",
-    explanation: "Pernyataan Benar. Full body harness merupakan APD utama untuk mencegah bahaya jatuh dari ketinggian."
+    explanation: "Full body harness adalah APD wajib pencegah jatuh saat bekerja di ketinggian."
   },
   {
-    question_text: "[Benar/Salah] Salah satu hak tenaga kerja menurut Pasal 12 UU Nomor 1 Tahun 1970 adalah meminta kepada pengurus atau pimpinan agar dilaksanakan semua syarat-syarat K3 yang diwajibkan sesuai kondisi lingkungan kerja.",
+    question_text: "[Benar/Salah] Salah satu hak tenaga kerja menurut Pasal 12 UU Nomor 1 Tahun 1970 adalah meminta kepada pengurus atau pimpinan agar dilaksanakan semua syarat-syarat K3 yang diwajibkan sesuai kondisi lingkungan kerja",
     option_a: "Benar",
     option_b: "Salah",
     option_c: "-",
     option_d: "-",
     correct_answer: "A",
     difficulty: "MEDIUM",
-    explanation: "Pernyataan Benar. Pasal 12 UU No. 1/1970 menjamin hak pekerja untuk meminta pemenuhan seluruh syarat K3 di tempat kerja."
+    explanation: "Pasal 12 UU No. 1/1970 menjamin hak pekerja meminta pelaksanaan syarat K3 yang diwajibkan."
   },
   {
-    question_text: "[Benar/Salah] Potensi bahaya yang mungkin terjadi pada saat melakukan kegiatan penebangan pohon dengan menggunakan chainsaw salah satunya adalah gangguan stabilitas tanah dan lereng.",
+    question_text: "[Benar/Salah] Potensi bahaya yang mungkin terjadi pada saat melakukan kegiatan penebangan pohon dengan menggunakan chainsaw salah satunya adalah gangguan stabilitas tanah dan lereng",
     option_a: "Benar",
     option_b: "Salah",
     option_c: "-",
     option_d: "-",
     correct_answer: "A",
     difficulty: "MEDIUM",
-    explanation: "Pernyataan Benar. Penebangan pohon di wilayah berlereng mempengaruhi stabilitas tanah dan lereng sekitarnya."
+    explanation: "Penebangan pohon di kelerengan dapat memicu erosi dan stabilitas tanah."
   },
   {
-    question_text: "[Benar/Salah] Sistem Manajemen Keselamatan dan Kesehatan Kerja (SMK3) wajib dilaksanakan oleh perusahaan yang mempekerjakan minimal 100 tenaga kerja.",
-    option_a: "Benar",
-    option_b: "Salah",
-    option_c: "-",
-    option_d: "-",
-    correct_answer: "A",
-    difficulty: "MEDIUM",
-    explanation: "Pernyataan Benar. Berdasarkan PP No. 50 Tahun 2012, perusahaan yang mempekerjakan minimal 100 orang wajib menerapkan SMK3."
-  },
-  {
-    question_text: "[Benar/Salah] Sistem Manajemen Keselamatan dan Kesehatan Kerja (SMK3) wajib dilaksanakan oleh perusahaan yang memiliki tingkat potensi kecelakaan kerja yang lebih tinggi akibat karakteristik proses.",
-    option_a: "Benar",
-    option_b: "Salah",
-    option_c: "-",
-    option_d: "-",
-    correct_answer: "A",
-    difficulty: "MEDIUM",
-    explanation: "Pernyataan Benar. Perusahaan dengan tingkat potensi bahaya tinggi wajib menerapkan SMK3 tanpa memandang jumlah pekerja."
-  },
-  {
-    question_text: "[Benar/Salah] Semua sumber, situasi ataupun aktivitas yang berpotensi menimbulkan cedera (kecelakaan kerja) dan/atau penyakit akibat kerja disebut bahaya (hazard).",
+    question_text: "[Benar/Salah] Sistem manajemen keselamatan dan kesehatan kerja (SMK3) wajib dilaksanakan oleh perusahaan yang mempekerjakan minimal 100 tenaga kerja",
     option_a: "Benar",
     option_b: "Salah",
     option_c: "-",
     option_d: "-",
     correct_answer: "A",
     difficulty: "EASY",
-    explanation: "Pernyataan Benar. Hazard (bahaya) didefinisikan sebagai segala sesuatu yang berpotensi menyebabkan kerugian/cedera."
+    explanation: "Wajib SMK3 berlaku bagi perusahaan dengan minimal 100 tenaga kerja atau tingkat potensi bahaya tinggi."
   },
   {
-    question_text: "[Benar/Salah] Beberapa faktor yang umum dan berpotensi besar terjadi dan menyebabkan kecelakaan bagi GANISPH yang bekerja di pertambangan terbuka adalah risiko ledakan (blasting), kecelakaan alat berat dan genangan di lubang tambang.",
+    question_text: "[Benar/Salah] Sistem manajemen keselamatan dan kesehatan kerja (SMK3) wajib dilaksanakan oleh perusahaan yang memiliki tingkat potensi kecelakaan kerja yang lebih tinggi akobat karateristik proses",
+    option_a: "Benar",
+    option_b: "Salah",
+    option_c: "-",
+    option_d: "-",
+    correct_answer: "A",
+    difficulty: "EASY",
+    explanation: "Potensi bahaya tinggi mewajibkan penerapkan SMK3 sesuai PP No. 50 Tahun 2012."
+  },
+  {
+    question_text: "[Benar/Salah] Semua sumber, situasi ataupun aktivitas yang berpotensi menimbulkan cedera (kecelakaan kerja) dana tau penyakit akibat kerja disebut bahaya (hazard)",
+    option_a: "Benar",
+    option_b: "Salah",
+    option_c: "-",
+    option_d: "-",
+    correct_answer: "A",
+    difficulty: "EASY",
+    explanation: "Definisi bahaya (hazard) adalah sumber, situasi, atau tindakan yang berpotensi cedera/sakit."
+  },
+  {
+    question_text: "[Benar/Salah] Beberapa factor yang umum dan berpotensi besar terjadi dan menyebabkan kecelakaan bagi GANISPH yang bekerja di pertambangan terbuka adalah risiko ledakan (blasting), kecelakaan alat berat dan genangan di lubang tambang",
     option_a: "Benar",
     option_b: "Salah",
     option_c: "-",
     option_d: "-",
     correct_answer: "A",
     difficulty: "MEDIUM",
-    explanation: "Pernyataan Benar. Lingkungan tambang terbuka memiliki potensi bahaya tinggi dari peledakan, lalu lintas alat berat, dan genangan air tambang."
+    explanation: "Area tambang terbuka memiliki potensi risiko tinggi ledakan, pergerakan alat berat, dan genangan air."
   }
 ];
 
-async function insertK3Questions() {
-  try {
-    // 1. Get Unit Kompetensi ID for A.02GNS01.001.1
-    const unitRows = await sql`SELECT id FROM competency_units WHERE code = 'A.02GNS01.001.1'`;
-    if (unitRows.length === 0) {
-      console.error("Error: Unit Kompetensi A.02GNS01.001.1 tidak ditemukan!");
-      process.exit(1);
-    }
-    const competencyUnitId = unitRows[0].id;
-
-    // 2. Get default subject ID and qualification ID
-    const subjectRows = await sql`SELECT id FROM subjects ORDER BY id ASC LIMIT 1`;
-    const subjectId = subjectRows.length > 0 ? subjectRows[0].id : null;
-
-    const qualRows = await sql`SELECT id FROM qualifications ORDER BY id ASC LIMIT 1`;
-    const qualificationId = qualRows.length > 0 ? qualRows[0].id : null;
-
-    console.log(`Found Competency Unit ID: ${competencyUnitId}, Subject ID: ${subjectId}, Qualification ID: ${qualificationId}`);
-
-    let insertedCount = 0;
-    await sql.begin(async (tx) => {
-      for (const q of questionsData) {
-        await tx`
-          INSERT INTO questions (
-            qualification_id,
-            subject_id,
-            competency_unit_id,
-            question_text,
-            option_a,
-            option_b,
-            option_c,
-            option_d,
-            correct_answer,
-            difficulty,
-            explanation,
-            status
-          ) VALUES (
-            ${qualificationId},
-            ${subjectId},
-            ${competencyUnitId},
-            ${q.question_text},
-            ${q.option_a},
-            ${q.option_b},
-            ${q.option_c},
-            ${q.option_d},
-            ${q.correct_answer},
-            ${q.difficulty},
-            ${q.explanation},
-            'ACTIVE'
-          );
-        `;
-        insertedCount++;
-      }
-    });
-
-    const [{ totalQuestions }] = await sql`
-      SELECT COUNT(*)::int as "totalQuestions" 
-      FROM questions 
-      WHERE competency_unit_id = ${competencyUnitId}
-    `;
-
-    console.log(`✓ Inserted ${insertedCount} questions! Total questions for unit A.02GNS01.001.1 in Supabase: ${totalQuestions}`);
-    process.exit(0);
-  } catch (err) {
-    console.error("Error inserting K3 questions:", err);
-    process.exit(1);
-  } finally {
-    await sql.end();
+async function insertOrUpdateQuestions() {
+  // Ensure K3 qualification exists
+  let qual = await sql`SELECT id FROM qualifications WHERE code = 'GANISPH-K3' OR code = 'K3' LIMIT 1`;
+  if (qual.length === 0) {
+    qual = await sql`SELECT id FROM qualifications ORDER BY id ASC LIMIT 1`;
   }
+  const qualificationId = qual[0].id;
+
+  // Ensure K3 subject exists
+  let sub = await sql`SELECT id FROM subjects WHERE name ILIKE '%K3%' LIMIT 1`;
+  if (sub.length === 0) {
+    sub = await sql`SELECT id FROM subjects WHERE qualification_id = ${qualificationId} LIMIT 1`;
+  }
+  const subjectId = sub[0].id;
+
+  console.log(`Using qualification_id = ${qualificationId}, subject_id = ${subjectId}`);
+
+  // Clean old versions of these questions (ID 17 to 33 or matching text)
+  await sql`
+    DELETE FROM questions 
+    WHERE qualification_id = ${qualificationId} 
+       OR question_text ILIKE 'Alat pelindung diri%'
+       OR question_text ILIKE 'Pernyataan berikut yang bukan merupakan%'
+       OR question_text ILIKE 'Potensi risiko yang mungkin terjadi dalam kegiatan timber cruising%';
+  `;
+
+  for (const q of questionsData) {
+    const inserted = await sql`
+      INSERT INTO questions (
+        qualification_id, subject_id, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation, status
+      ) VALUES (
+        ${qualificationId}, ${subjectId}, ${q.question_text}, ${q.option_a}, ${q.option_b}, ${q.option_c}, ${q.option_d}, ${q.correct_answer}, ${q.difficulty}, ${q.explanation}, 'ACTIVE'
+      ) RETURNING id;
+    `;
+    console.log(`Inserted question ID ${inserted[0].id}: ${q.question_text.slice(0, 50)}...`);
+  }
+
+  console.log("All K3 questions updated successfully!");
+  await sql.end();
 }
 
-insertK3Questions();
+insertOrUpdateQuestions().catch(console.error);

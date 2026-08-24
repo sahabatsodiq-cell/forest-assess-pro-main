@@ -501,9 +501,15 @@ function AdminQuestionsPage() {
                         </td>
                         <td className="px-4 py-3.5 font-medium text-charcoal">
                           <div>{q.question_text}</div>
-                          <div className="mt-1 text-[11px] text-muted-foreground space-x-2">
-                            <span>A: {q.option_a}</span>
-                            <span>B: {q.option_b}</span>
+                          <div className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-muted-foreground max-w-2xl">
+                            <span className="truncate" title={`A: ${q.option_a}`}><strong className="text-charcoal font-semibold">A:</strong> {q.option_a}</span>
+                            <span className="truncate" title={`B: ${q.option_b}`}><strong className="text-charcoal font-semibold">B:</strong> {q.option_b}</span>
+                            {q.option_c && q.option_c !== "-" && (
+                              <span className="truncate" title={`C: ${q.option_c}`}><strong className="text-charcoal font-semibold">C:</strong> {q.option_c}</span>
+                            )}
+                            {q.option_d && q.option_d !== "-" && (
+                              <span className="truncate" title={`D: ${q.option_d}`}><strong className="text-charcoal font-semibold">D:</strong> {q.option_d}</span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3.5">

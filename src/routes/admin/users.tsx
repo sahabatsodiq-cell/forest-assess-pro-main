@@ -58,17 +58,17 @@ function AdminUsersPage() {
     const token = localStorage.getItem("askganis_token") || "";
 
     try {
-      const res = await createUserFn({
-        data: {
-          token,
-          name,
-          email,
-          password,
-          role,
-          participant_number: participantNumber || undefined,
-          qualification_ids: selectedQualIds.length > 0 ? selectedQualIds : undefined,
-        },
-      });
+      const reqData: any = {
+        token,
+        name,
+        email,
+        password,
+        role,
+      };
+      if (participantNumber) reqData.participant_number = participantNumber;
+      if (selectedQualIds.length > 0) reqData.qualification_ids = selectedQualIds;
+
+      const res = await createUserFn({ data: reqData });
 
       if (res.success) {
         setOpen(false);

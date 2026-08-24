@@ -304,20 +304,19 @@ function AdminQualificationsPage() {
                 <th scope="col" className="px-6 py-3.5 w-32">KODE</th>
                 <th scope="col" className="px-6 py-3.5">NAMA</th>
                 <th scope="col" className="px-6 py-3.5">DESKRIPSI</th>
-                <th scope="col" className="px-4 py-3.5 text-center w-28">STATUS</th>
                 <th scope="col" className="px-6 py-3.5 text-center w-36">AKSI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40 dark:divide-charcoal/60">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={4} className="py-10 text-center text-xs text-muted-foreground">
                     Memuat data kualifikasi...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={4} className="py-10 text-center text-xs text-muted-foreground">
                     Tidak ada kualifikasi yang ditemukan.
                   </td>
                 </tr>
@@ -339,17 +338,6 @@ function AdminQualificationsPage() {
                       {q.description || "-"}
                     </td>
 
-                    {/* STATUS */}
-                    <td className="px-4 py-4 text-center">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                        q.status === "ACTIVE"
-                          ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800"
-                          : "bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-800 dark:text-gray-400"
-                      }`}>
-                        {q.status === "ACTIVE" ? "Aktif" : "Nonaktif"}
-                      </span>
-                    </td>
-
                     {/* AKSI */}
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -361,20 +349,6 @@ function AdminQualificationsPage() {
                           className="rounded-md p-1.5 text-charcoal hover:bg-forest-50 hover:text-forest-900 transition-colors dark:text-forest-100 dark:hover:bg-charcoal/60"
                         >
                           <Pencil className="h-4 w-4" />
-                        </button>
-
-                        {/* Power / Toggle Status Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(q)}
-                          title={q.status === "ACTIVE" ? "Nonaktifkan Kualifikasi" : "Aktifkan Kualifikasi"}
-                          className={`rounded-md p-1.5 transition-colors ${
-                            q.status === "ACTIVE"
-                              ? "text-charcoal hover:bg-amber-50 hover:text-amber-700 dark:text-forest-100"
-                              : "text-gray-400 hover:bg-green-50 hover:text-green-700"
-                          }`}
-                        >
-                          <Power className="h-4 w-4" />
                         </button>
 
                         {/* Delete Button */}

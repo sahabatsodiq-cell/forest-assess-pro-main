@@ -409,22 +409,20 @@ function AdminCompetencyUnitsPage() {
                 <th scope="col" className="px-5 py-3.5 w-40">KODE UNIT</th>
                 <th scope="col" className="px-5 py-3.5">JUDUL UNIT KOMPETENSI</th>
                 <th scope="col" className="px-4 py-3.5 w-32 text-center">KODE MATERI</th>
-                <th scope="col" className="px-4 py-3.5 w-24 text-center">JML SOAL</th>
                 <th scope="col" className="px-5 py-3.5">KUALIFIKASI TERHUBUNG</th>
-                <th scope="col" className="px-4 py-3.5 text-center w-24">STATUS</th>
                 <th scope="col" className="px-5 py-3.5 text-center w-32">AKSI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40 dark:divide-charcoal/60">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
                     Memuat unit kompetensi...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
                     Tidak ada unit kompetensi ditemukan.
                   </td>
                 </tr>
@@ -452,11 +450,6 @@ function AdminCompetencyUnitsPage() {
                       )}
                     </td>
 
-                    {/* JUMLAH SOAL */}
-                    <td className="px-4 py-4 text-center font-bold font-mono text-charcoal dark:text-forest-100">
-                      {u.question_count ?? 5}
-                    </td>
-
                     {/* KUALIFIKASI TERHUBUNG */}
                     <td className="px-5 py-4">
                       {u.qualification_codes ? (
@@ -473,17 +466,6 @@ function AdminCompetencyUnitsPage() {
                       ) : (
                         <span className="text-gray-400 italic text-[11px]">Belum terhubung</span>
                       )}
-                    </td>
-
-                    {/* STATUS */}
-                    <td className="px-4 py-4 text-center">
-                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                        u.status === "ACTIVE"
-                          ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800"
-                          : "bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-800 dark:text-gray-400"
-                      }`}>
-                        {u.status === "ACTIVE" ? "Aktif" : "Nonaktif"}
-                      </span>
                     </td>
 
                     {/* AKSI */}

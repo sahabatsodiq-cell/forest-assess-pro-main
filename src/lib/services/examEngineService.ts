@@ -544,7 +544,7 @@ export const getParticipantProfileDetailsFn = createServerFn({ method: "POST" })
   });
 
 export const updateParticipantProfileDetailsFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; name: string; participant_number?: string; password?: string }) => data)
+  .validator((data: { token: string; name: string; participant_number?: string | undefined; password?: string | undefined }) => data)
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
@@ -561,11 +561,11 @@ export const updateParticipantProfileDetailsFn = createServerFn({ method: "POST"
       `).run(data.name, data.participant_number || null, session.userId);
     }
 
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const addParticipantQualificationFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; qualification_id: number; registration_number?: string }) => data)
+  .validator((data: { token: string; qualification_id: number; registration_number?: string | undefined }) => data)
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
@@ -577,7 +577,7 @@ export const addParticipantQualificationFn = createServerFn({ method: "POST" })
         registration_number = EXCLUDED.registration_number
     `).run(session.userId, data.qualification_id, data.registration_number || null);
 
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const updateParticipantQualificationRegNoFn = createServerFn({ method: "POST" })

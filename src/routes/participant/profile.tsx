@@ -84,14 +84,14 @@ function ParticipantProfilePage() {
     const token = localStorage.getItem("askganis_token") || "";
 
     try {
-      const res = await updateParticipantProfileDetailsFn({
-        data: {
-          token,
-          name,
-          participant_number: participantNumber,
-          password: newPassword ? newPassword : undefined,
-        },
-      });
+      const profileData: any = {
+        token,
+        name,
+      };
+      if (participantNumber) profileData.participant_number = participantNumber;
+      if (newPassword) profileData.password = newPassword;
+
+      const res = await updateParticipantProfileDetailsFn({ data: profileData });
 
       if (res.success) {
         toast.success("Profil & Nomor KTP/NIK Anda berhasil disimpan!");
@@ -127,13 +127,13 @@ function ParticipantProfilePage() {
     const token = localStorage.getItem("askganis_token") || "";
 
     try {
-      const res = await addParticipantQualificationFn({
-        data: {
-          token,
-          qualification_id: Number(selectedQualId),
-          registration_number: newQualRegNo.trim() ? newQualRegNo.trim() : undefined,
-        },
-      });
+      const qualData: any = {
+        token,
+        qualification_id: Number(selectedQualId),
+      };
+      if (newQualRegNo.trim()) qualData.registration_number = newQualRegNo.trim();
+
+      const res = await addParticipantQualificationFn({ data: qualData });
 
       if (res.success) {
         toast.success("Kualifikasi GANISPH & Nomor Register berhasil ditambahkan!");

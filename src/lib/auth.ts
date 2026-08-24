@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { getDb } from "./db";
 
 const SESSION_COOKIE_NAME = "session_token";
-const JWT_SECRET = process.env.JWT_SECRET || "askganisph-secret-key-for-local-dev-2026";
+const JWT_SECRET = process.env["JWT_SECRET"] || "askganisph-secret-key-for-local-dev-2026";
 
 const PBKDF2_ITERATIONS = 600000;
 
@@ -15,7 +15,7 @@ export function hashPassword(password: string): string {
 
 export function verifyPassword(password: string, storedHash: string): boolean {
   const parts = storedHash.split(":");
-  if (parts.length < 2) return false;
+  if (parts.length < 2 || !parts[0] || !parts[1]) return false;
   const salt = parts[0];
   const hash = parts[1];
   const iterations = parts[2] ? parseInt(parts[2], 10) : 1000;

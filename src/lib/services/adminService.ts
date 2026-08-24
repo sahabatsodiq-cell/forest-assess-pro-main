@@ -64,7 +64,7 @@ export const getUsersFn = createServerFn({ method: "POST" })
   });
 
 export const createUserFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; name: string; email: string; password: string; role: string; participant_number?: string; qualification_ids?: number[] }) => data)
+  .validator((data: { token: string; name: string; email: string; password: string; role: string; participant_number?: string | undefined; qualification_ids?: number[] | undefined }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
@@ -89,11 +89,11 @@ export const createUserFn = createServerFn({ method: "POST" })
     }
 
     await logAudit(session.userId, "CREATE_USER", "users", userId as number, { email: data.email, role: data.role });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const updateUserFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; id: number; name: string; role: string; participant_number?: string; password?: string; qualification_ids?: number[] }) => data)
+  .validator((data: { token: string; id: number; name: string; role: string; participant_number?: string | undefined; password?: string | undefined; qualification_ids?: number[] | undefined }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
@@ -147,49 +147,86 @@ export const getMasterGanisphFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
     let query = `
-      SELECT mg.id, mg.name, mg.qualification_name, mg.registration_number, mg.email,
-             u.participant_number AS user_nik
-      FROM master_ganisph mg
-      LEFT JOIN users u ON LOWER(mg.email) = LOWER(u.email)
+      SELECT id, company_name, assignment_type, name, qualification_name, registration_number, register_active_end, assignment_active_end, regency_city, created_at
+      FROM master_ganisph
     `;
     const params: any[] = [];
     if (data.qualification_name && data.qualification_name !== "ALL") {
-      query += " WHERE mg.qualification_name = ?";
+      query += " WHERE qualification_name = ?";
       params.push(data.qualification_name);
     }
-    query += " ORDER BY mg.id DESC";
+    query += " ORDER BY id ASC";
     const res = await db.prepare(query).all(...params);
     return Array.isArray(res) ? res : [];
   });
 
 export const createMasterGanisphFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; name: string; qualification_name: string; registration_number?: string; email?: string }) => data)
+  .validator((data: {
+    token: string;
+    company_name?: string | undefined;
+    assignment_type?: string | undefined;
+    name: string;
+    qualification_name: string;
+    registration_number?: string | undefined;
+    register_active_end?: string | undefined;
+    assignment_active_end?: string | undefined;
+    regency_city?: string | undefined;
+  }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
     const res = await db.prepare(`
-      INSERT INTO master_ganisph (name, qualification_name, registration_number, email)
-      VALUES (?, ?, ?, ?)
-      RETURNING id
-    `).run(data.name, data.qualification_name, data.registration_number || null, data.email || null);
+      INSERT INTO master_ganisph (company_name, assignment_type, name, qualification_name, registration_number, register_active_end, assignment_active_end, regency_city)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      data.company_name || null,
+      data.assignment_type || null,
+      data.name,
+      data.qualification_name,
+      data.registration_number || null,
+      data.register_active_end || null,
+      data.assignment_active_end || null,
+      data.regency_city || null
+    );
 
-    await logAudit(session.userId, "CREATE_MASTER_GANISPH", "master_ganisph", (res as any).lastInsertRowid as number, { name: data.name });
-    return { success: true };
+    await logAudit(session.userId, "CREATE_MASTER_GANISPH", "master_ganisph", res.lastInsertRowid as number, { name: data.name });
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const updateMasterGanisphFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; id: number; name: string; qualification_name: string; registration_number?: string; email?: string }) => data)
+  .validator((data: {
+    token: string;
+    id: number;
+    company_name?: string | undefined;
+    assignment_type?: string | undefined;
+    name: string;
+    qualification_name: string;
+    registration_number?: string | undefined;
+    register_active_end?: string | undefined;
+    assignment_active_end?: string | undefined;
+    regency_city?: string | undefined;
+  }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
     await db.prepare(`
       UPDATE master_ganisph
-      SET name = ?, qualification_name = ?, registration_number = ?, email = ?
+      SET company_name = ?, assignment_type = ?, name = ?, qualification_name = ?, registration_number = ?, register_active_end = ?, assignment_active_end = ?, regency_city = ?
       WHERE id = ?
-    `).run(data.name, data.qualification_name, data.registration_number || null, data.email || null, data.id);
+    `).run(
+      data.company_name || null,
+      data.assignment_type || null,
+      data.name,
+      data.qualification_name,
+      data.registration_number || null,
+      data.register_active_end || null,
+      data.assignment_active_end || null,
+      data.regency_city || null,
+      data.id
+    );
 
     await logAudit(session.userId, "UPDATE_MASTER_GANISPH", "master_ganisph", data.id, { name: data.name });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const deleteMasterGanisphFn = createServerFn({ method: "POST" })
@@ -199,7 +236,7 @@ export const deleteMasterGanisphFn = createServerFn({ method: "POST" })
     const db = await getDb();
     await db.prepare("DELETE FROM master_ganisph WHERE id = ?").run(data.id);
     await logAudit(session.userId, "DELETE_MASTER_GANISPH", "master_ganisph", data.id);
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const createQualificationFn = createServerFn({ method: "POST" })
@@ -217,7 +254,7 @@ export const createQualificationFn = createServerFn({ method: "POST" })
     `).run(data.code.toUpperCase(), data.name, data.description || null);
 
     await logAudit(session.userId, "CREATE_QUALIFICATION", "qualifications", res.lastInsertRowid as number, { code: data.code });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const updateQualificationFn = createServerFn({ method: "POST" })
@@ -227,7 +264,7 @@ export const updateQualificationFn = createServerFn({ method: "POST" })
     const db = await getDb();
     await db.prepare("UPDATE qualifications SET name = ?, description = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.description || null, data.status, data.id);
     await logAudit(session.userId, "UPDATE_QUALIFICATION", "qualifications", data.id, { name: data.name });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const deleteQualificationFn = createServerFn({ method: "POST" })
@@ -237,7 +274,7 @@ export const deleteQualificationFn = createServerFn({ method: "POST" })
     const db = await getDb();
     await db.prepare("DELETE FROM qualifications WHERE id = ?").run(data.id);
     await logAudit(session.userId, "DELETE_QUALIFICATION", "qualifications", data.id);
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 // ------------------------------------------------------------------

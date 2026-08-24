@@ -36,10 +36,17 @@ async function main() {
     JOIN qualifications q ON qcu.qualification_id = q.id
     LIMIT 20;
   `;
-  console.log("=== SUBJECTS TABLE ===");
-  const allSubjects = await sql`SELECT * FROM subjects ORDER BY id;`;
-  console.log("Subjects count:", allSubjects.length);
-  console.log(allSubjects);
+  console.log("=== MASTER GANISPH COLUMNS ===");
+  const cols = await sql`
+    SELECT column_name, data_type 
+    FROM information_schema.columns 
+    WHERE table_name = 'master_ganisph' 
+    ORDER BY ordinal_position;
+  `;
+  console.log(cols);
+
+  const sample = await sql`SELECT * FROM master_ganisph LIMIT 5;`;
+  console.log("Sample rows:", sample);
 
   console.log("\n=== QUESTIONS SUBJECT_IDS ===");
   const qs = await sql`SELECT id, question_text, subject_id, competency_unit_id FROM questions;`;

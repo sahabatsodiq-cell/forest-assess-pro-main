@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getSubjectsFn, createSubjectFn, updateSubjectFn, getQualificationsFn, getCompetencyUnitsFn } from "@/lib/services/adminService";
 import { BookOpen, Plus, Search, Edit2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { toast } from "sonner";
 
@@ -178,7 +178,7 @@ function AdminSubjectsPage() {
 
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700">
+            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-forest-700 focus:ring-2 focus:ring-forest-900/20 active:scale-[0.98] transition-all">
               <Plus className="h-4 w-4" />
               Tambah Materi
             </button>
@@ -188,6 +188,9 @@ function AdminSubjectsPage() {
               <DialogTitle className="font-display text-base font-bold text-charcoal">
                 Tambah Materi Ujian Baru
               </DialogTitle>
+              <DialogDescription className="text-[11px] text-muted-foreground mt-1">
+                Lengkapi rincian materi kompetensi kehutanan baru yang akan dikaitkan dengan unit kompetensi.
+              </DialogDescription>
             </DialogHeader>
 
             {formError && (
@@ -198,11 +201,11 @@ function AdminSubjectsPage() {
 
             <form onSubmit={handleCreate} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Pilih Unit Kompetensi (Opsional)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Pilih Unit Kompetensi (Opsional)</label>
                 <select
                   value={selectedUnitId}
                   onChange={(e) => handleUnitSelect(Number(e.target.value))}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+                  className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
                 >
                   <option value="">Pilih dari Master Unit Kompetensi...</option>
                   {competencyUnits.map((u) => (
@@ -214,47 +217,56 @@ function AdminSubjectsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Kode Materi</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kode Materi</label>
                 <input
                   type="text"
                   required
                   placeholder="Contoh: K3, Org-Job, Ren-Kurpet..."
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono focus:border-forest-700 focus:outline-none"
+                  className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-mono font-medium text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Materi_Subjek</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Materi / Subjek</label>
                 <input
                   type="text"
                   required
                   placeholder="Nama materi/subjek kompetensi..."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+                  className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-medium text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Deskripsi</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Deskripsi</label>
                 <textarea
                   rows={2}
                   placeholder="Penjelasan ringkas materi..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+                  className="mt-1.5 w-full rounded-lg border border-border bg-white p-2.5 text-xs text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200 resize-none"
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={formLoading}
-                className="mt-2 w-full rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
-              >
-                {formLoading ? "Menyimpan..." : "Simpan Materi"}
-              </button>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(false)}
+                  className="flex-1 rounded-lg border border-border bg-white py-2.5 text-xs font-semibold text-charcoal hover:bg-gray-50 focus:ring-2 focus:ring-gray-100 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex-1 rounded-lg bg-forest-900 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-forest-700 focus:ring-2 focus:ring-forest-900/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                >
+                  {formLoading ? "Menyimpan..." : "Simpan Materi"}
+                </button>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
@@ -267,46 +279,49 @@ function AdminSubjectsPage() {
             <DialogTitle className="font-display text-base font-bold text-charcoal">
               Edit Materi: {editingSubject?.code}
             </DialogTitle>
+            <DialogDescription className="text-[11px] text-muted-foreground mt-1">
+              Perbarui nama materi, status aktif, atau deskripsi penjelasan materi kompetensi ini.
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleUpdate} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal">Kode Unit Kompetensi</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kode Unit Kompetensi</label>
               <input
                 type="text"
                 disabled
                 value={editingSubject?.competency_unit_code || "-"}
-                className="mt-1 w-full rounded-md border border-border bg-slate-50 px-3 py-1.5 text-xs font-mono font-bold text-amber-900"
+                className="mt-1.5 w-full rounded-lg border border-border bg-gray-100/70 px-3 py-2 text-xs font-mono font-bold text-amber-900 cursor-not-allowed select-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal">Kode Materi</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kode Materi</label>
               <input
                 type="text"
                 disabled
                 value={editingSubject?.code || ""}
-                className="mt-1 w-full rounded-md border border-border bg-slate-50 px-3 py-1.5 text-xs font-mono font-bold text-charcoal"
+                className="mt-1.5 w-full rounded-lg border border-border bg-gray-100/70 px-3 py-2 text-xs font-mono font-bold text-charcoal/70 cursor-not-allowed select-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal">Materi_Subjek</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Materi / Subjek</label>
               <input
                 type="text"
                 required
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+                className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-medium text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal">Status</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Status</label>
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value)}
-                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+                className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
               >
                 <option value="ACTIVE">ACTIVE</option>
                 <option value="INACTIVE">INACTIVE</option>
@@ -314,39 +329,48 @@ function AdminSubjectsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal">Deskripsi</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Deskripsi</label>
               <textarea
                 rows={2}
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+                className="mt-1.5 w-full rounded-lg border border-border bg-white p-2.5 text-xs text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200 resize-none"
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={editLoading}
-              className="mt-2 w-full rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
-            >
-              {editLoading ? "Menyimpan..." : "Perbarui Materi"}
-            </button>
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setEditOpen(false)}
+                className="flex-1 rounded-lg border border-border bg-white py-2.5 text-xs font-semibold text-charcoal hover:bg-gray-50 focus:ring-2 focus:ring-gray-100 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                disabled={editLoading}
+                className="flex-1 rounded-lg bg-forest-900 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-forest-700 focus:ring-2 focus:ring-forest-900/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+              >
+                {editLoading ? "Menyimpan..." : "Perbarui Materi"}
+              </button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/50 bg-white p-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Cari kode unit, kode materi, atau materi_subjek..."
+            placeholder="Cari kode unit, kode materi, atau materi / subjek..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none"
+            className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-xs focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
           />
         </div>
 
@@ -356,7 +380,7 @@ function AdminSubjectsPage() {
             setQualFilter(e.target.value);
             setPage(1);
           }}
-          className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-charcoal focus:outline-none"
+          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200 cursor-pointer"
         >
           <option value="ALL">Semua Kualifikasi</option>
           {qualifications.map((q) => (
@@ -376,10 +400,10 @@ function AdminSubjectsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <tr className="border-b border-border/30 bg-slate-50/75 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <th className="px-5 py-3.5 w-12 text-center">No</th>
                     <th className="px-4 py-3.5 w-56">Kode Unit Kompetensi</th>
-                    <th className="px-6 py-3.5">Materi_Subjek</th>
+                    <th className="px-6 py-3.5">Materi / Subjek</th>
                     <th className="px-4 py-3.5 w-36">Kode Materi</th>
                     <th className="px-4 py-3.5 w-24 text-center">Status</th>
                     <th className="px-4 py-3.5 w-20 text-center">Aksi</th>
@@ -399,35 +423,53 @@ function AdminSubjectsPage() {
                           {(page - 1) * pageSize + idx + 1}
                         </td>
                         <td className="px-4 py-3.5">
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-1.5">
                             {s.competency_unit_code ? (
-                              <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" title={s.competency_unit_title}>
+                              <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 cursor-help" title={s.competency_unit_title || ""}>
                                 {s.competency_unit_code}
                               </span>
                             ) : (
                               <span className="text-[11px] text-muted-foreground italic">-</span>
                             )}
                             {s.qualification_codes && (
-                              <div className="flex flex-wrap gap-1">
-                                {s.qualification_codes.split("; ").map((qc: string) => (
-                                  <span key={qc} className="rounded bg-forest-50 px-1.5 py-0.5 text-[9px] font-bold text-forest-900 border border-forest-100">
-                                    {qc}
-                                  </span>
-                                ))}
+                              <div className="flex flex-wrap gap-1 max-w-[210px]">
+                                {(() => {
+                                  const codes = s.qualification_codes.split("; ");
+                                  const limit = 3;
+                                  const visible = codes.slice(0, limit);
+                                  const extraCount = codes.length - limit;
+                                  return (
+                                    <>
+                                      {visible.map((qc: string) => (
+                                        <span key={qc} className="rounded bg-forest-50 px-1.5 py-0.5 text-[9px] font-semibold text-forest-900 border border-forest-100/50">
+                                          {qc}
+                                        </span>
+                                      ))}
+                                      {extraCount > 0 && (
+                                        <span 
+                                          className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold text-gray-600 border border-gray-200 cursor-help select-none"
+                                          title={codes.slice(limit).join(", ")}
+                                        >
+                                          +{extraCount}
+                                        </span>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-3.5 font-bold text-charcoal">
+                        <td className="px-6 py-3.5 font-semibold text-charcoal">
                           {s.name}
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className="rounded bg-forest-50 px-2.5 py-1 text-[10px] font-black uppercase text-forest-900 border border-forest-200 shadow-xs">
+                          <span className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-bold font-mono uppercase text-forest-900 border border-forest-200/60 shadow-2xs">
                             {s.code}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-center">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold ${s.status === "ACTIVE" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[9px] font-bold border ${s.status === "ACTIVE" ? "bg-green-50 text-green-700 border-green-200/50" : "bg-gray-100 text-gray-600 border-gray-200"}`}>
                             {s.status}
                           </span>
                         </td>

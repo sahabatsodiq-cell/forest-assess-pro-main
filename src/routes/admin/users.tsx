@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getUsersFn, createUserFn, toggleUserStatusFn, getQualificationsFn } from "@/lib/services/adminService";
 import { Users, Plus, Search, UserCheck, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 export const Route = createFileRoute("/admin/users")({
   component: AdminUsersPage,
@@ -15,6 +16,8 @@ function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Form State
   const [name, setName] = useState("");
@@ -99,12 +102,14 @@ function AdminUsersPage() {
 
   const filtered = users.filter((u) => {
     const matchSearch =
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (u.email || "").toLowerCase().includes(search.toLowerCase()) ||
       (u.qualification_codes && u.qualification_codes.toLowerCase().includes(search.toLowerCase()));
     const matchRole = roleFilter === "ALL" || u.role === roleFilter;
     return matchSearch && matchRole;
   });
+
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="space-y-6">
@@ -243,14 +248,20 @@ function AdminUsersPage() {
             type="text"
             placeholder="Cari nama, email, atau kualifikasi..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none"
           />
         </div>
 
         <select
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          onChange={(e) => {
+            setRoleFilter(e.target.value);
+            setPage(1);
+          }}
           className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-charcoal focus:outline-none"
         >
           <option value="ALL">Semua Role</option>
@@ -265,86 +276,96 @@ function AdminUsersPage() {
         {loading ? (
           <div className="p-8 text-center text-xs text-muted-foreground">Memuat data pengguna...</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <th className="px-6 py-3.5">Nama & Email</th>
-                  <th className="px-4 py-3.5">Role</th>
-                  <th className="px-4 py-3.5">Nomor KTP / NIK</th>
-                  <th className="px-4 py-3.5">Kualifikasi Dimiliki</th>
-                  <th className="px-4 py-3.5">Status</th>
-                  <th className="px-6 py-3.5 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20 text-xs">
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
-                      Tidak ada pengguna yang sesuai.
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3.5">Nama & Email</th>
+                    <th className="px-4 py-3.5">Role</th>
+                    <th className="px-4 py-3.5">Nomor KTP / NIK</th>
+                    <th className="px-4 py-3.5">Kualifikasi Dimiliki</th>
+                    <th className="px-4 py-3.5">Status</th>
+                    <th className="px-6 py-3.5 text-right">Aksi</th>
                   </tr>
-                ) : (
-                  filtered.map((u) => (
-                    <tr key={u.id} className="hover:bg-forest-50/10 transition-colors">
-                      <td className="px-6 py-3.5">
-                        <div className="font-bold text-charcoal">{u.name}</div>
-                        <div className="text-[11px] text-muted-foreground">{u.email}</div>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold ${
-                          u.role === 'SUPER_ADMIN' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
-                          u.role === 'ADMIN' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
-                          'bg-gray-50 text-gray-700 border border-gray-100'
-                        }`}>
-                          <Shield className="h-3 w-3" />
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5 font-mono text-muted-foreground font-bold">
-                        {u.participant_number || "-"}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        {u.qualification_codes ? (
-                          <div className="flex flex-wrap items-center gap-1">
-                            {u.qualification_codes.split("; ").map((qc: string, idx: number, arr: string[]) => (
-                              <span key={qc} className="inline-flex items-center gap-1">
-                                <span className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-extrabold text-forest-900 border border-forest-100 shadow-xs">
-                                  {qc}
-                                </span>
-                                {idx < arr.length - 1 && <span className="text-forest-900 font-extrabold text-xs font-mono mr-0.5">;</span>}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 italic text-[11px]">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                          u.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                        }`}>
-                          {u.is_active ? 'AKTIF' : 'NONAKTIF'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3.5 text-right">
-                        <button
-                          onClick={() => handleToggleStatus(u)}
-                          className={`rounded px-2.5 py-1 text-[11px] font-semibold border transition-colors ${
-                            u.is_active 
-                              ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
-                              : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
-                          }`}
-                        >
-                          {u.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>
+                </thead>
+                <tbody className="divide-y divide-border/20 text-xs">
+                  {filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                        Tidak ada pengguna yang sesuai.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    paginated.map((u) => (
+                      <tr key={u.id} className="hover:bg-forest-50/10 transition-colors">
+                        <td className="px-6 py-3.5">
+                          <div className="font-bold text-charcoal">{u.name}</div>
+                          <div className="text-[11px] text-muted-foreground">{u.email}</div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold ${
+                            u.role === 'SUPER_ADMIN' ? 'bg-purple-50 text-purple-700 border border-purple-100' :
+                            u.role === 'ADMIN' ? 'bg-blue-50 text-blue-700 border border-blue-100' :
+                            'bg-gray-50 text-gray-700 border border-gray-100'
+                          }`}>
+                            <Shield className="h-3 w-3" />
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-muted-foreground font-bold">
+                          {u.participant_number || "-"}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          {u.qualification_codes ? (
+                            <div className="flex flex-wrap items-center gap-1">
+                              {u.qualification_codes.split("; ").map((qc: string, idx: number, arr: string[]) => (
+                                <span key={qc} className="inline-flex items-center gap-1">
+                                  <span className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-extrabold text-forest-900 border border-forest-100 shadow-xs">
+                                    {qc}
+                                  </span>
+                                  {idx < arr.length - 1 && <span className="text-forest-900 font-extrabold text-xs font-mono mr-0.5">;</span>}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-[11px]">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                            u.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                          }`}>
+                            {u.is_active ? 'AKTIF' : 'NONAKTIF'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3.5 text-right">
+                          <button
+                            onClick={() => handleToggleStatus(u)}
+                            className={`rounded px-2.5 py-1 text-[11px] font-semibold border transition-colors ${
+                              u.is_active 
+                                ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100'
+                                : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                            }`}
+                          >
+                            {u.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              currentPage={page}
+              pageSize={pageSize}
+              totalItems={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="pengguna"
+            />
+          </>
         )}
       </div>
     </div>

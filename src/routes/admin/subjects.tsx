@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getSubjectsFn, createSubjectFn, getQualificationsFn } from "@/lib/services/adminService";
 import { BookOpen, Plus, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 export const Route = createFileRoute("/admin/subjects")({
   component: AdminSubjectsPage,
@@ -15,6 +16,8 @@ function AdminSubjectsPage() {
   const [search, setSearch] = useState("");
   const [qualFilter, setQualFilter] = useState("ALL");
   const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Form State
   const [qualificationId, setQualificationId] = useState<number | "">("");
@@ -86,10 +89,14 @@ function AdminSubjectsPage() {
   };
 
   const filtered = subjects.filter((s) => {
-    const matchesSearch = s.code.toLowerCase().includes(search.toLowerCase()) || s.name.toLowerCase().includes(search.toLowerCase());
-    const matchesQual = qualFilter === "ALL" || String(s.qualification_id) === qualFilter;
-    return matchesSearch && matchesQual;
+    const matchSearch =
+      s.name?.toLowerCase().includes(search.toLowerCase()) ||
+      s.code?.toLowerCase().includes(search.toLowerCase());
+    const matchQual = qualFilter === "ALL" || String(s.qualification_id) === qualFilter;
+    return matchSearch && matchQual;
   });
+
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="space-y-6">
@@ -205,14 +212,20 @@ function AdminSubjectsPage() {
             type="text"
             placeholder="Cari kode atau nama materi..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none"
           />
         </div>
 
         <select
           value={qualFilter}
-          onChange={(e) => setQualFilter(e.target.value)}
+          onChange={(e) => {
+            setQualFilter(e.target.value);
+            setPage(1);
+          }}
           className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-charcoal focus:outline-none"
         >
           <option value="ALL">Semua Kualifikasi</option>
@@ -228,47 +241,57 @@ function AdminSubjectsPage() {
         {loading ? (
           <div className="p-8 text-center text-xs text-muted-foreground">Memuat data materi...</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <th className="px-6 py-3.5">Kode & Nama Materi</th>
-                  <th className="px-4 py-3.5">Kualifikasi</th>
-                  <th className="px-4 py-3.5">Bobot</th>
-                  <th className="px-4 py-3.5">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20 text-xs">
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
-                      Belum ada materi terdaftar.
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3.5">Kode & Nama Materi</th>
+                    <th className="px-4 py-3.5">Kualifikasi</th>
+                    <th className="px-4 py-3.5">Bobot</th>
+                    <th className="px-4 py-3.5">Status</th>
                   </tr>
-                ) : (
-                  filtered.map((s) => (
-                    <tr key={s.id} className="hover:bg-forest-50/10 transition-colors">
-                      <td className="px-6 py-3.5">
-                        <div className="font-bold text-charcoal">{s.name}</div>
-                        <div className="text-[11px] font-mono text-muted-foreground">{s.code}</div>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <span className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-bold text-forest-900 border border-forest-100">
-                          {s.qualification_code}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5 font-semibold text-charcoal">{s.weight}%</td>
-                      <td className="px-4 py-3.5">
-                        <span className="rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-bold text-green-700">
-                          {s.status}
-                        </span>
+                </thead>
+                <tbody className="divide-y divide-border/20 text-xs">
+                  {filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                        Belum ada materi terdaftar.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    paginated.map((s) => (
+                      <tr key={s.id} className="hover:bg-forest-50/10 transition-colors">
+                        <td className="px-6 py-3.5">
+                          <div className="font-bold text-charcoal">{s.name}</div>
+                          <div className="text-[11px] font-mono text-muted-foreground">{s.code}</div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-bold text-forest-900 border border-forest-100">
+                            {s.qualification_code}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 font-semibold text-charcoal">{s.weight}%</td>
+                        <td className="px-4 py-3.5">
+                          <span className="rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-bold text-green-700">
+                            {s.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              currentPage={page}
+              pageSize={pageSize}
+              totalItems={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="materi"
+            />
+          </>
         )}
       </div>
     </div>

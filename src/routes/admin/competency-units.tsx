@@ -10,6 +10,7 @@ import {
 import { Plus, Search, Pencil, Power, Trash2, Filter, AlertTriangle, ListChecks } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 export const Route = createFileRoute("/admin/competency-units")({
   component: AdminCompetencyUnitsPage,
@@ -21,6 +22,8 @@ function AdminCompetencyUnitsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedQualId, setSelectedQualId] = useState<string>("ALL");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Create Modal State
   const [createOpen, setCreateOpen] = useState(false);
@@ -218,6 +221,8 @@ function AdminCompetencyUnitsPage() {
       u.qualification_codes?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -380,7 +385,7 @@ function AdminCompetencyUnitsPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((u) => (
+                paginated.map((u) => (
                   <tr key={u.id} className="transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40">
                     {/* KODE UNIT */}
                     <td className="px-6 py-4 font-mono font-black text-charcoal text-xs dark:text-forest-100">
@@ -465,6 +470,14 @@ function AdminCompetencyUnitsPage() {
             </tbody>
           </table>
         </div>
+        <DataTablePagination
+          currentPage={page}
+          pageSize={pageSize}
+          totalItems={filtered.length}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="unit kompetensi"
+        />
       </div>
 
       {/* EDIT MODAL DIALOG */}

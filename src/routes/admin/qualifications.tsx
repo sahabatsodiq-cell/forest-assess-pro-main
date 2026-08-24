@@ -9,6 +9,7 @@ import {
 import { Plus, Search, Pencil, Power, Trash2, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 export const Route = createFileRoute("/admin/qualifications")({
   component: AdminQualificationsPage,
@@ -18,6 +19,8 @@ function AdminQualificationsPage() {
   const [qualifications, setQualifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Create Modal State
   const [createOpen, setCreateOpen] = useState(false);
@@ -191,6 +194,8 @@ function AdminQualificationsPage() {
       q.description?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -281,7 +286,10 @@ function AdminQualificationsPage() {
             type="text"
             placeholder="Cari kode atau nama kualifikasi..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
           />
         </div>
@@ -314,7 +322,7 @@ function AdminQualificationsPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((q) => (
+                paginated.map((q) => (
                   <tr key={q.id} className="transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40">
                     {/* KODE */}
                     <td className="px-6 py-4 font-mono font-black text-charcoal text-sm dark:text-forest-100">
@@ -386,6 +394,14 @@ function AdminQualificationsPage() {
             </tbody>
           </table>
         </div>
+        <DataTablePagination
+          currentPage={page}
+          pageSize={pageSize}
+          totalItems={filtered.length}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="kualifikasi"
+        />
       </div>
 
       {/* EDIT MODAL DIALOG */}

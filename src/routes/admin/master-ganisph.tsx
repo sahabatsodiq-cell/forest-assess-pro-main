@@ -7,9 +7,10 @@ import {
   deleteMasterGanisphFn,
   getQualificationsFn,
 } from "@/lib/services/adminService";
-import { UserCheck, Plus, Search, Edit2, Trash2, Mail, Hash, Award, Check, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
+import { UserCheck, Plus, Search, Edit2, Trash2, Mail, Hash, Award, Check, CreditCard } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 export const Route = createFileRoute("/admin/master-ganisph")({
   component: AdminMasterGanisphPage,
@@ -480,69 +481,14 @@ function AdminMasterGanisphPage() {
               </table>
             </div>
 
-            {/* Pagination Footer */}
-            <div className="flex flex-col gap-3 border-t border-border/30 bg-gray-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-              {/* Left: Page size selector & info */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Tampilkan</span>
-                  <select
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="rounded-md border border-border bg-white px-2 py-1 text-xs font-medium text-charcoal focus:border-forest-700 focus:outline-none"
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                  </select>
-                  <span className="text-xs text-muted-foreground">per halaman</span>
-                </div>
-                <span className="hidden sm:inline text-xs text-muted-foreground">
-                  | Menampilkan {totalItems === 0 ? 0 : startIdx + 1}–{endIdx} dari {totalItems} data
-                </span>
-              </div>
-
-              {/* Right: Page navigation */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={safeCurrentPage <= 1}
-                  className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                  Sebelumnya
-                </button>
-
-                {getPageNumbers().map((page, i) =>
-                  typeof page === "string" ? (
-                    <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-xs text-muted-foreground select-none">
-                      …
-                    </span>
-                  ) : (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-semibold transition-colors ${
-                        page === safeCurrentPage
-                          ? "bg-forest-900 text-white shadow-sm"
-                          : "border border-border bg-white text-charcoal hover:bg-gray-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  )
-                )}
-
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={safeCurrentPage >= totalPages}
-                  className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  Selanjutnya
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
+            <DataTablePagination
+              currentPage={currentPage}
+              pageSize={pageSize}
+              totalItems={totalItems}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="data"
+            />
           </>
         )}
       </div>

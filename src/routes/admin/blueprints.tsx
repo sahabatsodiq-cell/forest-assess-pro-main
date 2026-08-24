@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getBlueprintsFn, createBlueprintFn, getQualificationsFn, getSubjectsFn } from "@/lib/services/adminService";
 import { Layers, Plus, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 export const Route = createFileRoute("/admin/blueprints")({
   component: AdminBlueprintsPage,
@@ -14,6 +15,8 @@ function AdminBlueprintsPage() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Form State
   const [qualificationId, setQualificationId] = useState<number | "">("");
@@ -247,39 +250,54 @@ function AdminBlueprintsPage() {
       </div>
 
       {/* Blueprint list */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {loading ? (
-          <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Memuat blueprint...</div>
-        ) : blueprints.length === 0 ? (
-          <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Belum ada blueprint ujian.</div>
-        ) : (
-          blueprints.map((b) => (
-            <div key={b.id} className="rounded-xl border border-border/60 bg-white p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-border/30 pb-3">
-                <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-bold text-forest-900 border border-forest-100">
-                  {b.qualification_code}
-                </span>
-                <span className="font-display text-sm font-extrabold text-forest-900">
-                  {b.total_questions} Total Soal
-                </span>
-              </div>
+      <div className="space-y-4">
+        <div className="grid gap-6 md:grid-cols-2">
+          {loading ? (
+            <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Memuat blueprint...</div>
+          ) : blueprints.length === 0 ? (
+            <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Belum ada blueprint ujian.</div>
+          ) : (
+            blueprints.slice((page - 1) * pageSize, page * pageSize).map((b) => (
+              <div key={b.id} className="rounded-xl border border-border/60 bg-white p-6 shadow-sm space-y-4 dark:bg-charcoal dark:border-charcoal/60">
+                <div className="flex items-center justify-between border-b border-border/30 pb-3 dark:border-charcoal/60">
+                  <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-bold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
+                    {b.qualification_code}
+                  </span>
+                  <span className="font-display text-sm font-extrabold text-forest-900 dark:text-forest-300">
+                    {b.total_questions} Total Soal
+                  </span>
+                </div>
 
-              <div>
-                <h3 className="font-display text-base font-bold text-charcoal">{b.name}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">{b.description || "Tanpa deskripsi."}</p>
-              </div>
+                <div>
+                  <h3 className="font-display text-base font-bold text-charcoal dark:text-forest-100">{b.name}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground dark:text-forest-100/70">{b.description || "Tanpa deskripsi."}</p>
+                </div>
 
-              <div className="space-y-1.5 border-t border-border/20 pt-3 text-xs">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Komposisi Alokasi:</div>
-                {b.items?.map((item: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between text-muted-foreground">
-                    <span>{item.subject_name} ({item.difficulty})</span>
-                    <span className="font-bold text-charcoal">{item.question_count} Soal</span>
-                  </div>
-                ))}
+                <div className="space-y-1.5 border-t border-border/20 pt-3 text-xs dark:border-charcoal/60">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:text-forest-100/60 mb-2">Komposisi Alokasi:</div>
+                  {b.items?.map((item: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-muted-foreground dark:text-forest-100/80">
+                      <span>{item.subject_name} ({item.difficulty})</span>
+                      <span className="font-bold text-charcoal dark:text-forest-100">{item.question_count} Soal</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))
+            ))
+          )}
+        </div>
+
+        {blueprints.length > 0 && (
+          <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden dark:bg-charcoal dark:border-charcoal/60">
+            <DataTablePagination
+              currentPage={page}
+              pageSize={pageSize}
+              totalItems={blueprints.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="blueprint"
+            />
+          </div>
         )}
       </div>
     </div>

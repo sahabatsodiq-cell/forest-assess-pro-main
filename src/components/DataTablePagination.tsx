@@ -17,7 +17,7 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
   totalItems,
   onPageChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 25, 50],
+  pageSizeOptions = [10, 25, 50, 100],
   itemLabel = "data",
 }) => {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -43,18 +43,18 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 border-t border-border/30 bg-gray-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 border-t border-border/30 bg-gray-50/50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:bg-charcoal/30 dark:border-charcoal/60">
       {/* Left: Page size selector & info */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Tampilkan</span>
+          <span className="text-xs text-muted-foreground dark:text-forest-100/70">Tampilkan</span>
           <select
             value={pageSize}
             onChange={(e) => {
               onPageSizeChange(Number(e.target.value));
               onPageChange(1);
             }}
-            className="rounded-md border border-border bg-white px-2 py-1 text-xs font-medium text-charcoal focus:border-forest-700 focus:outline-none"
+            className="rounded-md border border-border bg-white px-2 py-1 text-xs font-medium text-charcoal focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal dark:text-forest-100"
           >
             {pageSizeOptions.map((option) => (
               <option key={option} value={option}>
@@ -62,19 +62,19 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
               </option>
             ))}
           </select>
-          <span className="text-xs text-muted-foreground">per halaman</span>
+          <span className="text-xs text-muted-foreground dark:text-forest-100/70">per halaman</span>
         </div>
-        <span className="hidden sm:inline text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground dark:text-forest-100/70">
           | Menampilkan {startIdx}–{endIdx} dari {totalItems} {itemLabel}
         </span>
       </div>
 
       {/* Right: Page navigation */}
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         <button
           onClick={() => onPageChange(Math.max(1, safeCurrentPage - 1))}
           disabled={safeCurrentPage <= 1}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:border-charcoal/60 dark:bg-charcoal dark:text-forest-100 dark:hover:bg-charcoal/80"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
           Sebelumnya
@@ -82,7 +82,7 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
 
         {getPageNumbers().map((page, i) =>
           typeof page === "string" ? (
-            <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-xs text-muted-foreground select-none">
+            <span key={`ellipsis-${i}`} className="px-2 py-1.5 text-xs text-muted-foreground select-none dark:text-forest-100/60">
               …
             </span>
           ) : (
@@ -91,8 +91,8 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
               onClick={() => onPageChange(page)}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
                 safeCurrentPage === page
-                  ? "bg-forest-900 text-white shadow-xs"
-                  : "border border-border bg-white text-charcoal hover:bg-gray-50"
+                  ? "bg-forest-900 text-white shadow-xs dark:bg-forest-700"
+                  : "border border-border bg-white text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:bg-charcoal dark:text-forest-100 dark:hover:bg-charcoal/80"
               }`}
             >
               {page}
@@ -103,7 +103,7 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
         <button
           onClick={() => onPageChange(Math.min(totalPages, safeCurrentPage + 1))}
           disabled={safeCurrentPage >= totalPages}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-charcoal hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors dark:border-charcoal/60 dark:bg-charcoal dark:text-forest-100 dark:hover:bg-charcoal/80"
         >
           Selanjutnya
           <ChevronRight className="h-3.5 w-3.5" />

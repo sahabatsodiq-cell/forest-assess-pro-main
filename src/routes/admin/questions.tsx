@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getQuestionsFn, createQuestionFn, importQuestionsCsvFn, getQualificationsFn, getSubjectsFn } from "@/lib/services/adminService";
 import { Database, Plus, Upload, Filter, Search, FileSpreadsheet, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 export const Route = createFileRoute("/admin/questions")({
   component: AdminQuestionsPage,
@@ -13,6 +14,8 @@ function AdminQuestionsPage() {
   const [qualifications, setQualifications] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -166,6 +169,8 @@ function AdminQuestionsPage() {
     const matchesDiff = difficultyFilter === "ALL" || q.difficulty === difficultyFilter;
     return matchesSearch && matchesQual && matchesDiff;
   });
+
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="space-y-6">
@@ -426,14 +431,20 @@ function AdminQuestionsPage() {
             type="text"
             placeholder="Cari pertanyaan..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
             className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none"
           />
         </div>
 
         <select
           value={qualFilter}
-          onChange={(e) => setQualFilter(e.target.value)}
+          onChange={(e) => {
+            setQualFilter(e.target.value);
+            setPage(1);
+          }}
           className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-charcoal"
         >
           <option value="ALL">Semua Kualifikasi</option>
@@ -444,7 +455,10 @@ function AdminQuestionsPage() {
 
         <select
           value={difficultyFilter}
-          onChange={(e) => setDifficultyFilter(e.target.value)}
+          onChange={(e) => {
+            setDifficultyFilter(e.target.value);
+            setPage(1);
+          }}
           className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-charcoal"
         >
           <option value="ALL">Semua Tingkat</option>
@@ -459,76 +473,88 @@ function AdminQuestionsPage() {
         {loading ? (
           <div className="p-8 text-center text-xs text-muted-foreground">Memuat bank soal...</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  <th className="px-5 py-3.5 w-12 text-center">No</th>
-                  <th className="px-4 py-3.5">Pertanyaan</th>
-                  <th className="px-4 py-3.5 w-28">Kualifikasi</th>
-                  <th className="px-4 py-3.5 w-32">Materi</th>
-                  <th className="px-4 py-3.5 w-24">Kesulitan</th>
-                  <th className="px-4 py-3.5 w-20 text-center">Jawaban</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20 text-xs">
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
-                      Belum ada soal dalam bank soal.
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <th className="px-5 py-3.5 w-12 text-center">No</th>
+                    <th className="px-4 py-3.5">Pertanyaan</th>
+                    <th className="px-4 py-3.5 w-28">Kualifikasi</th>
+                    <th className="px-4 py-3.5 w-32">Materi</th>
+                    <th className="px-4 py-3.5 w-24">Kesulitan</th>
+                    <th className="px-4 py-3.5 w-20 text-center">Jawaban</th>
                   </tr>
-                ) : (
-                  filtered.map((q, idx) => (
-                    <tr key={q.id} className="hover:bg-forest-50/10 transition-colors">
-                      <td className="px-5 py-3.5 text-center font-mono text-muted-foreground">{idx + 1}</td>
-                      <td className="px-4 py-3.5 font-medium text-charcoal">
-                        <div>{q.question_text}</div>
-                        <div className="mt-1 text-[11px] text-muted-foreground space-x-2">
-                          <span>A: {q.option_a}</span>
-                          <span>B: {q.option_b}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex flex-col gap-1.5 max-w-[200px]">
-                          {/* Qualification Badges */}
-                          <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
-                            {(q.linked_qualification_codes ? q.linked_qualification_codes.split("; ") : [q.qualification_code]).map((code: string) => (
-                              <span key={code} className="rounded bg-forest-50 px-1.5 py-0.5 text-[9px] font-extrabold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
-                                {code}
-                              </span>
-                            ))}
-                          </div>
-
-                          {/* Unit Code Badge */}
-                          {q.competency_unit_code && (
-                            <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" title={q.competency_unit_title}>
-                              {q.competency_unit_code}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-muted-foreground">{q.subject_name}</td>
-                      <td className="px-4 py-3.5">
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                          q.difficulty === 'EASY' ? 'bg-blue-50 text-blue-700' :
-                          q.difficulty === 'MEDIUM' ? 'bg-orange-50 text-orange-700' :
-                          'bg-red-50 text-red-700'
-                        }`}>
-                          {q.difficulty}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-forest-900 font-bold text-white text-[11px]">
-                          {q.correct_answer}
-                        </span>
+                </thead>
+                <tbody className="divide-y divide-border/20 text-xs">
+                  {filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                        Belum ada soal dalam bank soal.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ) : (
+                    paginated.map((q, idx) => (
+                      <tr key={q.id} className="hover:bg-forest-50/10 transition-colors">
+                        <td className="px-5 py-3.5 text-center font-mono text-muted-foreground">
+                          {(page - 1) * pageSize + idx + 1}
+                        </td>
+                        <td className="px-4 py-3.5 font-medium text-charcoal">
+                          <div>{q.question_text}</div>
+                          <div className="mt-1 text-[11px] text-muted-foreground space-x-2">
+                            <span>A: {q.option_a}</span>
+                            <span>B: {q.option_b}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex flex-col gap-1.5 max-w-[200px]">
+                            {/* Qualification Badges */}
+                            <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
+                              {(q.linked_qualification_codes ? q.linked_qualification_codes.split("; ") : [q.qualification_code]).map((code: string) => (
+                                <span key={code} className="rounded bg-forest-50 px-1.5 py-0.5 text-[9px] font-extrabold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
+                                  {code}
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Unit Code Badge */}
+                            {q.competency_unit_code && (
+                              <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" title={q.competency_unit_title}>
+                                {q.competency_unit_code}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-muted-foreground">{q.subject_name}</td>
+                        <td className="px-4 py-3.5">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                            q.difficulty === 'EASY' ? 'bg-blue-50 text-blue-700' :
+                            q.difficulty === 'MEDIUM' ? 'bg-orange-50 text-orange-700' :
+                            'bg-red-50 text-red-700'
+                          }`}>
+                            {q.difficulty}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-forest-900 font-bold text-white text-[11px]">
+                            {q.correct_answer}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              currentPage={page}
+              pageSize={pageSize}
+              totalItems={filtered.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="soal"
+            />
+          </>
         )}
       </div>
     </div>

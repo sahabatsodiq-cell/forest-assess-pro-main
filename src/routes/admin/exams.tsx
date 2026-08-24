@@ -11,6 +11,7 @@ import {
 import { Package, Plus, Edit2, Trash2, Check, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 export const Route = createFileRoute("/admin/exams")({
   component: AdminExamsPage,
@@ -20,6 +21,8 @@ function AdminExamsPage() {
   const [exams, setExams] = useState<any[]>([]);
   const [qualifications, setQualifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Create Modal State
   const [createOpen, setCreateOpen] = useState(false);
@@ -447,80 +450,95 @@ function AdminExamsPage() {
       </Dialog>
 
       {/* Exam Packages Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {loading ? (
-          <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Memuat paket ujian...</div>
-        ) : exams.length === 0 ? (
-          <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Belum ada paket ujian.</div>
-        ) : (
-          exams.map((e) => (
-            <div key={e.id} className="rounded-xl border border-border/60 bg-white p-6 shadow-sm space-y-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-extrabold text-forest-900 border border-forest-100">
-                  {e.qualification_code} — {e.code}
-                </span>
-                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                  e.status === 'PUBLISHED' ? 'bg-green-50 text-green-700 border border-green-100' :
-                  e.status === 'DRAFT' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                  'bg-gray-50 text-gray-700'
-                }`}>
-                  {e.status}
-                </span>
-              </div>
+      <div className="space-y-4">
+        <div className="grid gap-6 md:grid-cols-2">
+          {loading ? (
+            <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Memuat paket ujian...</div>
+          ) : exams.length === 0 ? (
+            <div className="col-span-full py-8 text-center text-xs text-muted-foreground">Belum ada paket ujian.</div>
+          ) : (
+            exams.slice((page - 1) * pageSize, page * pageSize).map((e) => (
+              <div key={e.id} className="rounded-xl border border-border/60 bg-white p-6 shadow-sm space-y-4 hover:shadow-md transition-shadow dark:bg-charcoal dark:border-charcoal/60">
+                <div className="flex items-center justify-between">
+                  <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-extrabold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
+                    {e.qualification_code} — {e.code}
+                  </span>
+                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
+                    e.status === 'PUBLISHED' ? 'bg-green-50 text-green-700 border border-green-100 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800' :
+                    e.status === 'DRAFT' ? 'bg-amber-50 text-amber-700 border border-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800' :
+                    'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                  }`}>
+                    {e.status}
+                  </span>
+                </div>
 
-              <div>
-                <h3 className="font-display text-base font-bold text-charcoal">{e.name}</h3>
-                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{e.instructions}</p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 rounded-lg bg-forest-50/10 p-3 text-center border border-border/30">
                 <div>
-                  <div className="text-[9px] font-bold text-muted-foreground">DURASI</div>
-                  <div className="text-xs font-bold text-charcoal">{e.duration_minutes} Menit</div>
-                </div>
-                <div>
-                  <div className="text-[9px] font-bold text-muted-foreground">SOAL</div>
-                  <div className="text-xs font-bold text-charcoal">{e.total_questions} Soal</div>
-                </div>
-                <div>
-                  <div className="text-[9px] font-bold text-muted-foreground">PASSING GRADE</div>
-                  <div className="text-xs font-bold text-forest-900">{e.passing_grade}%</div>
-                </div>
-              </div>
-
-              {/* Action Toolbar */}
-              <div className="flex items-center justify-between border-t border-border/20 pt-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => openEditModal(e)}
-                    className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors"
-                    title="Edit Paket Ujian"
-                  >
-                    <Edit2 className="h-3.5 w-3.5" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(e.id, e.name)}
-                    className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 hover:bg-red-100 transition-colors"
-                    title="Hapus Paket Ujian"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Hapus
-                  </button>
+                  <h3 className="font-display text-base font-bold text-charcoal dark:text-forest-100">{e.name}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground dark:text-forest-100/70 line-clamp-2">{e.instructions}</p>
                 </div>
 
-                {e.status === "DRAFT" && (
-                  <button
-                    onClick={() => handlePublish(e.id)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-forest-900 px-3 py-1 text-xs font-semibold text-white hover:bg-forest-700"
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    Publikasikan
-                  </button>
-                )}
+                <div className="grid grid-cols-3 gap-2 rounded-lg bg-forest-50/10 p-3 text-center border border-border/30 dark:border-charcoal/60">
+                  <div>
+                    <div className="text-[9px] font-bold text-muted-foreground dark:text-forest-100/60">DURASI</div>
+                    <div className="text-xs font-bold text-charcoal dark:text-forest-100">{e.duration_minutes} Menit</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-bold text-muted-foreground dark:text-forest-100/60">SOAL</div>
+                    <div className="text-xs font-bold text-charcoal dark:text-forest-100">{e.total_questions} Soal</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-bold text-muted-foreground dark:text-forest-100/60">PASSING GRADE</div>
+                    <div className="text-xs font-bold text-forest-900 dark:text-forest-300">{e.passing_grade}%</div>
+                  </div>
+                </div>
+
+                {/* Action Toolbar */}
+                <div className="flex items-center justify-between border-t border-border/20 pt-3 dark:border-charcoal/60">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openEditModal(e)}
+                      className="inline-flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300"
+                      title="Edit Paket Ujian"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(e.id, e.name)}
+                      className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+                      title="Hapus Paket Ujian"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Hapus
+                    </button>
+                  </div>
+
+                  {e.status === "DRAFT" && (
+                    <button
+                      onClick={() => handlePublish(e.id)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-forest-900 px-3 py-1 text-xs font-semibold text-white hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      Publikasikan
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            ))
+          )}
+        </div>
+
+        {exams.length > 0 && (
+          <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden dark:bg-charcoal dark:border-charcoal/60">
+            <DataTablePagination
+              currentPage={page}
+              pageSize={pageSize}
+              totalItems={exams.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="paket ujian"
+            />
+          </div>
         )}
       </div>
     </div>

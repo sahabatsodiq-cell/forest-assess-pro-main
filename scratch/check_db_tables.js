@@ -5,41 +5,46 @@ const connectionString = "postgresql://postgres.lfuzlvmytjbxuakpanfo:bobbY_%23%2
 async function main() {
   const sql = postgres(connectionString);
 
-  console.log("=== TABLES IN DB ===");
-  const tables = await sql`
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public'
-    ORDER BY table_name;
-  `;
-  console.log(tables.map(t => t.table_name));
-
-  console.log("\n=== COMPETENCY UNIT QUALIFICATIONS JUNCTION TABLE ===");
-  const cuq = await sql`
-    SELECT cuq.*, cu.code as unit_code, q.code as qual_code
-    FROM competency_unit_qualifications cuq
-    JOIN competency_units cu ON cuq.competency_unit_id = cu.id
-    JOIN qualifications q ON cuq.qualification_id = q.id
-    WHERE cu.code = 'A.02GNS01.001.1'
-  `;
-  console.log(cuq);
-
-  console.log("\n=== QUESTIONS TABLE SCHEMA & SAMPLE ===");
-  const qCols = await sql`
+  console.log("=== COMPETENCY UNITS COLUMNS ===");
+  const cuCols = await sql`
     SELECT column_name, data_type 
     FROM information_schema.columns 
-    WHERE table_name = 'questions';
+    WHERE table_name = 'competency_units';
   `;
-  console.log(qCols);
+  console.log(cuCols);
 
-  const sampleQ = await sql`
-    SELECT q.id, q.question_text, q.competency_unit_id, q.qualification_id, cu.code as unit_code, qual.code as qual_code
-    FROM questions q
-    LEFT JOIN competency_units cu ON q.competency_unit_id = cu.id
-    LEFT JOIN qualifications qual ON q.qualification_id = qual.id
-    LIMIT 5;
+  console.log("=== QUALIFICATIONS COLUMNS & ALL ROWS ===");
+  const qualCols = await sql`
+    SELECT column_name, data_type 
+    FROM information_schema.columns 
+    WHERE table_name = 'qualifications';
   `;
-  console.log(sampleQ);
+  console.log(qualCols);
+  const quals = await sql`SELECT * FROM qualifications ORDER BY id`;
+  console.log(quals);
+
+  console.log("=== SUBJECTS TABLE ===");
+  const subjects = await sql`SELECT s.*, q.code as qual_code FROM subjects s LEFT JOIN qualifications q ON s.qualification_id = q.id LIMIT 20;`;
+  console.log("Subjects count:", subjects.length);
+  console.log(subjects);
+
+  console.log("\n=== QUALIFICATION COMPETENCY UNITS JUNCTION TABLE WITH SUBJECT/MATERI ===");
+  const qcu = await sql`
+    SELECT qcu.*, cu.code as unit_code, cu.title as unit_title, q.code as qual_code
+    FROM qualification_competency_units qcu
+    JOIN competency_units cu ON qcu.competency_unit_id = cu.id
+    JOIN qualifications q ON qcu.qualification_id = q.id
+    LIMIT 20;
+  `;
+  console.log("=== SUBJECTS TABLE ===");
+  const allSubjects = await sql`SELECT * FROM subjects ORDER BY id;`;
+  console.log("Subjects count:", allSubjects.length);
+  console.log(allSubjects);
+
+  console.log("\n=== QUESTIONS SUBJECT_IDS ===");
+  const qs = await sql`SELECT id, question_text, subject_id, competency_unit_id FROM questions;`;
+  console.log("Questions count:", qs.length);
+  console.log("Questions subject_ids:", qs.map(q => q.subject_id));
 
   await sql.end();
 }
@@ -48,3 +53,4 @@ main().catch(err => {
   console.error(err);
   process.exit(1);
 });
+

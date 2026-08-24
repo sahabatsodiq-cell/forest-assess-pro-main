@@ -1,10 +1,9 @@
 import postgres from "postgres";
 
-const connectionString = process.env.DATABASE_URL || "postgresql://postgres.lfuzlvmytjbxuakpanfo:bobbY_%23%24%25%5E%26123456789%2B-%2A%2F@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres";
-
-console.log("Connecting to Supabase PostgreSQL Cloud to setup Unit Kompetensi tables & data...");
+const connectionString = "postgresql://postgres.lfuzlvmytjbxuakpanfo:bobbY_%23%24%25%5E%26123456789%2B-%2A%2F@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres";
 const sql = postgres(connectionString, { ssl: "require" });
 
+// Complete master dataset matching uploaded document (11 pages)
 const pdfData = [
   // 1. KURPET
   {
@@ -204,7 +203,6 @@ const pdfData = [
   {
     qualCode: "PAK",
     units: [
-      { code: "PAK", title: "Menerapkan Keselamatan, dan Kesehatan Kerja (K3)", subjectCode: "K3", questionCount: 5 },
       { code: "A.02GNS01.001.1", title: "Menerapkan Keselamatan, dan Kesehatan Kerja (K3)", subjectCode: "K3", questionCount: 5 },
       { code: "A.02GNS01.003.1", title: "Melakukan komunikasi efektif.", subjectCode: "Kom-Tif", questionCount: 5 },
       { code: "A.02GNS01.066.2", title: "Menetapkan Berat Arang Kayu", subjectCode: "Berat-Arang", questionCount: 5 },
@@ -255,55 +253,36 @@ const pdfData = [
   }
 ];
 
-async function setupCompetencyUnits() {
+async function fixMasterData() {
   try {
-    // 1. Create competency_units table if not exists
+    console.log("1. Adding missing columns to competency_units table if needed...");
     await sql`
-      CREATE TABLE IF NOT EXISTS competency_units (
-        id SERIAL PRIMARY KEY,
-        code VARCHAR(100) NOT NULL UNIQUE,
-        title TEXT NOT NULL,
-        subject_code VARCHAR(100),
-        question_count INTEGER DEFAULT 5,
-        description TEXT,
-        status VARCHAR(20) DEFAULT 'ACTIVE',
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-      );
+      ALTER TABLE competency_units 
+      ADD COLUMN IF NOT EXISTS subject_code VARCHAR(100),
+      ADD COLUMN IF NOT EXISTS question_count INTEGER DEFAULT 5;
     `;
 
-    // 2. Create qualification_competency_units junction table
-    await sql`
-      CREATE TABLE IF NOT EXISTS qualification_competency_units (
-        id SERIAL PRIMARY KEY,
-        qualification_id INTEGER NOT NULL REFERENCES qualifications(id) ON DELETE CASCADE,
-        competency_unit_id INTEGER NOT NULL REFERENCES competency_units(id) ON DELETE CASCADE,
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT unique_qual_comp UNIQUE (qualification_id, competency_unit_id)
-      );
-    `;
-
-    await sql`CREATE INDEX IF NOT EXISTS idx_qcu_qual_id ON qualification_competency_units(qualification_id);`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_qcu_comp_id ON qualification_competency_units(competency_unit_id);`;
-
-    await sql`
-      ALTER TABLE questions ADD COLUMN IF NOT EXISTS competency_unit_id INTEGER REFERENCES competency_units(id) ON DELETE SET NULL;
-    `;
-    await sql`CREATE INDEX IF NOT EXISTS idx_questions_comp_unit_id ON questions(competency_unit_id);`;
-
+    // Map existing qualifications in DB
     const qualRows = await sql`SELECT id, code FROM qualifications`;
     const qualMap = new Map();
     for (const r of qualRows) qualMap.set(r.code, r.id);
 
-    const uniquePdfUnits = new Map();
+    // Build unique set of valid unit codes from PDF
+    const pdfUnitCodes = new Set();
+    const uniquePdfUnits = new Map(); // code -> { title, subjectCode, questionCount }
+
     for (const group of pdfData) {
       for (const u of group.units) {
+        pdfUnitCodes.add(u.code);
         if (!uniquePdfUnits.has(u.code)) {
           uniquePdfUnits.set(u.code, u);
         }
       }
     }
 
+    console.log(`2. Total unique units in PDF dataset: ${uniquePdfUnits.size}`);
+
+    console.log("3. Inserting clean master unit kompetensi data...");
     await sql.begin(async (tx) => {
       await tx`DELETE FROM qualification_competency_units;`;
       await tx`DELETE FROM competency_units;`;
@@ -319,9 +298,13 @@ async function setupCompetencyUnits() {
         unitIdMap.set(code, inserted.id);
       }
 
+      console.log("4. Rebuilding qualification_competency_units junction links...");
       for (const group of pdfData) {
         const qualId = qualMap.get(group.qualCode);
-        if (!qualId) continue;
+        if (!qualId) {
+          console.warn(`Warning: Qualification code ${group.qualCode} not found in DB!`);
+          continue;
+        }
 
         for (const u of group.units) {
           const unitId = unitIdMap.get(u.code);
@@ -339,14 +322,13 @@ async function setupCompetencyUnits() {
     const [{ totalUnits }] = await sql`SELECT COUNT(*)::int as "totalUnits" FROM competency_units`;
     const [{ totalLinks }] = await sql`SELECT COUNT(*)::int as "totalLinks" FROM qualification_competency_units`;
 
-    console.log(`✓ Setup Complete! Total Unit Kompetensi: ${totalUnits}, Total Kualifikasi Links: ${totalLinks}`);
-    process.exit(0);
+    console.log(`\n✅ FIX COMPLETE! Total Unit Kompetensi: ${totalUnits}, Total Qualification Links: ${totalLinks}`);
   } catch (err) {
-    console.error("Error setting up Unit Kompetensi:", err);
+    console.error("❌ Error fixing master data:", err);
     process.exit(1);
   } finally {
     await sql.end();
   }
 }
 
-setupCompetencyUnits();
+fixMasterData();

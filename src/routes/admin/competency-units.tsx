@@ -29,6 +29,8 @@ function AdminCompetencyUnitsPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [code, setCode] = useState("");
   const [title, setTitle] = useState("");
+  const [subjectCode, setSubjectCode] = useState("");
+  const [questionCount, setQuestionCount] = useState<number>(5);
   const [description, setDescription] = useState("");
   const [selectedQualIds, setSelectedQualIds] = useState<number[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
@@ -38,6 +40,8 @@ function AdminCompetencyUnitsPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [editingUnit, setEditingUnit] = useState<any | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [editSubjectCode, setEditSubjectCode] = useState("");
+  const [editQuestionCount, setEditQuestionCount] = useState<number>(5);
   const [editDescription, setEditDescription] = useState("");
   const [editStatus, setEditStatus] = useState("ACTIVE");
   const [editQualIds, setEditQualIds] = useState<number[]>([]);
@@ -52,9 +56,13 @@ function AdminCompetencyUnitsPage() {
     const token = localStorage.getItem("askganis_token");
     if (!token) return;
     try {
-      const qualIdNum = selectedQualId !== "ALL" ? Number(selectedQualId) : undefined;
       const [uData, qData] = await Promise.all([
-        getCompetencyUnitsFn({ data: { token, qualification_id: qualIdNum } }),
+        getCompetencyUnitsFn({
+          data: {
+            token,
+            ...(selectedQualId !== "ALL" ? { qualification_id: Number(selectedQualId) } : {}),
+          },
+        }),
         getQualificationsFn({ data: { token } }),
       ]);
 
@@ -84,6 +92,8 @@ function AdminCompetencyUnitsPage() {
           token,
           code,
           title,
+          subject_code: subjectCode,
+          question_count: questionCount,
           description,
           qualification_ids: selectedQualIds,
         },
@@ -94,6 +104,8 @@ function AdminCompetencyUnitsPage() {
         setCreateOpen(false);
         setCode("");
         setTitle("");
+        setSubjectCode("");
+        setQuestionCount(5);
         setDescription("");
         setSelectedQualIds([]);
         loadData();
@@ -111,6 +123,8 @@ function AdminCompetencyUnitsPage() {
   const openEditModal = (u: any) => {
     setEditingUnit(u);
     setEditTitle(u.title);
+    setEditSubjectCode(u.subject_code || "");
+    setEditQuestionCount(u.question_count || 5);
     setEditDescription(u.description || "");
     setEditStatus(u.status || "ACTIVE");
     setEditOpen(true);
@@ -127,11 +141,13 @@ function AdminCompetencyUnitsPage() {
       const res = await updateCompetencyUnitFn({
         data: {
           token,
-          id: editingUnit.id,
+          id: Number(editingUnit.id),
           title: editTitle,
+          subject_code: editSubjectCode,
+          question_count: editQuestionCount,
           description: editDescription,
           status: editStatus,
-          qualification_ids: editQualIds.length > 0 ? editQualIds : undefined,
+          ...(editQualIds.length > 0 ? { qualification_ids: editQualIds } : {}),
         },
       });
 
@@ -161,6 +177,8 @@ function AdminCompetencyUnitsPage() {
           token,
           id: u.id,
           title: u.title,
+          subject_code: u.subject_code,
+          question_count: u.question_count,
           description: u.description || "",
           status: nextStatus,
         },
@@ -218,6 +236,7 @@ function AdminCompetencyUnitsPage() {
     (u) =>
       u.code?.toLowerCase().includes(search.toLowerCase()) ||
       u.title?.toLowerCase().includes(search.toLowerCase()) ||
+      u.subject_code?.toLowerCase().includes(search.toLowerCase()) ||
       u.qualification_codes?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -260,7 +279,7 @@ function AdminCompetencyUnitsPage() {
 
             <form onSubmit={handleCreate} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Kode Unit Kode (SKKNI/Standar)</label>
+                <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Kode Unit (SKKNI/Standar)</label>
                 <input
                   type="text"
                   required
@@ -281,6 +300,29 @@ function AdminCompetencyUnitsPage() {
                   onChange={(e) => setTitle(e.target.value)}
                   className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Kode Materi</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: K3, Kom-Tif, Ren-Kurpet"
+                    value={subjectCode}
+                    onChange={(e) => setSubjectCode(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Jumlah Soal</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={questionCount}
+                    onChange={(e) => setQuestionCount(Number(e.target.value))}
+                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                  />
+                </div>
               </div>
 
               <div>
@@ -333,7 +375,7 @@ function AdminCompetencyUnitsPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Cari kode unit, judul kompetensi, atau kualifikasi..."
+            placeholder="Cari kode unit, judul kompetensi, kode materi, atau kualifikasi..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
@@ -364,23 +406,25 @@ function AdminCompetencyUnitsPage() {
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border/50 bg-forest-50/50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-charcoal/80 dark:border-charcoal/60 dark:text-forest-100/70">
               <tr>
-                <th scope="col" className="px-6 py-3.5 w-44">KODE UNIT</th>
-                <th scope="col" className="px-6 py-3.5">JUDUL UNIT KOMPETENSI</th>
-                <th scope="col" className="px-6 py-3.5">KUALIFIKASI TERHUBUNG</th>
-                <th scope="col" className="px-4 py-3.5 text-center w-28">STATUS</th>
-                <th scope="col" className="px-6 py-3.5 text-center w-36">AKSI</th>
+                <th scope="col" className="px-5 py-3.5 w-40">KODE UNIT</th>
+                <th scope="col" className="px-5 py-3.5">JUDUL UNIT KOMPETENSI</th>
+                <th scope="col" className="px-4 py-3.5 w-32 text-center">KODE MATERI</th>
+                <th scope="col" className="px-4 py-3.5 w-24 text-center">JML SOAL</th>
+                <th scope="col" className="px-5 py-3.5">KUALIFIKASI TERHUBUNG</th>
+                <th scope="col" className="px-4 py-3.5 text-center w-24">STATUS</th>
+                <th scope="col" className="px-5 py-3.5 text-center w-32">AKSI</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40 dark:divide-charcoal/60">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={7} className="py-10 text-center text-xs text-muted-foreground">
                     Memuat unit kompetensi...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={7} className="py-10 text-center text-xs text-muted-foreground">
                     Tidak ada unit kompetensi ditemukan.
                   </td>
                 </tr>
@@ -388,19 +432,35 @@ function AdminCompetencyUnitsPage() {
                 paginated.map((u) => (
                   <tr key={u.id} className="transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40">
                     {/* KODE UNIT */}
-                    <td className="px-6 py-4 font-mono font-black text-charcoal text-xs dark:text-forest-100">
+                    <td className="px-5 py-4 font-mono font-black text-charcoal text-xs dark:text-forest-100">
                       {u.code}
                     </td>
 
                     {/* JUDUL UNIT KOMPETENSI */}
-                    <td className="px-6 py-4 font-bold text-charcoal dark:text-forest-100 max-w-md">
+                    <td className="px-5 py-4 font-bold text-charcoal dark:text-forest-100 max-w-sm">
                       {u.title}
                     </td>
 
+                    {/* KODE MATERI */}
+                    <td className="px-4 py-4 text-center">
+                      {u.subject_code ? (
+                        <span className="inline-block rounded-md bg-amber-50 px-2 py-1 text-[11px] font-mono font-black text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                          {u.subject_code}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 italic text-[11px]">-</span>
+                      )}
+                    </td>
+
+                    {/* JUMLAH SOAL */}
+                    <td className="px-4 py-4 text-center font-bold font-mono text-charcoal dark:text-forest-100">
+                      {u.question_count ?? 5}
+                    </td>
+
                     {/* KUALIFIKASI TERHUBUNG */}
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       {u.qualification_codes ? (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
                           {u.qualification_codes.split(", ").map((qc: string) => (
                             <span
                               key={qc}
@@ -427,7 +487,7 @@ function AdminCompetencyUnitsPage() {
                     </td>
 
                     {/* AKSI */}
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-5 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         {/* Edit Button */}
                         <button
@@ -509,6 +569,29 @@ function AdminCompetencyUnitsPage() {
                 onChange={(e) => setEditTitle(e.target.value)}
                 className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Kode Materi</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: K3, Kom-Tif, Ren-Kurpet"
+                  value={editSubjectCode}
+                  onChange={(e) => setEditSubjectCode(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Jumlah Soal</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={editQuestionCount}
+                  onChange={(e) => setEditQuestionCount(Number(e.target.value))}
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                />
+              </div>
             </div>
 
             <div>

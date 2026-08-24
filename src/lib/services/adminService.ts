@@ -259,7 +259,7 @@ export const getCompetencyUnitsFn = createServerFn({ method: "POST" })
         GROUP BY cu.id
         ORDER BY cu.code ASC
       `).all(data.qualification_id);
-      return Array.from(rows);
+      return Array.from(rows) as any[];
     } else {
       const rows = await db.prepare(`
         SELECT cu.*, string_agg(q.code, ', ') as qualification_codes
@@ -269,12 +269,12 @@ export const getCompetencyUnitsFn = createServerFn({ method: "POST" })
         GROUP BY cu.id
         ORDER BY cu.code ASC
       `).all();
-      return Array.from(rows);
+      return Array.from(rows) as any[];
     }
   });
 
 export const createCompetencyUnitFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; code: string; title: string; description?: string; qualification_ids?: number[] }) => data)
+  .validator((data: { token: string; code: string; title: string; subject_code?: string; question_count?: number; description?: string; qualification_ids?: number[] }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
@@ -285,10 +285,10 @@ export const createCompetencyUnitFn = createServerFn({ method: "POST" })
     }
 
     const res = await db.prepare(`
-      INSERT INTO competency_units (code, title, description, status)
-      VALUES ($1, $2, $3, 'ACTIVE')
+      INSERT INTO competency_units (code, title, subject_code, question_count, description, status)
+      VALUES ($1, $2, $3, $4, $5, 'ACTIVE')
       RETURNING id
-    `).run(data.code, data.title, data.description || null);
+    `).run(data.code, data.title, data.subject_code || null, data.question_count || 5, data.description || null);
 
     const unitId = (res as any).lastInsertRowid;
 
@@ -299,16 +299,23 @@ export const createCompetencyUnitFn = createServerFn({ method: "POST" })
     }
 
     await logAudit(session.userId, "CREATE_COMPETENCY_UNIT", "competency_units", unitId, { code: data.code });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const updateCompetencyUnitFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; id: number; title: string; description?: string; status: string; qualification_ids?: number[] }) => data)
+  .validator((data: { token: string; id: number; title: string; subject_code?: string; question_count?: number; description?: string; status: string; qualification_ids?: number[] }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
-    await db.prepare("UPDATE competency_units SET title = $1, description = $2, status = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4").run(data.title, data.description || null, data.status, data.id);
+    await db.prepare("UPDATE competency_units SET title = $1, subject_code = $2, question_count = $3, description = $4, status = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6").run(
+      data.title,
+      data.subject_code || null,
+      data.question_count || 5,
+      data.description || null,
+      data.status,
+      data.id
+    );
 
     if (Array.isArray(data.qualification_ids)) {
       await db.prepare("DELETE FROM qualification_competency_units WHERE competency_unit_id = $1").run(data.id);
@@ -318,7 +325,7 @@ export const updateCompetencyUnitFn = createServerFn({ method: "POST" })
     }
 
     await logAudit(session.userId, "UPDATE_COMPETENCY_UNIT", "competency_units", data.id, { title: data.title });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const deleteCompetencyUnitFn = createServerFn({ method: "POST" })
@@ -329,7 +336,7 @@ export const deleteCompetencyUnitFn = createServerFn({ method: "POST" })
 
     await db.prepare("DELETE FROM competency_units WHERE id = $1").run(data.id);
     await logAudit(session.userId, "DELETE_COMPETENCY_UNIT", "competency_units", data.id);
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 // ------------------------------------------------------------------
@@ -340,37 +347,74 @@ export const getSubjectsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
+    let query = `
+      SELECT s.*, 
+             COALESCE(cu.code, cu_sub.code) as competency_unit_code, 
+             COALESCE(cu.title, cu_sub.title) as competency_unit_title,
+             (
+               SELECT string_agg(DISTINCT q.code, '; ')
+               FROM qualification_competency_units qcu
+               JOIN qualifications q ON qcu.qualification_id = q.id
+               WHERE qcu.competency_unit_id = COALESCE(s.competency_unit_id, cu_sub.id)
+             ) as qualification_codes
+      FROM subjects s
+      LEFT JOIN competency_units cu ON s.competency_unit_id = cu.id
+      LEFT JOIN competency_units cu_sub ON s.code = cu_sub.subject_code
+      WHERE 1=1
+    `;
+    const params: any[] = [];
     if (data.qualification_id) {
-      const res = await db.prepare("SELECT s.*, q.code as qualification_code FROM subjects s JOIN qualifications q ON s.qualification_id = q.id WHERE s.qualification_id = ? ORDER BY s.id ASC").all(data.qualification_id);
-      return Array.isArray(res) ? res : [];
+      query += ` AND (
+        s.qualification_id = ? 
+        OR s.competency_unit_id IN (SELECT competency_unit_id FROM qualification_competency_units WHERE qualification_id = ?)
+        OR cu_sub.id IN (SELECT competency_unit_id FROM qualification_competency_units WHERE qualification_id = ?)
+      )`;
+      params.push(data.qualification_id, data.qualification_id, data.qualification_id);
     }
-    const res = await db.prepare("SELECT s.*, q.code as qualification_code FROM subjects s JOIN qualifications q ON s.qualification_id = q.id ORDER BY s.id ASC").all();
+    query += " ORDER BY s.id ASC";
+    const res = await db.prepare(query).all(...params);
     return Array.isArray(res) ? res : [];
   });
 
 export const createSubjectFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; qualification_id: number; code: string; name: string; description?: string; weight?: number }) => data)
+  .validator((data: { token: string; qualification_id?: number; competency_unit_id?: number; code: string; name: string; description?: string; weight?: number }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
+    let compUnitId: number | null = data.competency_unit_id || null;
+    if (!compUnitId && data.code) {
+      const cuRow = await db.prepare("SELECT id FROM competency_units WHERE subject_code = ? LIMIT 1").get(data.code) as any;
+      if (cuRow) compUnitId = cuRow.id;
+    }
+
     const res = await db.prepare(`
-      INSERT INTO subjects (qualification_id, code, name, description, weight, status)
-      VALUES (?, ?, ?, ?, ?, 'ACTIVE')
-    `).run(data.qualification_id, data.code.toUpperCase(), data.name, data.description || null, data.weight || 0);
+      INSERT INTO subjects (qualification_id, competency_unit_id, code, name, description, weight, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE')
+    `).run(data.qualification_id || null, compUnitId, data.code, data.name, data.description || null, data.weight || 0);
 
     await logAudit(session.userId, "CREATE_SUBJECT", "subjects", res.lastInsertRowid as number, { code: data.code });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const updateSubjectFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; id: number; name: string; description?: string; weight: number; status: string }) => data)
+  .validator((data: { token: string; id: number; name: string; description?: string; weight?: number; status: string; competency_unit_id?: number }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
-    await db.prepare("UPDATE subjects SET name = ?, description = ?, weight = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.description || null, data.weight, data.status, data.id);
+
+    let compUnitId: number | null = data.competency_unit_id || null;
+
+    await db.prepare("UPDATE subjects SET name = ?, description = ?, weight = ?, status = ?, competency_unit_id = COALESCE(?, competency_unit_id), updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(
+      data.name,
+      data.description || null,
+      data.weight || 0,
+      data.status,
+      compUnitId,
+      data.id
+    );
     await logAudit(session.userId, "UPDATE_SUBJECT", "subjects", data.id, { name: data.name });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 // ------------------------------------------------------------------
@@ -383,24 +427,27 @@ export const getQuestionsFn = createServerFn({ method: "POST" })
     const db = await getDb();
 
     let query = `
-      SELECT q.*, qual.code as qualification_code, sub.name as subject_name, sub.code as subject_code, cu.code as competency_unit_code, cu.title as competency_unit_title,
+      SELECT q.*, qual.code as qualification_code, sub.name as subject_name, sub.code as subject_code,
+             COALESCE(cu.code, cu_sub.code) as competency_unit_code,
+             COALESCE(cu.title, cu_sub.title) as competency_unit_title,
              (
                SELECT string_agg(DISTINCT q_sub.code, '; ')
                FROM qualification_competency_units qcu
                JOIN qualifications q_sub ON qcu.qualification_id = q_sub.id
-               WHERE qcu.competency_unit_id = q.competency_unit_id
+               WHERE qcu.competency_unit_id = COALESCE(q.competency_unit_id, cu_sub.id)
              ) as linked_qualification_codes
       FROM questions q 
       LEFT JOIN qualifications qual ON q.qualification_id = qual.id 
       LEFT JOIN subjects sub ON q.subject_id = sub.id 
       LEFT JOIN competency_units cu ON q.competency_unit_id = cu.id
+      LEFT JOIN competency_units cu_sub ON sub.code = cu_sub.subject_code
       WHERE 1=1
     `;
     const params: any[] = [];
 
     if (data.qualification_id) {
-      query += " AND (q.qualification_id = ? OR q.competency_unit_id IN (SELECT competency_unit_id FROM qualification_competency_units WHERE qualification_id = ?))";
-      params.push(data.qualification_id, data.qualification_id);
+      query += " AND (q.qualification_id = ? OR q.competency_unit_id IN (SELECT competency_unit_id FROM qualification_competency_units WHERE qualification_id = ?) OR cu_sub.id IN (SELECT competency_unit_id FROM qualification_competency_units WHERE qualification_id = ?))";
+      params.push(data.qualification_id, data.qualification_id, data.qualification_id);
     }
     if (data.subject_id) {
       query += " AND q.subject_id = ?";
@@ -421,6 +468,7 @@ export const createQuestionFn = createServerFn({ method: "POST" })
     token: string;
     qualification_id: number;
     subject_id: number;
+    competency_unit_id?: number;
     question_text: string;
     option_a: string;
     option_b: string;
@@ -434,12 +482,22 @@ export const createQuestionFn = createServerFn({ method: "POST" })
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
+    let compUnitId: number | null = data.competency_unit_id || null;
+    if (!compUnitId && data.subject_id) {
+      const subRow = await db.prepare("SELECT code FROM subjects WHERE id = ?").get(data.subject_id) as any;
+      if (subRow && subRow.code) {
+        const cuRow = await db.prepare("SELECT id FROM competency_units WHERE subject_code = ? LIMIT 1").get(subRow.code) as any;
+        if (cuRow) compUnitId = cuRow.id;
+      }
+    }
+
     const res = await db.prepare(`
-      INSERT INTO questions (qualification_id, subject_id, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation, status, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
+      INSERT INTO questions (qualification_id, subject_id, competency_unit_id, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation, status, created_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
     `).run(
       data.qualification_id,
       data.subject_id,
+      compUnitId,
       data.question_text,
       data.option_a,
       data.option_b,
@@ -452,7 +510,7 @@ export const createQuestionFn = createServerFn({ method: "POST" })
     );
 
     await logAudit(session.userId, "CREATE_QUESTION", "questions", res.lastInsertRowid as number, { text: data.question_text });
-    return { success: true };
+    return { success: true, error: undefined as string | undefined };
   });
 
 export const importQuestionsCsvFn = createServerFn({ method: "POST" })
@@ -464,6 +522,15 @@ export const importQuestionsCsvFn = createServerFn({ method: "POST" })
     const lines = data.csvContent.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
     if (lines.length <= 1) {
       return { success: false, error: "File CSV kosong atau tidak memiliki baris data." };
+    }
+
+    let compUnitId: number | null = null;
+    if (data.subject_id) {
+      const subRow = await db.prepare("SELECT code FROM subjects WHERE id = ?").get(data.subject_id) as any;
+      if (subRow && subRow.code) {
+        const cuRow = await db.prepare("SELECT id FROM competency_units WHERE subject_code = ? LIMIT 1").get(subRow.code) as any;
+        if (cuRow) compUnitId = cuRow.id;
+      }
     }
 
     const dataLines = lines[0]?.toLowerCase().includes("question") ? lines.slice(1) : lines;
@@ -490,11 +557,12 @@ export const importQuestionsCsvFn = createServerFn({ method: "POST" })
       }
 
       await db.prepare(`
-        INSERT INTO questions (qualification_id, subject_id, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation, status, created_by)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
+        INSERT INTO questions (qualification_id, subject_id, competency_unit_id, question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation, status, created_by)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
       `).run(
         data.qualification_id,
         data.subject_id,
+        compUnitId,
         question_text,
         option_a,
         option_b,

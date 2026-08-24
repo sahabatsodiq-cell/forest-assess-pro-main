@@ -52,6 +52,11 @@ function AdminExamsPage() {
   const [editCompetencyUnits, setEditCompetencyUnits] = useState<any[]>([]);
   const [editSelectedUnits, setEditSelectedUnits] = useState<string[]>([]);
 
+  // Delete Modal State
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletingExam, setDeletingExam] = useState<any>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   // Effect to load competency units for creation target qualification
   useEffect(() => {
     if (!qualificationId) {
@@ -218,21 +223,31 @@ function AdminExamsPage() {
     }
   };
 
-  // Handle Delete Exam
-  const handleDelete = async (examId: number, examName: string) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus Paket Ujian ${examName}?`)) return;
+  // Open Delete Modal
+  const openDeleteModal = (exam: any) => {
+    setDeletingExam(exam);
+    setDeleteOpen(true);
+  };
 
+  // Handle Delete Exam
+  const handleDelete = async () => {
+    if (!deletingExam) return;
+    setDeleteLoading(true);
     const token = localStorage.getItem("askganis_token") || "";
     try {
-      const res = await deleteExamFn({ data: { token, id: examId } });
+      const res = await deleteExamFn({ data: { token, id: deletingExam.id } });
       if (res.success) {
-        toast.success(`Paket Ujian ${examName} berhasil dihapus.`);
+        toast.success(`Paket Ujian ${deletingExam.name} berhasil dihapus.`);
+        setDeleteOpen(false);
+        setDeletingExam(null);
         loadData();
       } else {
         toast.error(res.error || "Gagal menghapus paket ujian.");
       }
     } catch (err: any) {
       toast.error(err.message || "Terjadi kesalahan.");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -548,6 +563,41 @@ function AdminExamsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-red-600 font-bold">
+              <AlertTriangle className="h-5 w-5" />
+              <span>Konfirmasi Hapus Paket Ujian</span>
+            </div>
+          </DialogHeader>
+
+          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-forest-100">
+            Apakah Anda yakin ingin menghapus paket ujian <strong className="font-mono">{deletingExam?.name}</strong>? 
+            Tindakan ini tidak dapat dibatalkan.
+          </p>
+
+          <div className="flex gap-2 pt-4">
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(false)}
+              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="flex-1 rounded-lg bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleteLoading ? "Menghapus..." : "Ya, Hapus"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Exam Packages Grid */}
       <div className="space-y-4">
         <div className="grid gap-6 md:grid-cols-2">
@@ -603,7 +653,7 @@ function AdminExamsPage() {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(e.id, e.name)}
+                      onClick={() => openDeleteModal(e)}
                       className="inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700 hover:bg-red-100 transition-colors dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
                       title="Hapus Paket Ujian"
                     >

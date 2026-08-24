@@ -281,7 +281,7 @@ function AdminUsersPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <th className="px-6 py-3.5">Nama & Email</th>
+                    <th className="px-6 py-3.5">NAMA PENGGUNA</th>
                     <th className="px-4 py-3.5">Role</th>
                     <th className="px-4 py-3.5">Nomor KTP / NIK</th>
                     <th className="px-4 py-3.5">Kualifikasi Dimiliki</th>
@@ -301,7 +301,6 @@ function AdminUsersPage() {
                       <tr key={u.id} className="hover:bg-forest-50/10 transition-colors">
                         <td className="px-6 py-3.5">
                           <div className="font-bold text-charcoal">{u.name}</div>
-                          <div className="text-[11px] text-muted-foreground">{u.email}</div>
                         </td>
                         <td className="px-4 py-3.5">
                           <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold ${

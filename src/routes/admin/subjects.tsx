@@ -423,42 +423,13 @@ function AdminSubjectsPage() {
                           {(page - 1) * pageSize + idx + 1}
                         </td>
                         <td className="px-4 py-3.5">
-                          <div className="flex flex-col gap-1.5">
-                            {s.competency_unit_code ? (
-                              <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 cursor-help" title={s.competency_unit_title || ""}>
-                                {s.competency_unit_code}
-                              </span>
-                            ) : (
-                              <span className="text-[11px] text-muted-foreground italic">-</span>
-                            )}
-                            {s.qualification_codes && (
-                              <div className="flex flex-wrap gap-1 max-w-[210px]">
-                                {(() => {
-                                  const codes = s.qualification_codes.split("; ");
-                                  const limit = 3;
-                                  const visible = codes.slice(0, limit);
-                                  const extraCount = codes.length - limit;
-                                  return (
-                                    <>
-                                      {visible.map((qc: string) => (
-                                        <span key={qc} className="rounded bg-forest-50 px-1.5 py-0.5 text-[9px] font-semibold text-forest-900 border border-forest-100/50">
-                                          {qc}
-                                        </span>
-                                      ))}
-                                      {extraCount > 0 && (
-                                        <span 
-                                          className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold text-gray-600 border border-gray-200 cursor-help select-none"
-                                          title={codes.slice(limit).join(", ")}
-                                        >
-                                          +{extraCount}
-                                        </span>
-                                      )}
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            )}
-                          </div>
+                          {s.competency_unit_code ? (
+                            <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 cursor-help" title={s.competency_unit_title || ""}>
+                              {s.competency_unit_code}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-muted-foreground italic">-</span>
+                          )}
                         </td>
                         <td className="px-6 py-3.5 font-semibold text-charcoal">
                           {s.name}

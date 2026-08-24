@@ -522,15 +522,6 @@ function AdminQuestionsPage() {
                             ) : (
                               <span className="text-[11px] text-muted-foreground italic">-</span>
                             )}
-
-                            {/* Qualification Badges */}
-                            <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
-                              {(q.linked_qualification_codes ? q.linked_qualification_codes.split("; ") : [q.qualification_code]).map((code: string) => (
-                                <span key={code} className="rounded bg-forest-50 px-1.5 py-0.5 text-[9px] font-extrabold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
-                                  {code}
-                                </span>
-                              ))}
-                            </div>
                           </div>
                         </td>
                         <td className="px-4 py-3.5 font-bold text-charcoal">{q.subject_name || "Keselamatan dan Kesehatan Kerja"}</td>

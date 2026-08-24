@@ -32,7 +32,7 @@ function AdminExamsPage() {
   const [code, setCode] = useState("");
   const [instructions, setInstructions] = useState("Bacalah setiap soal dengan teliti dan pilih satu jawaban yang paling tepat.");
   const [durationMinutes, setDurationMinutes] = useState(60);
-  const [passingGrade, setPassingGrade] = useState(70);
+  const passingGrade = 61; // Fixed: kriteria PAHAM >= 61
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [competencyUnits, setCompetencyUnits] = useState<any[]>([]);
@@ -46,7 +46,7 @@ function AdminExamsPage() {
   const [editCode, setEditCode] = useState("");
   const [editInstructions, setEditInstructions] = useState("");
   const [editDurationMinutes, setEditDurationMinutes] = useState(60);
-  const [editPassingGrade, setEditPassingGrade] = useState(70);
+  const [editPassingGrade] = useState(61); // Fixed: kriteria PAHAM >= 61
   const [editStatus, setEditStatus] = useState("PUBLISHED");
   const [editLoading, setEditLoading] = useState(false);
   const [editCompetencyUnits, setEditCompetencyUnits] = useState<any[]>([]);
@@ -175,7 +175,7 @@ function AdminExamsPage() {
     setEditSelectedUnits(parsedCodes);
     setEditInstructions(item.instructions || "");
     setEditDurationMinutes(item.duration_minutes || 60);
-    setEditPassingGrade(item.passing_grade || 70);
+    // passing_grade fixed at 61 (kriteria PAHAM >= 61)
     setEditStatus(item.status || "PUBLISHED");
     setEditOpen(true);
   };
@@ -379,17 +379,31 @@ function AdminExamsPage() {
                   </span>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Passing Grade (%)</label>
-                  <input
-                    type="number"
-                    required
-                    min={1}
-                    max={100}
-                    value={passingGrade}
-                    onChange={(e) => setPassingGrade(Number(e.target.value))}
-                    className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-bold text-forest-900 focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
-                  />
-                </div>
+                   <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kriteria Hasil Ujian</label>
+                   <div className="mt-1.5 w-full rounded-lg border border-border bg-gray-50/80 px-3 py-2.5 space-y-1.5">
+                     <div className="flex items-center justify-between">
+                       <span className="flex items-center gap-1.5">
+                         <span className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+                         <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">PAHAM</span>
+                       </span>
+                       <span className="text-[10px] font-black text-emerald-700">&ge; 61</span>
+                     </div>
+                     <div className="flex items-center justify-between">
+                       <span className="flex items-center gap-1.5">
+                         <span className="inline-block h-2 w-2 rounded-full bg-amber-500"></span>
+                         <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wide">KURANG PAHAM</span>
+                       </span>
+                       <span className="text-[10px] font-black text-amber-700">&gt; 51</span>
+                     </div>
+                     <div className="flex items-center justify-between">
+                       <span className="flex items-center gap-1.5">
+                         <span className="inline-block h-2 w-2 rounded-full bg-red-500"></span>
+                         <span className="text-[10px] font-bold text-red-700 uppercase tracking-wide">TIDAK PAHAM</span>
+                       </span>
+                       <span className="text-[10px] font-black text-red-700">&le; 51</span>
+                     </div>
+                   </div>
+                 </div>
               </div>
 
               <div>
@@ -507,18 +521,32 @@ function AdminExamsPage() {
                    (Otomatis: {editSelectedUnits.length} unit × 5 × 100s)
                  </span>
                </div>
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Passing Grade (%)</label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  max={100}
-                  value={editPassingGrade}
-                  onChange={(e) => setEditPassingGrade(Number(e.target.value))}
-                  className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-bold text-forest-900 focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
-                />
-              </div>
+               <div>
+                 <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kriteria Hasil Ujian</label>
+                 <div className="mt-1.5 w-full rounded-lg border border-border bg-gray-50/80 px-3 py-2.5 space-y-1.5">
+                   <div className="flex items-center justify-between">
+                     <span className="flex items-center gap-1.5">
+                       <span className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+                       <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">PAHAM</span>
+                     </span>
+                     <span className="text-[10px] font-black text-emerald-700">&ge; 61</span>
+                   </div>
+                   <div className="flex items-center justify-between">
+                     <span className="flex items-center gap-1.5">
+                       <span className="inline-block h-2 w-2 rounded-full bg-amber-500"></span>
+                       <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wide">KURANG PAHAM</span>
+                     </span>
+                     <span className="text-[10px] font-black text-amber-700">&gt; 51</span>
+                   </div>
+                   <div className="flex items-center justify-between">
+                     <span className="flex items-center gap-1.5">
+                       <span className="inline-block h-2 w-2 rounded-full bg-red-500"></span>
+                       <span className="text-[10px] font-bold text-red-700 uppercase tracking-wide">TIDAK PAHAM</span>
+                     </span>
+                     <span className="text-[10px] font-black text-red-700">&le; 51</span>
+                   </div>
+                 </div>
+               </div>
             </div>
 
             <div>

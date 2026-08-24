@@ -481,8 +481,8 @@ function AdminQuestionsPage() {
                     <th className="px-5 py-3.5 w-12 text-center">No</th>
                     <th className="px-4 py-3.5">Pertanyaan</th>
                     <th className="px-4 py-3.5 w-28">Kualifikasi</th>
-                    <th className="px-4 py-3.5 w-32">Materi</th>
-                    <th className="px-4 py-3.5 w-24">Kesulitan</th>
+                    <th className="px-4 py-3.5 w-44">Materi</th>
+                    <th className="px-4 py-3.5 w-28">Kode Materi</th>
                     <th className="px-4 py-3.5 w-20 text-center">Jawaban</th>
                   </tr>
                 </thead>
@@ -531,14 +531,10 @@ function AdminQuestionsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-muted-foreground">{q.subject_name}</td>
+                        <td className="px-4 py-3.5 font-bold text-charcoal">{q.subject_name || "Keselamatan dan Kesehatan Kerja"}</td>
                         <td className="px-4 py-3.5">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                            q.difficulty === 'EASY' ? 'bg-blue-50 text-blue-700' :
-                            q.difficulty === 'MEDIUM' ? 'bg-orange-50 text-orange-700' :
-                            'bg-red-50 text-red-700'
-                          }`}>
-                            {q.difficulty}
+                          <span className="rounded bg-forest-50 px-2.5 py-1 text-[10px] font-black uppercase text-forest-900 border border-forest-200 shadow-xs dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
+                            {q.subject_code || "K3"}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-center">

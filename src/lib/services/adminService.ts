@@ -383,7 +383,7 @@ export const getQuestionsFn = createServerFn({ method: "POST" })
     const db = await getDb();
 
     let query = `
-      SELECT q.*, qual.code as qualification_code, sub.name as subject_name, cu.code as competency_unit_code, cu.title as competency_unit_title,
+      SELECT q.*, qual.code as qualification_code, sub.name as subject_name, sub.code as subject_code, cu.code as competency_unit_code, cu.title as competency_unit_title,
              (
                SELECT string_agg(DISTINCT q_sub.code, '; ')
                FROM qualification_competency_units qcu

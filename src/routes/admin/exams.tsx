@@ -10,7 +10,7 @@ import {
   getCompetencyUnitsFn,
 } from "@/lib/services/adminService";
 import { Package, Plus, Edit2, Trash2, Check, AlertTriangle, ShieldCheck } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
 
@@ -269,7 +269,7 @@ function AdminExamsPage() {
         {/* Create Dialog */}
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-forest-700">
+            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-forest-700 focus:ring-2 focus:ring-forest-900/20 active:scale-[0.98] transition-all">
               <Plus className="h-4 w-4" />
               Buat Paket Ujian
             </button>
@@ -279,6 +279,9 @@ function AdminExamsPage() {
               <DialogTitle className="font-display text-base font-bold text-charcoal">
                 Buat Paket Ujian Baru
               </DialogTitle>
+              <DialogDescription className="text-[11px] text-muted-foreground mt-1">
+                Lengkapi formulir di bawah ini untuk membuat paket ujian asesmen baru bagi peserta.
+              </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleCreate} className="mt-4 space-y-4">
@@ -289,12 +292,12 @@ function AdminExamsPage() {
               )}
 
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Kualifikasi Target</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kualifikasi Target</label>
                 <select
                   required
                   value={qualificationId}
                   onChange={(e) => setQualificationId(Number(e.target.value))}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold"
+                  className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
                 >
                   <option value="">-- Pilih Kualifikasi --</option>
                   {qualifications.map((q) => (
@@ -306,13 +309,13 @@ function AdminExamsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Kode Unit Kompetensi</label>
-                <div className="mt-1 max-h-36 overflow-y-auto rounded-md border border-border p-2 space-y-1.5 bg-gray-50/50">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kode Unit Kompetensi</label>
+                <div className="mt-1.5 max-h-36 overflow-y-auto rounded-lg border border-border p-3 space-y-2 bg-gray-50/50">
                   {competencyUnits.length === 0 ? (
                     <span className="text-[11px] text-muted-foreground italic">Pilih kualifikasi target terlebih dahulu</span>
                   ) : (
                     competencyUnits.map((u) => (
-                      <label key={u.id} className="flex items-center gap-2 text-xs text-charcoal font-medium cursor-pointer">
+                      <label key={u.id} className="flex items-start gap-2.5 text-xs text-charcoal font-medium cursor-pointer py-0.5 min-w-0 w-full hover:text-forest-900 transition-colors">
                         <input
                           type="checkbox"
                           checked={selectedUnits.includes(u.code)}
@@ -323,10 +326,10 @@ function AdminExamsPage() {
                               setSelectedUnits(selectedUnits.filter((code) => code !== u.code));
                             }
                           }}
-                          className="rounded border-border text-forest-900 focus:ring-forest-900"
+                          className="mt-0.5 h-3.5 w-3.5 rounded border-border text-forest-900 focus:ring-forest-900 focus:ring-offset-0 shrink-0 cursor-pointer"
                         />
-                        <span className="font-semibold font-mono text-[11px]">{u.code}</span>
-                        <span className="text-muted-foreground truncate">— {u.title}</span>
+                        <span className="font-semibold font-mono text-[10px] bg-forest-50 text-forest-900 px-1 py-0.5 rounded border border-forest-100/50 shrink-0 select-all leading-none">{u.code}</span>
+                        <span className="text-muted-foreground break-words leading-normal flex-1">— {u.title}</span>
                       </label>
                     ))
                   )}
@@ -334,26 +337,26 @@ function AdminExamsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Nama Ujian</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Nama Ujian</label>
                 <input
                   type="text"
                   required
                   placeholder="Pengujian Kayu Bulat Rimba"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                  className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-medium text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Durasi (Menit)</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Durasi (Menit)</label>
                   <input
                     type="number"
                     readOnly
                     required
                     value={durationMinutes}
-                    className="mt-1 w-full rounded-md border border-border bg-gray-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground select-none cursor-not-allowed"
+                    className="mt-1.5 w-full rounded-lg border border-border bg-gray-100/70 px-3 py-2 text-xs font-semibold text-muted-foreground select-none cursor-not-allowed"
                     title="Dihitung otomatis: jumlah unit kompetensi x 5 x 100 detik"
                   />
                   <span className="text-[10px] text-muted-foreground block mt-0.5 font-medium">
@@ -361,7 +364,7 @@ function AdminExamsPage() {
                   </span>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Passing Grade (%)</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Passing Grade (%)</label>
                   <input
                     type="number"
                     required
@@ -369,33 +372,33 @@ function AdminExamsPage() {
                     max={100}
                     value={passingGrade}
                     onChange={(e) => setPassingGrade(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold text-forest-900"
+                    className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-bold text-forest-900 focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Instruksi Ujian</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Instruksi Ujian</label>
                 <textarea
                   rows={2}
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border p-2 text-xs"
+                  className="mt-1.5 w-full rounded-lg border border-border bg-white p-2.5 text-xs text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200 resize-none"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-3 pt-3">
                 <button
                   type="button"
                   onClick={() => setCreateOpen(false)}
-                  className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50"
+                  className="flex-1 rounded-lg border border-border bg-white py-2.5 text-xs font-semibold text-charcoal hover:bg-gray-50 focus:ring-2 focus:ring-gray-100 active:scale-[0.98] transition-all cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="flex-1 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-forest-900 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-forest-700 focus:ring-2 focus:ring-forest-900/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                 >
                   {formLoading ? "Menyimpan..." : "Simpan Paket Ujian"}
                 </button>
@@ -412,16 +415,19 @@ function AdminExamsPage() {
             <DialogTitle className="font-display text-base font-bold text-charcoal">
               Edit Paket Ujian Asesmen
             </DialogTitle>
+            <DialogDescription className="text-[11px] text-muted-foreground mt-1">
+              Sesuaikan rincian paket ujian, unit kompetensi yang diujikan, durasi, dan status publikasi.
+            </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleEdit} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal">Kualifikasi Target</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kualifikasi Target</label>
               <select
                 required
                 value={editQualId}
                 onChange={(e) => setEditQualId(Number(e.target.value))}
-                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold"
+                className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
               >
                 <option value="">-- Pilih Kualifikasi --</option>
                 {qualifications.map((q) => (
@@ -433,13 +439,13 @@ function AdminExamsPage() {
             </div>
 
              <div>
-               <label className="block text-xs font-bold uppercase text-charcoal">Kode Unit Kompetensi</label>
-               <div className="mt-1 max-h-36 overflow-y-auto rounded-md border border-border p-2 space-y-1.5 bg-gray-50/50">
+               <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Kode Unit Kompetensi</label>
+               <div className="mt-1.5 max-h-36 overflow-y-auto rounded-lg border border-border p-3 space-y-2 bg-gray-50/50">
                  {editCompetencyUnits.length === 0 ? (
                    <span className="text-[11px] text-muted-foreground italic">Pilih kualifikasi target terlebih dahulu</span>
                  ) : (
                    editCompetencyUnits.map((u) => (
-                     <label key={u.id} className="flex items-center gap-2 text-xs text-charcoal font-medium cursor-pointer">
+                     <label key={u.id} className="flex items-start gap-2.5 text-xs text-charcoal font-medium cursor-pointer py-0.5 min-w-0 w-full hover:text-forest-900 transition-colors">
                        <input
                          type="checkbox"
                          checked={editSelectedUnits.includes(u.code)}
@@ -450,10 +456,10 @@ function AdminExamsPage() {
                              setEditSelectedUnits(editSelectedUnits.filter((code) => code !== u.code));
                            }
                          }}
-                         className="rounded border-border text-forest-900 focus:ring-forest-900"
+                         className="mt-0.5 h-3.5 w-3.5 rounded border-border text-forest-900 focus:ring-forest-900 focus:ring-offset-0 shrink-0 cursor-pointer"
                        />
-                       <span className="font-semibold font-mono text-[11px]">{u.code}</span>
-                       <span className="text-muted-foreground truncate">— {u.title}</span>
+                       <span className="font-semibold font-mono text-[10px] bg-forest-50 text-forest-900 px-1 py-0.5 rounded border border-forest-100/50 shrink-0 select-all leading-none">{u.code}</span>
+                       <span className="text-muted-foreground break-words leading-normal flex-1">— {u.title}</span>
                      </label>
                    ))
                  )}
@@ -461,25 +467,25 @@ function AdminExamsPage() {
              </div>
 
              <div>
-               <label className="block text-xs font-bold uppercase text-charcoal">Nama Ujian</label>
+               <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Nama Ujian</label>
                <input
                  type="text"
                  required
                  value={editName}
                  onChange={(e) => setEditName(e.target.value)}
-                 className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                 className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-medium text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
                />
              </div>
 
             <div className="grid grid-cols-2 gap-3">
                <div>
-                 <label className="block text-xs font-bold uppercase text-charcoal">Durasi (Menit)</label>
+                 <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Durasi (Menit)</label>
                  <input
                    type="number"
                    readOnly
                    required
                    value={editDurationMinutes}
-                   className="mt-1 w-full rounded-md border border-border bg-gray-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground select-none cursor-not-allowed"
+                   className="mt-1.5 w-full rounded-lg border border-border bg-gray-100/70 px-3 py-2 text-xs font-semibold text-muted-foreground select-none cursor-not-allowed"
                    title="Dihitung otomatis: jumlah unit kompetensi x 5 x 100 detik"
                  />
                  <span className="text-[10px] text-muted-foreground block mt-0.5 font-medium">
@@ -487,7 +493,7 @@ function AdminExamsPage() {
                  </span>
                </div>
               <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Passing Grade (%)</label>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Passing Grade (%)</label>
                 <input
                   type="number"
                   required
@@ -495,17 +501,17 @@ function AdminExamsPage() {
                   max={100}
                   value={editPassingGrade}
                   onChange={(e) => setEditPassingGrade(Number(e.target.value))}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold text-forest-900"
+                  className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-bold text-forest-900 focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal">Status Publikasi</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Status Publikasi</label>
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value)}
-                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold"
+                className="mt-1.5 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200"
               >
                 <option value="PUBLISHED">PUBLISHED (Tampil Di Akun Peserta)</option>
                 <option value="DRAFT">DRAFT (Sembunyikan)</option>
@@ -513,27 +519,27 @@ function AdminExamsPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal">Instruksi Ujian</label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Instruksi Ujian</label>
               <textarea
                 rows={2}
                 value={editInstructions}
                 onChange={(e) => setEditInstructions(e.target.value)}
-                className="mt-1 w-full rounded-md border border-border p-2 text-xs"
+                className="mt-1.5 w-full rounded-lg border border-border bg-white p-2.5 text-xs text-charcoal focus:border-forest-900 focus:ring-1 focus:ring-forest-900 focus:outline-none transition-all duration-200 resize-none"
               />
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-3 pt-3">
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50"
+                className="flex-1 rounded-lg border border-border bg-white py-2.5 text-xs font-semibold text-charcoal hover:bg-gray-50 focus:ring-2 focus:ring-gray-100 active:scale-[0.98] transition-all cursor-pointer"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={editLoading}
-                className="flex-1 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
+                className="flex-1 rounded-lg bg-forest-900 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-forest-700 focus:ring-2 focus:ring-forest-900/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
               >
                 {editLoading ? "Menyimpan..." : "Simpan Perubahan"}
               </button>

@@ -7,46 +7,11 @@
     "email": "msahlana@yahoo.co.id"
   },
   {
-    "id": 2,
-    "name": "Muhammad Syahlana",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16200000783",
-    "email": "msahlana@yahoo.co.id"
-  },
-  {
-    "id": 3,
-    "name": "Andi Ardiansyah",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16200000001",
-    "email": "dyanfortunate84@gmail.com"
-  },
-  {
-    "id": 4,
-    "name": "Faturrahmi Helmi, S.Sos",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "18200000024",
-    "email": "faturrahmi.helmi2020@gmail.com"
-  },
-  {
     "id": 5,
     "name": "Agus Sutrisno",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04200000040",
     "email": "agus.sutrisno.mantewe@gmail.com"
-  },
-  {
-    "id": 6,
-    "name": "Jaenal Arifin",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02200000047",
-    "email": "Jaenal.arifin.sungaidua@gmail.com"
-  },
-  {
-    "id": 7,
-    "name": "Abdul Rahim",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08200001309",
-    "email": "abdulrahim.kyn@gmail.com"
   },
   {
     "id": 8,
@@ -63,13 +28,6 @@
     "email": "daminbjb@gmail.com"
   },
   {
-    "id": 10,
-    "name": "Tjipto Wasisto Hs",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16200001729",
-    "email": "tjiptodayasakti10@gmail.com"
-  },
-  {
     "id": 11,
     "name": "Johansyah",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -82,20 +40,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04200001915",
     "email": "Liandj280@gmail.com"
-  },
-  {
-    "id": 13,
-    "name": "Achmad Rizmi, S. Hut",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200001956",
-    "email": "achmad.rizmi73@gmail.com"
-  },
-  {
-    "id": 14,
-    "name": "Ruddy Eldiani",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200002133",
-    "email": "ruddy.eldiani@gmail.com"
   },
   {
     "id": 15,
@@ -117,20 +61,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04200001780",
     "email": "riyanto67@ymail.com"
-  },
-  {
-    "id": 18,
-    "name": "Syaifuddin Anwari",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03200002316",
-    "email": "syaifuddinanwari08@gmail.com"
-  },
-  {
-    "id": 19,
-    "name": "Abdul Rahmad",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200002456",
-    "email": "abdul.rahmad.ganis2020@gmail.com"
   },
   {
     "id": 20,
@@ -159,20 +89,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06200001905",
     "email": "arsyadbjbaru@gmail.com"
-  },
-  {
-    "id": 24,
-    "name": "Faturrahmi Helmi, S.Sos",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03200001024",
-    "email": "faturrahmi.helmi2020@gmail.com"
-  },
-  {
-    "id": 25,
-    "name": "Abdullah Syafi'e, S.hut",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03200000892",
-    "email": "syafie.bjb@gmail.com"
   },
   {
     "id": 26,
@@ -222,13 +138,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06200002833",
     "email": "msyahrianzaini@gmail.com"
-  },
-  {
-    "id": 33,
-    "name": "Firmansyah, Ir",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200002642",
-    "email": "firmansyahpnb@gmail.com"
   },
   {
     "id": 34,
@@ -308,13 +217,6 @@
     "email": "ahmadsuwandisadi@gmail.com"
   },
   {
-    "id": 45,
-    "name": "Wansyah",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200003331",
-    "email": "wansyah.2020.hst@gmail.com"
-  },
-  {
     "id": 46,
     "name": "Niti Lestari, S.Pd.,M.M.",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -336,13 +238,6 @@
     "email": "firdauskht@gmail.com"
   },
   {
-    "id": 49,
-    "name": "Masruri",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08200003598",
-    "email": "tsmjmasruri@gmail.com"
-  },
-  {
     "id": 50,
     "name": "Zainab",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -354,13 +249,6 @@
     "name": "Denny Poltje Tumangken",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04200003686",
-    "email": "dennypoltjetumangken@gmail.com"
-  },
-  {
-    "id": 52,
-    "name": "Denny Poltje Tumangken",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08200003686",
     "email": "dennypoltjetumangken@gmail.com"
   },
   {
@@ -476,20 +364,6 @@
     "email": "kelik.sulistiyono@gmail.com"
   },
   {
-    "id": 69,
-    "name": "Febri Tri Prasetyo",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14200004297",
-    "email": "fprasetyo59@gmail.com"
-  },
-  {
-    "id": 70,
-    "name": "Tendy Sumarjono, S.Hut",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200003318",
-    "email": "swrtendytea@gmail.com"
-  },
-  {
     "id": 71,
     "name": "-. Rahmad Ary Sulistyawan, -",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -502,13 +376,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06200004076",
     "email": "azharisaputra91@gmail.com"
-  },
-  {
-    "id": 73,
-    "name": "Ahmad Firdaus",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200004508",
-    "email": "firdausgm57@gmail.com"
   },
   {
     "id": 74,
@@ -544,20 +411,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06200004693",
     "email": "udjayaabadisejati20@gmail.com"
-  },
-  {
-    "id": 79,
-    "name": "Yudi Harsono",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200004860",
-    "email": "yudi.bc42@gmail.com"
-  },
-  {
-    "id": 80,
-    "name": "Moh. Ulil Amri",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01200004863",
-    "email": "ulil.bc42@gmail.com"
   },
   {
     "id": 81,
@@ -630,13 +483,6 @@
     "email": "yachyunie@gmail.com"
   },
   {
-    "id": 91,
-    "name": "Muhammad Bakri S.",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210005126",
-    "email": "sbakri967@gmail.com"
-  },
-  {
     "id": 92,
     "name": "Jumakir",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -665,20 +511,6 @@
     "email": "dedy.bc42@gmail.com"
   },
   {
-    "id": 96,
-    "name": "Andre Wardhana",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210002188",
-    "email": "andrewardana512@gmail.com"
-  },
-  {
-    "id": 97,
-    "name": "Bagus Irawan",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210005377",
-    "email": "bagus.bc42@gmail.com"
-  },
-  {
     "id": 98,
     "name": "Sijab",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -686,25 +518,11 @@
     "email": "sijab29@gmail.com"
   },
   {
-    "id": 99,
-    "name": "Elin",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210005386",
-    "email": "elin.bc42@gmail.com"
-  },
-  {
     "id": 100,
     "name": "Fathurrahman",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210002552",
     "email": "perintisadiwana17@gmail.com"
-  },
-  {
-    "id": 101,
-    "name": "Endi Supriadi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210005395",
-    "email": "endi.bc42@gmail.com"
   },
   {
     "id": 102,
@@ -719,76 +537,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210002272",
     "email": "imamsuratip@gmail.com"
-  },
-  {
-    "id": 104,
-    "name": "Judiansyah",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210005511",
-    "email": "judiansyah.bc42@gmail.com"
-  },
-  {
-    "id": 105,
-    "name": "Pitoyo",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210005530",
-    "email": "pitoyo.bc42@gmail.com"
-  },
-  {
-    "id": 106,
-    "name": "Dona",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210005536",
-    "email": "dona02.bc42@gmail.com"
-  },
-  {
-    "id": 107,
-    "name": "Alan Suryanata",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210005548",
-    "email": "alan.bc42@gmail.com"
-  },
-  {
-    "id": 108,
-    "name": "Muslan Soroga,",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210005555",
-    "email": "alimunawar_siddik@yahoo.com"
-  },
-  {
-    "id": 109,
-    "name": "Deki H Kaligis",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210005558",
-    "email": "dekikaligis234@gmail.com"
-  },
-  {
-    "id": 110,
-    "name": "Han Han Adnan Kamil",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210005563",
-    "email": "hanhan.bc42@gmail.com"
-  },
-  {
-    "id": 111,
-    "name": "Priyono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210004521",
-    "email": "priyonoifi@gmail.com"
-  },
-  {
-    "id": 112,
-    "name": "Rusdiannor",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210003491",
-    "email": "rusdiannor23@gmail.com"
-  },
-  {
-    "id": 113,
-    "name": "Asteny Ralvi Woley",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210005708",
-    "email": "astenyrw234@gmail.com"
   },
   {
     "id": 114,
@@ -812,67 +560,11 @@
     "email": "salamah.aura79@gmail.com"
   },
   {
-    "id": 117,
-    "name": "Hamsani Kamaruddin",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210003514",
-    "email": "hamsanikamaruddin@gmail.com"
-  },
-  {
-    "id": 118,
-    "name": "Iberahim",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210003510",
-    "email": "iberahimahim21@gmail.com"
-  },
-  {
-    "id": 119,
-    "name": "Syahriadi Noor",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210002215",
-    "email": "syahriadi.noor67@gmail.com"
-  },
-  {
-    "id": 120,
-    "name": "Zaenal Arifin",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210004563",
-    "email": "zaenal.bc42@gmail.com"
-  },
-  {
     "id": 121,
     "name": "Dedi Irawan",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06210005860",
     "email": "dediirawan7979@gmail.com"
-  },
-  {
-    "id": 122,
-    "name": "Sunardi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210004550",
-    "email": "sunardi.bc42@gmail.com"
-  },
-  {
-    "id": 123,
-    "name": "Anton",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210005336",
-    "email": "anton.bc42@gmail.com"
-  },
-  {
-    "id": 124,
-    "name": "Sugeng Riyadi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210005485",
-    "email": "sugeng.bc42@gmail.com"
-  },
-  {
-    "id": 125,
-    "name": "Ari Wibowo",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210005552",
-    "email": "ari.bc42@gmail.com"
   },
   {
     "id": 126,
@@ -894,20 +586,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210002167",
     "email": "hairiansyah82@gmail.com"
-  },
-  {
-    "id": 129,
-    "name": "Saul Pardosi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210006229",
-    "email": "saulpardosi062@gmail.com"
-  },
-  {
-    "id": 130,
-    "name": "Ryu Pelata",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210006699",
-    "email": "pelata.ryu@gmail.com"
   },
   {
     "id": 131,
@@ -952,13 +630,6 @@
     "email": "HANIPUTRIDAHA@GMAIL.COM"
   },
   {
-    "id": 137,
-    "name": "Herman,s.sos",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210006965",
-    "email": "hermantiki999@gmail.com"
-  },
-  {
     "id": 138,
     "name": "Mohammad Ibang Arif, S.Hut",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1001,13 +672,6 @@
     "email": "shinabud@gmail.com"
   },
   {
-    "id": 144,
-    "name": "Swadhar Madi Harjuni",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210007246",
-    "email": "nyot19@gmail.com"
-  },
-  {
     "id": 145,
     "name": "Karno",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1043,20 +707,6 @@
     "email": "sayudiktb@gmail.com"
   },
   {
-    "id": 150,
-    "name": "Muhammad Khairan",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210006216",
-    "email": "khairanb3@gmail.com"
-  },
-  {
-    "id": 151,
-    "name": "Muhammad Hijrah Salam",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210001964",
-    "email": "m.hijrahsalamm@gmail.com"
-  },
-  {
     "id": 152,
     "name": "Santiaji",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1071,13 +721,6 @@
     "email": "muhammadalvian95@gmail.com"
   },
   {
-    "id": 154,
-    "name": "Munir",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210007241",
-    "email": "munirasnur211@gmail.com"
-  },
-  {
     "id": 155,
     "name": "Haryoto",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1090,13 +733,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06210007356",
     "email": "adiputraramadhani29@gmail.com"
-  },
-  {
-    "id": 157,
-    "name": "Untung",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210007487",
-    "email": "yogie966@gmail.com"
   },
   {
     "id": 158,
@@ -1148,13 +784,6 @@
     "email": "alfianbtl1971@gmail.com"
   },
   {
-    "id": 165,
-    "name": "Eko Susanto",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210007553",
-    "email": "eko.alfatihi@gmail.com"
-  },
-  {
     "id": 166,
     "name": "M. Salbani",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1183,20 +812,6 @@
     "email": "amiruddin.iht2@gmail.com"
   },
   {
-    "id": 170,
-    "name": "Agus Marwoto",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210007589",
-    "email": "agusmarwoto29@yahoo.com"
-  },
-  {
-    "id": 171,
-    "name": "Nur Alam",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210007586",
-    "email": "naalam78@gmail.com"
-  },
-  {
     "id": 172,
     "name": "Sugiono",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1218,27 +833,6 @@
     "email": "admin@dpksplywood.com"
   },
   {
-    "id": 175,
-    "name": "Agus",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210007420",
-    "email": "aguss.iht2@gmail.com"
-  },
-  {
-    "id": 176,
-    "name": "Fitriadi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210007500",
-    "email": "ifityadi559@gmail.com"
-  },
-  {
-    "id": 177,
-    "name": "Andriyadi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210003055",
-    "email": "andridpks@gmail.com"
-  },
-  {
     "id": 178,
     "name": "Mashur",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -1253,20 +847,6 @@
     "email": "adiputraramadhani29@gmail.com"
   },
   {
-    "id": 180,
-    "name": "Muhammad Nurfarida",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210007615",
-    "email": "faridaganispkli2021@gmail.com"
-  },
-  {
-    "id": 181,
-    "name": "Santiaji",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210007173",
-    "email": "santiajibjm@gmail.com"
-  },
-  {
     "id": 182,
     "name": "Alip Rusdi",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1279,13 +859,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06210006235",
     "email": "aliefrusdi@gmail.com"
-  },
-  {
-    "id": 184,
-    "name": "Ponidi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210007584",
-    "email": "ponidiganispkli2021@gmail.com"
   },
   {
     "id": 185,
@@ -1330,13 +903,6 @@
     "email": "oewayh@gmail.com"
   },
   {
-    "id": 191,
-    "name": "Sutomo",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210007407",
-    "email": "tomo.iht2@gmail.com"
-  },
-  {
     "id": 192,
     "name": "Suwondo",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -1356,34 +922,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06210005793",
     "email": "rhmd.mitraud@gmail.com"
-  },
-  {
-    "id": 195,
-    "name": "Febriana Daniaristyawati",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210007795",
-    "email": "febrianania@gmail.com"
-  },
-  {
-    "id": 196,
-    "name": "Muhamad Jaelani",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210007793",
-    "email": "jaelanimuhamad69@gmail.com"
-  },
-  {
-    "id": 197,
-    "name": "Muhamad Jaelani",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210007793",
-    "email": "jaelanimuhamad69@gmail.com"
-  },
-  {
-    "id": 198,
-    "name": "Wardi Yani",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210007490",
-    "email": "wardi.yani@gmail.com"
   },
   {
     "id": 199,
@@ -1428,46 +966,11 @@
     "email": "mama.fathan1105@gmail.com"
   },
   {
-    "id": 205,
-    "name": "-. Yusuf Yuliadi, S.Hut",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210007174",
-    "email": "yusuf.yuliadi@borneo-indobara.com"
-  },
-  {
-    "id": 206,
-    "name": "Sulisno Andri Hamsah",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210008126",
-    "email": "sulisnoandri_hamsah@yahoo.co.id"
-  },
-  {
-    "id": 207,
-    "name": "Abdul Khalik",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008159",
-    "email": "abdul_khalik85@yahoo.co.id"
-  },
-  {
-    "id": 208,
-    "name": "Riyadi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210007697",
-    "email": "Riyadi05867@gmail.com"
-  },
-  {
     "id": 209,
     "name": "Sunaryanta",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210008171",
     "email": "ysunar9@gmail.com"
-  },
-  {
-    "id": 210,
-    "name": "Sinelson Hutagaol",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210008233",
-    "email": "sinelson.siganishut@gmail.com"
   },
   {
     "id": 211,
@@ -1484,32 +987,11 @@
     "email": "mrinzani@gmail.com"
   },
   {
-    "id": 213,
-    "name": "Hasan",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14210008300",
-    "email": "vivohasan407@gmail.com"
-  },
-  {
     "id": 214,
     "name": "Azael Mauwilik",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210008336",
     "email": "pratama.azael@gmail.com"
-  },
-  {
-    "id": 215,
-    "name": "Muhammad Murjani",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210008215",
-    "email": "muhmurjani@gmail.com"
-  },
-  {
-    "id": 216,
-    "name": "Rahmanuddin",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210008357",
-    "email": "rumah.grand@Gmail.com"
   },
   {
     "id": 217,
@@ -1547,27 +1029,6 @@
     "email": "zainidg22@gmail.com"
   },
   {
-    "id": 222,
-    "name": "Nafril Yuzen, S.HUT",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210008369",
-    "email": "nafril933new@gmail.com"
-  },
-  {
-    "id": 223,
-    "name": "Nafril Yuzen, S.HUT",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008369",
-    "email": "nafril933new@gmail.com"
-  },
-  {
-    "id": 224,
-    "name": "Ir. Jamaluddin",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008400",
-    "email": "jamalrafie6@gmail.com"
-  },
-  {
     "id": 225,
     "name": "Toni Irawan",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1582,25 +1043,11 @@
     "email": "surotoayi2021@gmail.com"
   },
   {
-    "id": 227,
-    "name": "Harianto",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210008436",
-    "email": "ayayayang2022@gmail.com"
-  },
-  {
     "id": 228,
     "name": "Wahyuni Fierdaus",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06210007749",
     "email": "wfierdaus@gmail.com"
-  },
-  {
-    "id": 229,
-    "name": "Fredy Dias",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210008452",
-    "email": "ayayayang2023@gmail.com"
   },
   {
     "id": 230,
@@ -1617,13 +1064,6 @@
     "email": "syarifsiganishut@gmail.com"
   },
   {
-    "id": 232,
-    "name": "Agus Arwani",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210006182",
-    "email": "agusarwani1972@gmail.com"
-  },
-  {
     "id": 233,
     "name": "M. Fakhri Ihsan",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -1638,13 +1078,6 @@
     "email": "irfansyarifudin1969@gmail.com"
   },
   {
-    "id": 235,
-    "name": "Muhammad Ady Maswardi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008476",
-    "email": "adimaswardi@gmail.com"
-  },
-  {
     "id": 236,
     "name": "Adhe Chandra",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1652,32 +1085,11 @@
     "email": "adhechandra.074@gmail.com"
   },
   {
-    "id": 237,
-    "name": "Askar Bawono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210008579",
-    "email": "ayah.pratama1105@gmail.com"
-  },
-  {
     "id": 238,
     "name": "Syahril",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210008567",
     "email": "syahril81022@gmail.com"
-  },
-  {
-    "id": 239,
-    "name": "Wilman Marpaung",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210007788",
-    "email": "wilmanbjb92@gmail.com"
-  },
-  {
-    "id": 240,
-    "name": "Indra Harissandi Saputra",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210006380",
-    "email": "indra.haris@yahoo.co.id"
   },
   {
     "id": 241,
@@ -1694,13 +1106,6 @@
     "email": "masdarpagatan@gmail.com"
   },
   {
-    "id": 243,
-    "name": "Maman Supirman",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008706",
-    "email": "mamansupirman@yahoo.co.id"
-  },
-  {
     "id": 244,
     "name": "Subarsono",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -1708,25 +1113,11 @@
     "email": "subarsono19@gmail.com"
   },
   {
-    "id": 245,
-    "name": "Satria Aris Wicaksono",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008807",
-    "email": "ayayayang2025@gmail.com"
-  },
-  {
     "id": 246,
     "name": "Muhammad Jainudin",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210008763",
     "email": "siganishut3@gmail.com"
-  },
-  {
-    "id": 247,
-    "name": "Yusran",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210008871",
-    "email": "yusran1.sstc@gmail.com"
   },
   {
     "id": 248,
@@ -1748,20 +1139,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210008886",
     "email": "unangaul@gmail.com"
-  },
-  {
-    "id": 251,
-    "name": "Jimmy Andreas",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210008897",
-    "email": "siganishut1@gmail.com"
-  },
-  {
-    "id": 252,
-    "name": "Mahlan. Sp",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008898",
-    "email": "mahlanhrb2012@yahoo.co.id"
   },
   {
     "id": 253,
@@ -1848,20 +1225,6 @@
     "email": "yusrip.iht2@gmail.com"
   },
   {
-    "id": 265,
-    "name": "Selamat",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008616",
-    "email": "selamat.iht2@gmail.com"
-  },
-  {
-    "id": 266,
-    "name": "Muhamadi",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210008626",
-    "email": "muhamadi.iht2@gmail.com"
-  },
-  {
     "id": 267,
     "name": "Jianto",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -1874,13 +1237,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210009102",
     "email": "jianto.siganishut@gmail.com"
-  },
-  {
-    "id": 269,
-    "name": "Ali Junaidi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210009112",
-    "email": "aliedhuned.iht2@gmail.com"
   },
   {
     "id": 270,
@@ -2009,46 +1365,11 @@
     "email": "ridhaahmad93@gmail.com"
   },
   {
-    "id": 288,
-    "name": "Yandy Adhikara",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210008910",
-    "email": "yandy_andhik@yahoo.com"
-  },
-  {
     "id": 289,
     "name": "Masrani",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210009448",
     "email": "masrani.jm@gmail.com"
-  },
-  {
-    "id": 290,
-    "name": "Triwantono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210009496",
-    "email": "siganishut2a@gmail.com"
-  },
-  {
-    "id": 291,
-    "name": "Widi Isnarko",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210009322",
-    "email": "widi.isnarko@dayasakti.co.id"
-  },
-  {
-    "id": 292,
-    "name": "Agus Sugianto",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210007854",
-    "email": "agus.sugianto@dayasakti.co.id"
-  },
-  {
-    "id": 293,
-    "name": "Rejo",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210009562",
-    "email": "rejo1.sstc@gmail.com"
   },
   {
     "id": 294,
@@ -2072,46 +1393,11 @@
     "email": "pujianto@dayasakti.co.id"
   },
   {
-    "id": 297,
-    "name": "Hairullah",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210009013",
-    "email": "hairullah@dayasakti.co.id"
-  },
-  {
-    "id": 298,
-    "name": "Hermanto",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210009000",
-    "email": "hermanto@dayasakti.co.id"
-  },
-  {
     "id": 299,
     "name": "Defi Eka Para Setia",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210003383",
     "email": "aldesun3119@gmail.com"
-  },
-  {
-    "id": 300,
-    "name": "Ahmad Rifai",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210009674",
-    "email": "ahmad.rifai151186@gmail.com"
-  },
-  {
-    "id": 301,
-    "name": "Mashudani",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210008157",
-    "email": "fadlan.af69@gmail.com"
-  },
-  {
-    "id": 302,
-    "name": "Imam Junaedi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210006140",
-    "email": "imjunaedi@gmail.com"
   },
   {
     "id": 303,
@@ -2135,25 +1421,11 @@
     "email": "muhammadfahriganis@gmail.com"
   },
   {
-    "id": 306,
-    "name": "Nur Wahid Suyoso",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210009899",
-    "email": "nurwahidsuyoso68@gmail.com"
-  },
-  {
     "id": 307,
     "name": "Sunaryo",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210009333",
     "email": "sunaryo@dayasakti.co.id"
-  },
-  {
-    "id": 308,
-    "name": "Edy Siswadi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210010085",
-    "email": "janggalasemesta2024@gmail.com"
   },
   {
     "id": 309,
@@ -2170,13 +1442,6 @@
     "email": "yuyunhirwin36@gmail.com"
   },
   {
-    "id": 311,
-    "name": "Ernawan Budi Santoso",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210010083",
-    "email": "janggalasemesta2025@gmail.com"
-  },
-  {
     "id": 312,
     "name": "Nurhasmi",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -2191,34 +1456,6 @@
     "email": "antojer007@gmail.com"
   },
   {
-    "id": 314,
-    "name": "Baharudin Nur Efendi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210001421",
-    "email": "baharudinnur11@gmail.com"
-  },
-  {
-    "id": 315,
-    "name": "Paimun",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210010561",
-    "email": "kdp_banjarmasin@yahoo.com"
-  },
-  {
-    "id": 316,
-    "name": "Arvil Bolang",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210010353",
-    "email": "bolangarvil@gmail.com"
-  },
-  {
-    "id": 317,
-    "name": "Robby Cahyadi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210010360",
-    "email": "robyraziq@gmail.com"
-  },
-  {
     "id": 318,
     "name": "Padeli",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -2231,13 +1468,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210002377",
     "email": "suharnomap@yahoo.co.id"
-  },
-  {
-    "id": 320,
-    "name": "Abdul Kadir, S. Kom",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210010729",
-    "email": "ak5071504@gmail.com"
   },
   {
     "id": 321,
@@ -2275,25 +1505,11 @@
     "email": "siganishut5@gmail.com"
   },
   {
-    "id": 326,
-    "name": "Djoko Murtoyo",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210010762",
-    "email": "murtoyo.iht2@hotmail.com"
-  },
-  {
     "id": 327,
     "name": "Herryawan",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06210010891",
     "email": "herryawan2021@gmail.com"
-  },
-  {
-    "id": 328,
-    "name": "Muhammad Fadhil Mawardi",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210010907",
-    "email": "fdhl1437@gmail.com"
   },
   {
     "id": 329,
@@ -2317,20 +1533,6 @@
     "email": "marajohan.pga@gmail.com"
   },
   {
-    "id": 332,
-    "name": "Ricko Leowildi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210006147",
-    "email": "Rickoleowildi@gmail.com"
-  },
-  {
-    "id": 333,
-    "name": "Bayu Saputra",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210011017",
-    "email": "mercinclaw123@gmail.com"
-  },
-  {
     "id": 334,
     "name": "Muhammad Junaidi",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -2338,39 +1540,11 @@
     "email": "muhammadjunaidii466@gmail.com"
   },
   {
-    "id": 335,
-    "name": "Tarman",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210007148",
-    "email": "tarman60667@gmail.com"
-  },
-  {
-    "id": 336,
-    "name": "Sukirman",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "20210004877",
-    "email": "sukirmanmpp@gmail.com"
-  },
-  {
     "id": 337,
     "name": "Bachrudin",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210004655",
     "email": "bachrudinmpp@gmail.com"
-  },
-  {
-    "id": 338,
-    "name": "Dedy Yusfredy",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210011215",
-    "email": "dyusfredy@gmail.com"
-  },
-  {
-    "id": 339,
-    "name": "Gatot Pamungkas",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210011324",
-    "email": "gatotpamungkasbjm@gmail.com"
   },
   {
     "id": 340,
@@ -2401,20 +1575,6 @@
     "email": "adikaryadi757@gmail.com"
   },
   {
-    "id": 344,
-    "name": "Dian Cahyadi Putra",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210011511",
-    "email": "Dian.cputra@gmail.com"
-  },
-  {
-    "id": 345,
-    "name": "Pramono",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210011248",
-    "email": "pramonopga70@gmail.com"
-  },
-  {
     "id": 346,
     "name": "Sodikin",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -2429,32 +1589,11 @@
     "email": "agathisenam@gmail.com"
   },
   {
-    "id": 348,
-    "name": "Agil Ramanda Ray Todi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210010898",
-    "email": "agilsylva91@gmail.com"
-  },
-  {
     "id": 349,
     "name": "Bagus Febriyanto Nugroho",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210011784",
     "email": "bagusfebriyantonugroho02@gmail.com"
-  },
-  {
-    "id": 350,
-    "name": "Gunawan Yohanes",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210011783",
-    "email": "siganishut6@gmail.com"
-  },
-  {
-    "id": 351,
-    "name": "Zubaidi.m",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210011924",
-    "email": "zubaidim1955@gmail.com"
   },
   {
     "id": 352,
@@ -2471,46 +1610,11 @@
     "email": "Arismu304@gmail.com"
   },
   {
-    "id": 354,
-    "name": "Watno Wiloyo",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210011960",
-    "email": "watnowiloyo71@gmail.com"
-  },
-  {
     "id": 355,
     "name": "Watno Wiloyo",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210011960",
     "email": "watnowiloyo71@gmail.com"
-  },
-  {
-    "id": 356,
-    "name": "Muhammad Hafidh Bramantya",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210012052",
-    "email": "bramsfvs@gmail.com"
-  },
-  {
-    "id": 357,
-    "name": "Novyta Eka Setyarini",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16210012055",
-    "email": "novyta.setyarini@gmail.com"
-  },
-  {
-    "id": 358,
-    "name": "Didik Purwanto",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210011991",
-    "email": "purwanttodidik@gmail.com"
-  },
-  {
-    "id": 359,
-    "name": "Rusliansyah",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14210012240",
-    "email": "rusliansyah242@gmail.com"
   },
   {
     "id": 360,
@@ -2548,13 +1652,6 @@
     "email": "mercinclaw123@gmail.com"
   },
   {
-    "id": 365,
-    "name": "Aken Saputra",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210012627",
-    "email": "saputrajanggala2023@gmail.com"
-  },
-  {
     "id": 366,
     "name": "Sri Wahyu Gati Darmaja",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -2583,34 +1680,6 @@
     "email": "lisaizawati27@gmail.com"
   },
   {
-    "id": 370,
-    "name": "Sukirman",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210004877",
-    "email": "sukirmanmpp@gmail.com"
-  },
-  {
-    "id": 371,
-    "name": "Muchtasar",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210004878",
-    "email": "muchtasarmpp@gmail.com"
-  },
-  {
-    "id": 372,
-    "name": "Djoko Priyono",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210002291",
-    "email": "jokopridodo@gmail.com"
-  },
-  {
-    "id": 373,
-    "name": "Noor Ifansyah",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210012013",
-    "email": "ifansyahn40@gmail.com"
-  },
-  {
     "id": 374,
     "name": "Sudiyono",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -2625,13 +1694,6 @@
     "email": "sugiyantowidada@yahoo.com"
   },
   {
-    "id": 376,
-    "name": "Baihaqi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210012759",
-    "email": "baihaqi.40@yahoo.com"
-  },
-  {
     "id": 377,
     "name": "Agung Setianto",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -2644,13 +1706,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210012849",
     "email": "IBRAMSYAH0403@GMAIL.COM"
-  },
-  {
-    "id": 379,
-    "name": "Haris Budi Prasetyo",
-    "qualification_name": "GANISPH PENGUJIAN SERPIH KAYU",
-    "registration_number": "09210012463",
-    "email": "haris_logmal@yahoo.com"
   },
   {
     "id": 380,
@@ -2681,25 +1736,11 @@
     "email": "zainidg22@gmail.com"
   },
   {
-    "id": 384,
-    "name": "Gazali Rachman",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210013143",
-    "email": "darmo6988@gmail.com"
-  },
-  {
     "id": 385,
     "name": "Bima Adhitya",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210008311",
     "email": "adhityabima81@gmail.com"
-  },
-  {
-    "id": 386,
-    "name": "Fengky",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02210003201",
-    "email": "shs.teweh01@gmail.com"
   },
   {
     "id": 387,
@@ -2758,27 +1799,6 @@
     "email": "gustitajuddin@gmail.com"
   },
   {
-    "id": 395,
-    "name": "H. Mahpud",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210013678",
-    "email": "mhd.bjm77@gmail.com"
-  },
-  {
-    "id": 396,
-    "name": "Nurdin",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14210013528",
-    "email": "udinn5929@gmail.com"
-  },
-  {
-    "id": 397,
-    "name": "Irwansyah",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14210013609",
-    "email": "spinkzirwan86@gmail.com"
-  },
-  {
     "id": 398,
     "name": "Muhammad Taufik Hidayat",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -2798,13 +1818,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "06210013889",
     "email": "syadarsyad22@gmail.com"
-  },
-  {
-    "id": 401,
-    "name": "Bayu Saputra",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210014125",
-    "email": "bayusaputra.bs86@gmail.com"
   },
   {
     "id": 402,
@@ -2849,13 +1862,6 @@
     "email": "chomsunwahyudi1968@gmail.com"
   },
   {
-    "id": 408,
-    "name": "Muhammad Rizqi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03210015414",
-    "email": "muhammadrizqi171999@gmail.com"
-  },
-  {
     "id": 409,
     "name": "Herlina Wati",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -2884,13 +1890,6 @@
     "email": "sarkanipuji80@gmail.com"
   },
   {
-    "id": 413,
-    "name": "Noor Maulandari",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08210015672",
-    "email": "noormaulandari.kehutanan@gmail.com"
-  },
-  {
     "id": 414,
     "name": "Iswadi Noor",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -2903,13 +1902,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210015893",
     "email": "syahraniriduan@yahoo.com"
-  },
-  {
-    "id": 416,
-    "name": "Yudha Sakti Susilo",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210015901",
-    "email": "saidroyyan8055@gmail.com"
   },
   {
     "id": 417,
@@ -2961,13 +1953,6 @@
     "email": "msaini.kotabaru@gmail.com"
   },
   {
-    "id": 424,
-    "name": "Muhammad Khairan",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210006216",
-    "email": "khairanb3@gmail.com"
-  },
-  {
     "id": 425,
     "name": "Maman Usman",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -2980,13 +1965,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04210016351",
     "email": "catenbene@gmail.com"
-  },
-  {
-    "id": 427,
-    "name": "M.hadi Susanto",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01210016349",
-    "email": "hadisusanto3523@gmail.com"
   },
   {
     "id": 428,
@@ -3003,13 +1981,6 @@
     "email": "hadipri590@gmail.com"
   },
   {
-    "id": 430,
-    "name": "Muhammad Supian Sahuri",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14220016783",
-    "email": "saupyy@gmail.com"
-  },
-  {
     "id": 431,
     "name": "Arpison",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -3022,13 +1993,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "04220017210",
     "email": "zoelkifli1509@gmail.com"
-  },
-  {
-    "id": 433,
-    "name": "Gadafi Nazim",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02220017397",
-    "email": "ptdi.gadafi.nazim@gmail.com"
   },
   {
     "id": 434,
@@ -3052,13 +2016,6 @@
     "email": "fdhl1437@gmail.com"
   },
   {
-    "id": 437,
-    "name": "Syahrani, S.hut",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03220017829",
-    "email": "syahranisyahrani12345@gmail.com"
-  },
-  {
     "id": 438,
     "name": "Muhammad Juanito Azhar",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -3066,25 +2023,11 @@
     "email": "juanmja06@gmail.com"
   },
   {
-    "id": 439,
-    "name": "Muhammad Fadhil",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16220018026",
-    "email": "fadhiletsi@gmail.com"
-  },
-  {
     "id": 440,
     "name": "Ahmad Ridha",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23220009440",
     "email": "ridhaahmad93@gmail.com"
-  },
-  {
-    "id": 441,
-    "name": "Tariyono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08220018285",
-    "email": "tariyonoono17@gmail.com"
   },
   {
     "id": 442,
@@ -3101,27 +2044,6 @@
     "email": "cust.danu@gmail.com"
   },
   {
-    "id": 444,
-    "name": "Moh. Yusri Kurdi, S.pd",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03220018419",
-    "email": "yusrikudri@gmail.com"
-  },
-  {
-    "id": 445,
-    "name": "Bambang Jamaludin",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01220018426",
-    "email": "b.ma.l.te.weh@gmail.com"
-  },
-  {
-    "id": 446,
-    "name": "Indra Harissandi Saputra",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01220006380",
-    "email": "indra.haris@yahoo.co.id"
-  },
-  {
     "id": 447,
     "name": "Sarkani",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -3134,13 +2056,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "24230009448",
     "email": "masrani.jm@gmail.com"
-  },
-  {
-    "id": 449,
-    "name": "Priyono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230004521",
-    "email": "priyonoifi@gmail.com"
   },
   {
     "id": 450,
@@ -3199,74 +2114,11 @@
     "email": "santiajibjm@gmail.com"
   },
   {
-    "id": 458,
-    "name": "Santiaji",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230007173",
-    "email": "santiajibjm@gmail.com"
-  },
-  {
     "id": 459,
     "name": "Muhammad Fahri Rinaldi",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230010026",
     "email": "muhammadfahriganis@gmail.com"
-  },
-  {
-    "id": 460,
-    "name": "Rahmanuddin",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230008357",
-    "email": "rumah.grand@Gmail.com"
-  },
-  {
-    "id": 461,
-    "name": "Nur Alam",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230007586",
-    "email": "naalam78@gmail.com"
-  },
-  {
-    "id": 462,
-    "name": "Agus Arwani",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230006182",
-    "email": "agusarwani1972@gmail.com"
-  },
-  {
-    "id": 463,
-    "name": "Triwantono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230009496",
-    "email": "siganishut2a@gmail.com"
-  },
-  {
-    "id": 464,
-    "name": "Gunawan Yohanes",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230011783",
-    "email": "siganishut6@gmail.com"
-  },
-  {
-    "id": 465,
-    "name": "Andriyadi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230003055",
-    "email": "andridpks@gmail.com"
-  },
-  {
-    "id": 466,
-    "name": "Masruri",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230003598",
-    "email": "tsmjmasruri@gmail.com"
-  },
-  {
-    "id": 467,
-    "name": "Denny Poltje Tumangken",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230003686",
-    "email": "dennypoltjetumangken@gmail.com"
   },
   {
     "id": 468,
@@ -3301,13 +2153,6 @@
     "name": "Rejo",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "24230009562",
-    "email": "rejo1.sstc@gmail.com"
-  },
-  {
-    "id": 473,
-    "name": "Rejo",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230009562",
     "email": "rejo1.sstc@gmail.com"
   },
   {
@@ -3395,67 +2240,11 @@
     "email": "yachyunie@gmail.com"
   },
   {
-    "id": 486,
-    "name": "Muhammad Nurfarida",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230007615",
-    "email": "faridaganispkli2021@gmail.com"
-  },
-  {
     "id": 487,
     "name": "Subhan",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230018582",
     "email": "ud.mandirisejahterabjm@gmail.com"
-  },
-  {
-    "id": 488,
-    "name": "Sugeng Riyadi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230005485",
-    "email": "sugeng.bc42@gmail.com"
-  },
-  {
-    "id": 489,
-    "name": "Djoko Priyono",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230002291",
-    "email": "jokopridodo@gmail.com"
-  },
-  {
-    "id": 490,
-    "name": "Anton",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230005336",
-    "email": "anton.bc42@gmail.com"
-  },
-  {
-    "id": 491,
-    "name": "Sunardi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230004550",
-    "email": "sunardi.bc42@gmail.com"
-  },
-  {
-    "id": 492,
-    "name": "Zaenal Arifin",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230004563",
-    "email": "zaenal.bc42@gmail.com"
-  },
-  {
-    "id": 493,
-    "name": "Paimun",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230010561",
-    "email": "kdp_banjarmasin@yahoo.com"
-  },
-  {
-    "id": 494,
-    "name": "Ari Wibowo",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230005552",
-    "email": "ari.bc42@gmail.com"
   },
   {
     "id": 495,
@@ -3549,20 +2338,6 @@
     "email": "suratno.sstc@gmail.com"
   },
   {
-    "id": 508,
-    "name": "Askar Bawono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230008579",
-    "email": "ayah.pratama1105@gmail.com"
-  },
-  {
-    "id": 509,
-    "name": "Yusran",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230008871",
-    "email": "yusran1.sstc@gmail.com"
-  },
-  {
     "id": 510,
     "name": "Riyanto",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -3626,41 +2401,6 @@
     "email": "riski.regita13@gmail.com"
   },
   {
-    "id": 519,
-    "name": "Muhammad Bakri S.",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230005126",
-    "email": "sbakri967@gmail.com"
-  },
-  {
-    "id": 520,
-    "name": "Muslan Soroga,",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230005555",
-    "email": "alimunawar_siddik@yahoo.com"
-  },
-  {
-    "id": 521,
-    "name": "Robby Cahyadi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230010360",
-    "email": "robyraziq@gmail.com"
-  },
-  {
-    "id": 522,
-    "name": "Deki H Kaligis",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230005558",
-    "email": "dekikaligis234@gmail.com"
-  },
-  {
-    "id": 523,
-    "name": "Muchtasar",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230004878",
-    "email": "muchtasarmpp@gmail.com"
-  },
-  {
     "id": 524,
     "name": "Eddy Haryadi",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -3675,20 +2415,6 @@
     "email": "ujang.gm68@gmail.com"
   },
   {
-    "id": 526,
-    "name": "Gazali Rachman",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230013143",
-    "email": "darmo6988@gmail.com"
-  },
-  {
-    "id": 527,
-    "name": "Sukirman",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230004877",
-    "email": "sukirmanmpp@gmail.com"
-  },
-  {
     "id": 528,
     "name": "Sodikin",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -3701,13 +2427,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230004603",
     "email": "uriansyahmpp@gmail.com"
-  },
-  {
-    "id": 530,
-    "name": "Joko Kusdaryanto",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230007497",
-    "email": "jokokusdaryantoe@gmail.com"
   },
   {
     "id": 531,
@@ -3780,20 +2499,6 @@
     "email": "satriayadi19@gmail.com"
   },
   {
-    "id": 541,
-    "name": "Haris Budi Prasetyo",
-    "qualification_name": "GANISPH PENGUJIAN SERPIH KAYU",
-    "registration_number": "09230012463",
-    "email": "haris_logmal@yahoo.com"
-  },
-  {
-    "id": 542,
-    "name": "Yandy Adhikara",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230008910",
-    "email": "yandy_andhik@yahoo.com"
-  },
-  {
     "id": 543,
     "name": "Hendra Yusuf",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -3857,90 +2562,6 @@
     "email": "mfakhriihsan@gmail.com"
   },
   {
-    "id": 552,
-    "name": "Agus",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230007420",
-    "email": "aguss.iht2@gmail.com"
-  },
-  {
-    "id": 553,
-    "name": "Sulisno Andri Hamsah",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230008126",
-    "email": "sulisnoandri_hamsah@yahoo.co.id"
-  },
-  {
-    "id": 554,
-    "name": "Harianto",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230008436",
-    "email": "ayayayang2022@gmail.com"
-  },
-  {
-    "id": 555,
-    "name": "Muhammad Fadhil Mawardi",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230010907",
-    "email": "fdhl1437@gmail.com"
-  },
-  {
-    "id": 556,
-    "name": "Ricko Leowildi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230006147",
-    "email": "Rickoleowildi@gmail.com"
-  },
-  {
-    "id": 557,
-    "name": "-. Yusuf Yuliadi, S.Hut",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230007174",
-    "email": "yusuf.yuliadi@borneo-indobara.com"
-  },
-  {
-    "id": 558,
-    "name": "Abdul Khalik",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230008159",
-    "email": "abdul_khalik85@yahoo.co.id"
-  },
-  {
-    "id": 559,
-    "name": "Mashudani",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230008157",
-    "email": "fadlan.af69@gmail.com"
-  },
-  {
-    "id": 560,
-    "name": "Wardi Yani",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230007490",
-    "email": "wardi.yani@gmail.com"
-  },
-  {
-    "id": 561,
-    "name": "Eko Susanto",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230007553",
-    "email": "eko.alfatihi@gmail.com"
-  },
-  {
-    "id": 562,
-    "name": "Maman Supirman",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230008706",
-    "email": "mamansupirman@yahoo.co.id"
-  },
-  {
-    "id": 563,
-    "name": "Muhammad Ady Maswardi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230008476",
-    "email": "adimaswardi@gmail.com"
-  },
-  {
     "id": 564,
     "name": "Kuwadiyono",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -3955,104 +2576,6 @@
     "email": "adhechandra.074@gmail.com"
   },
   {
-    "id": 566,
-    "name": "Baihaqi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230012759",
-    "email": "baihaqi.40@yahoo.com"
-  },
-  {
-    "id": 567,
-    "name": "Untung",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230007487",
-    "email": "yogie966@gmail.com"
-  },
-  {
-    "id": 568,
-    "name": "Agus Marwoto",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230007589",
-    "email": "agusmarwoto29@yahoo.com"
-  },
-  {
-    "id": 569,
-    "name": "Tariyono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230018285",
-    "email": "tariyonoono17@gmail.com"
-  },
-  {
-    "id": 570,
-    "name": "Ahmad Rifai",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230009674",
-    "email": "ahmad.rifai151186@gmail.com"
-  },
-  {
-    "id": 571,
-    "name": "Herman,s.sos",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230006965",
-    "email": "hermantiki999@gmail.com"
-  },
-  {
-    "id": 572,
-    "name": "Imam Junaedi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230006140",
-    "email": "imjunaedi@gmail.com"
-  },
-  {
-    "id": 573,
-    "name": "Hamsani Kamaruddin",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230003514",
-    "email": "hamsanikamaruddin@gmail.com"
-  },
-  {
-    "id": 574,
-    "name": "Agus Sugianto",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230007854",
-    "email": "agus.sugianto@dayasakti.co.id"
-  },
-  {
-    "id": 575,
-    "name": "Andre Wardhana",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230002188",
-    "email": "andrewardana512@gmail.com"
-  },
-  {
-    "id": 576,
-    "name": "Fredy Dias",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230008452",
-    "email": "ayayayang2023@gmail.com"
-  },
-  {
-    "id": 577,
-    "name": "Iberahim",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230003510",
-    "email": "iberahimahim21@gmail.com"
-  },
-  {
-    "id": 578,
-    "name": "Muhammad Khairan",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230006216",
-    "email": "khairanb3@gmail.com"
-  },
-  {
-    "id": 579,
-    "name": "Muhamad Jaelani",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230007793",
-    "email": "jaelanimuhamad69@gmail.com"
-  },
-  {
     "id": 580,
     "name": "Muhammad Rifani",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -4065,13 +2588,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230010262",
     "email": "winarnonarno62@gmail.com"
-  },
-  {
-    "id": 582,
-    "name": "Bayu Saputra",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230011017",
-    "email": "mercinclaw123@gmail.com"
   },
   {
     "id": 583,
@@ -4116,13 +2632,6 @@
     "email": "muhran@dayasakti.co.id"
   },
   {
-    "id": 589,
-    "name": "Mahlan. Sp",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230008898",
-    "email": "mahlanhrb2012@yahoo.co.id"
-  },
-  {
     "id": 590,
     "name": "Sugiyanto Widada",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -4158,13 +2667,6 @@
     "email": "sijab29@gmail.com"
   },
   {
-    "id": 595,
-    "name": "Ryu Pelata",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230006699",
-    "email": "pelata.ryu@gmail.com"
-  },
-  {
     "id": 596,
     "name": "Indra Cahya Permana",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -4177,27 +2679,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230010406",
     "email": "antojer007@gmail.com"
-  },
-  {
-    "id": 598,
-    "name": "Widi Isnarko",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230009322",
-    "email": "widi.isnarko@dayasakti.co.id"
-  },
-  {
-    "id": 599,
-    "name": "Yamani, S.hut",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230018877",
-    "email": "myamani25@gmail.com"
-  },
-  {
-    "id": 600,
-    "name": "Dimas Agung Ghifari",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230018878",
-    "email": "dimas_ghifari@banpuindo.co.id"
   },
   {
     "id": 601,
@@ -4226,55 +2707,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "24230010891",
     "email": "herryawan2021@gmail.com"
-  },
-  {
-    "id": 605,
-    "name": "Muhammad Murjani",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230008215",
-    "email": "muhmurjani@gmail.com"
-  },
-  {
-    "id": 606,
-    "name": "Moh. Yusri Kurdi, S.pd",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230018419",
-    "email": "yusrikudri@gmail.com"
-  },
-  {
-    "id": 607,
-    "name": "Regina Amelia Putri",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230019305",
-    "email": "Rgnamelia4@gmail.com"
-  },
-  {
-    "id": 608,
-    "name": "Gatot Pamungkas",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230011324",
-    "email": "gatotpamungkasbjm@gmail.com"
-  },
-  {
-    "id": 609,
-    "name": "Dian Cahyadi Putra",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230011511",
-    "email": "Dian.cputra@gmail.com"
-  },
-  {
-    "id": 610,
-    "name": "Ir. Jamaluddin",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230008400",
-    "email": "jamalrafie6@gmail.com"
-  },
-  {
-    "id": 611,
-    "name": "Fitriadi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230007500",
-    "email": "ifityadi559@gmail.com"
   },
   {
     "id": 612,
@@ -4578,27 +3010,6 @@
     "email": "erwanebjb@gmail.com"
   },
   {
-    "id": 655,
-    "name": "Han Han Adnan Kamil",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230005563",
-    "email": "hanhan.bc42@gmail.com"
-  },
-  {
-    "id": 656,
-    "name": "Dona",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230005536",
-    "email": "dona02.bc42@gmail.com"
-  },
-  {
-    "id": 657,
-    "name": "Alan Suryanata",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230005548",
-    "email": "alan.bc42@gmail.com"
-  },
-  {
     "id": 658,
     "name": "Jianto",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -4632,27 +3043,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230019349",
     "email": "muhammadladija@gmail.com"
-  },
-  {
-    "id": 663,
-    "name": "Elin",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230005386",
-    "email": "elin.bc42@gmail.com"
-  },
-  {
-    "id": 664,
-    "name": "Endi Supriadi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230005395",
-    "email": "endi.bc42@gmail.com"
-  },
-  {
-    "id": 665,
-    "name": "Bagus Irawan",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230005377",
-    "email": "bagus.bc42@gmail.com"
   },
   {
     "id": 666,
@@ -4809,13 +3199,6 @@
     "email": "zainidg22@gmail.com"
   },
   {
-    "id": 688,
-    "name": "Pitoyo",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230005530",
-    "email": "pitoyo.bc42@gmail.com"
-  },
-  {
     "id": 689,
     "name": "Damin",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -4844,27 +3227,6 @@
     "email": "yutia.rimbaperkasa2@gmail.com"
   },
   {
-    "id": 693,
-    "name": "Noor Maulandari",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230015672",
-    "email": "noormaulandari.kehutanan@gmail.com"
-  },
-  {
-    "id": 694,
-    "name": "Yonathan Eric Prabowo",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230019353",
-    "email": "yonathanericprabowo@gmail.com"
-  },
-  {
-    "id": 695,
-    "name": "Agustina",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230019253",
-    "email": "tina.widyp@gmail.com"
-  },
-  {
     "id": 696,
     "name": "Lisa Izawati",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -4886,13 +3248,6 @@
     "email": "gustitajuddin@gmail.com"
   },
   {
-    "id": 699,
-    "name": "Yudian Noorhakim",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230019592",
-    "email": "yudian1713@gmail.com"
-  },
-  {
     "id": 700,
     "name": "Marajohan Sitanggang",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -4900,144 +3255,11 @@
     "email": "marajohan.pga@gmail.com"
   },
   {
-    "id": 701,
-    "name": "Pramono",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230011248",
-    "email": "pramonopga70@gmail.com"
-  },
-  {
-    "id": 702,
-    "name": "Nafril Yuzen, S.HUT",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230008369",
-    "email": "nafril933new@gmail.com"
-  },
-  {
-    "id": 703,
-    "name": "Nafril Yuzen, S.HUT",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230008369",
-    "email": "nafril933new@gmail.com"
-  },
-  {
-    "id": 704,
-    "name": "Muhammad Rizqi Yasin",
-    "qualification_name": "GANISPH PEMANDU WISATA ALAM",
-    "registration_number": "17230019724",
-    "email": "yasinr344@Gmail.com"
-  },
-  {
-    "id": 705,
-    "name": "Nur Laili Anindia, S. Hut",
-    "qualification_name": "GANISPH PEMANDU WISATA ALAM",
-    "registration_number": "17230019726",
-    "email": "nurlailianindia99@gmail.com"
-  },
-  {
-    "id": 706,
-    "name": "Ryna Wasianti, A.md.kom",
-    "qualification_name": "GANISPH PEMANDU WISATA ALAM",
-    "registration_number": "17230019727",
-    "email": "rynaawasyanti21@gmail.com"
-  },
-  {
-    "id": 707,
-    "name": "Muhamad Jaelani",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230007793",
-    "email": "jaelanimuhamad69@gmail.com"
-  },
-  {
-    "id": 708,
-    "name": "Munir",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230007241",
-    "email": "munirasnur211@gmail.com"
-  },
-  {
-    "id": 709,
-    "name": "Muhamadi",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230008626",
-    "email": "muhamadi.iht2@gmail.com"
-  },
-  {
     "id": 710,
     "name": "Sayudi",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "24230007423",
     "email": "sayudiktb@gmail.com"
-  },
-  {
-    "id": 711,
-    "name": "Dessy Ratnasari",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230019744",
-    "email": "ratnasari.desy1393@gmail.com"
-  },
-  {
-    "id": 712,
-    "name": "Syahrani, S.hut",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230017829",
-    "email": "syahranisyahrani12345@gmail.com"
-  },
-  {
-    "id": 713,
-    "name": "Joko Kusdaryanto",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230007497",
-    "email": "jokokusdaryantoe@gmail.com"
-  },
-  {
-    "id": 714,
-    "name": "Selamat",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230008616",
-    "email": "selamat.iht2@gmail.com"
-  },
-  {
-    "id": 715,
-    "name": "Irwansyah",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14230013609",
-    "email": "spinkzirwan86@gmail.com"
-  },
-  {
-    "id": 716,
-    "name": "Nurdin",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14230013528",
-    "email": "udinn5929@gmail.com"
-  },
-  {
-    "id": 717,
-    "name": "M. Iqbal Nurdiyansyah",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14230019745",
-    "email": "m.iqbalnurdiyansyah@gmail.com"
-  },
-  {
-    "id": 718,
-    "name": "M. Idrus",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14230019746",
-    "email": "qulluidroes@gmail.com"
-  },
-  {
-    "id": 719,
-    "name": "Ahmad Rijani",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14230019747",
-    "email": "ahmadrijani322@gmail.com"
-  },
-  {
-    "id": 720,
-    "name": "Samsuri",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14230019748",
-    "email": "ssam69210@gmail.com"
   },
   {
     "id": 721,
@@ -5068,69 +3290,6 @@
     "email": "sugiyanainhutani@gmail.com"
   },
   {
-    "id": 725,
-    "name": "M.hadi Susanto",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230016349",
-    "email": "hadisusanto3523@gmail.com"
-  },
-  {
-    "id": 726,
-    "name": "Muhammad Khairan",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230006216",
-    "email": "khairanb3@gmail.com"
-  },
-  {
-    "id": 727,
-    "name": "Swadhar Madi Harjuni",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230007246",
-    "email": "nyot19@gmail.com"
-  },
-  {
-    "id": 728,
-    "name": "Ramadhani",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230019749",
-    "email": "ramahalo9@gmail.com"
-  },
-  {
-    "id": 729,
-    "name": "Muhammad Syahlana",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230000783",
-    "email": "msahlana@yahoo.co.id"
-  },
-  {
-    "id": 730,
-    "name": "Muhammad Fadhil",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230018026",
-    "email": "fadhiletsi@gmail.com"
-  },
-  {
-    "id": 731,
-    "name": "Subairi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230019752",
-    "email": "bieryunlam@gmail.com"
-  },
-  {
-    "id": 732,
-    "name": "Ridayat",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230019755",
-    "email": "ridayatrh@gmail.com"
-  },
-  {
-    "id": 733,
-    "name": "Abdullah Syafi'e, S.hut",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230000892",
-    "email": "syafie.bjb@gmail.com"
-  },
-  {
     "id": 734,
     "name": "Abdul Kadir",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
@@ -5143,13 +3302,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230015671",
     "email": "iswadi.noor78@gmail.com"
-  },
-  {
-    "id": 736,
-    "name": "Ali Junaidi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230009112",
-    "email": "aliedhuned.iht2@gmail.com"
   },
   {
     "id": 737,
@@ -5222,20 +3374,6 @@
     "email": "syahril81022@gmail.com"
   },
   {
-    "id": 747,
-    "name": "Novizal Kharisma",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230019933",
-    "email": "ijalkharisma@gmail.com"
-  },
-  {
-    "id": 748,
-    "name": "Didik Purwanto",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230011991",
-    "email": "purwanttodidik@gmail.com"
-  },
-  {
     "id": 749,
     "name": "Umar",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -5250,32 +3388,11 @@
     "email": "bm.al.te.weh@gmail.com"
   },
   {
-    "id": 751,
-    "name": "Veri Agus Prasetio",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230019980",
-    "email": "veriagusprasetyo@gmail.com"
-  },
-  {
     "id": 752,
     "name": "Abdan",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "24230018629",
     "email": "deenabdan@gmail.com"
-  },
-  {
-    "id": 753,
-    "name": "Muhammad Ali Rakhman",
-    "qualification_name": "GANISPH PEMANDU WISATA ALAM",
-    "registration_number": "17230020063",
-    "email": "muhammadalirakhman0409@gmail.com"
-  },
-  {
-    "id": 754,
-    "name": "Jaenal Arifin",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230001047",
-    "email": "Jaenal.arifin.sungaidua@gmail.com"
   },
   {
     "id": 755,
@@ -5327,13 +3444,6 @@
     "email": "andiksiswanto531@gmail.com"
   },
   {
-    "id": 762,
-    "name": "Agil Ramanda Ray Todi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230010898",
-    "email": "agilsylva91@gmail.com"
-  },
-  {
     "id": 763,
     "name": "Herlina Wati",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -5355,20 +3465,6 @@
     "email": "nurhasy74@gmail.com"
   },
   {
-    "id": 766,
-    "name": "Rohmanur Apriansyah",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230020263",
-    "email": "rohmanurapriansyah7@gmail.com"
-  },
-  {
-    "id": 767,
-    "name": "Riyono",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230020265",
-    "email": "riyonodpks002@gmail.com"
-  },
-  {
     "id": 768,
     "name": "Beni",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -5381,27 +3477,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230020268",
     "email": "adenansyahpribadi@gmail.com"
-  },
-  {
-    "id": 770,
-    "name": "Aditya Rahman Fauzi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230020270",
-    "email": "adityarahmanf98@gmail.com"
-  },
-  {
-    "id": 771,
-    "name": "Joko Riyanto",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230020271",
-    "email": "riyantojoko110475@gmail.com"
-  },
-  {
-    "id": 772,
-    "name": "Sukraydin",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230020272",
-    "email": "adypoespa@gmail.com"
   },
   {
     "id": 773,
@@ -5446,32 +3521,11 @@
     "email": "imamsuliyono928@gmail.com"
   },
   {
-    "id": 779,
-    "name": "Niken Larasati Kusuma Dini",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230020281",
-    "email": "nikenlarasatikusumadini@gmail.com"
-  },
-  {
     "id": 780,
     "name": "Watno Wiloyo",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230011960",
     "email": "watnowiloyo71@gmail.com"
-  },
-  {
-    "id": 781,
-    "name": "Watno Wiloyo",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230011960",
-    "email": "watnowiloyo71@gmail.com"
-  },
-  {
-    "id": 782,
-    "name": "Noor Ifansyah",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03230012013",
-    "email": "ifansyahn40@gmail.com"
   },
   {
     "id": 783,
@@ -5481,32 +3535,11 @@
     "email": "mercinclaw123@gmail.com"
   },
   {
-    "id": 784,
-    "name": "Tjipto Wasisto Hs",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16230001729",
-    "email": "tjiptodayasakti10@gmail.com"
-  },
-  {
-    "id": 785,
-    "name": "Fengky",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02230003201",
-    "email": "shs.teweh01@gmail.com"
-  },
-  {
     "id": 786,
     "name": "Akhmad Efendi, S. Hut",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23230004688",
     "email": "efendi02@ymail.com"
-  },
-  {
-    "id": 787,
-    "name": "David Ahmad Fattah",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14230020357",
-    "email": "dd1383887@gmail.com"
   },
   {
     "id": 788,
@@ -5551,20 +3584,6 @@
     "email": "winarto.bc42@gmail.com"
   },
   {
-    "id": 794,
-    "name": "Ahmad Firdaus",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01230004508",
-    "email": "firdausgm57@gmail.com"
-  },
-  {
-    "id": 795,
-    "name": "Abdul Rahim",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08230001309",
-    "email": "abdulrahim.kyn@gmail.com"
-  },
-  {
     "id": 796,
     "name": "Shafa Aditya Akbar Farezy",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -5586,32 +3605,11 @@
     "email": "rwintanjung@gmail.com"
   },
   {
-    "id": 799,
-    "name": "Regina Amelia Putri",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240019305",
-    "email": "Rgnamelia4@gmail.com"
-  },
-  {
     "id": 800,
     "name": "Muhammad Fadhil Mawardi",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23240010907",
     "email": "fdhl1437@gmail.com"
-  },
-  {
-    "id": 801,
-    "name": "Firmansyah, Ir",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240002642",
-    "email": "firmansyahpnb@gmail.com"
-  },
-  {
-    "id": 802,
-    "name": "Muhamad Rabial",
-    "qualification_name": "GANISPH PEMANFAATAN JASA LINGKUNGAN KARBON",
-    "registration_number": "25240020736",
-    "email": "rabialmuhamad@gmail.com"
   },
   {
     "id": 803,
@@ -5621,25 +3619,11 @@
     "email": "agathisenam@gmail.com"
   },
   {
-    "id": 804,
-    "name": "Yudian Noorhakim",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240019592",
-    "email": "yudian1713@gmail.com"
-  },
-  {
     "id": 805,
     "name": "Muhammad Tedyansyah",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23240020772",
     "email": "tdyansyahh19@gmail.com"
-  },
-  {
-    "id": 806,
-    "name": "Muhammad Febrian Jordan Nur",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240020977",
-    "email": "fbrijordan@gmail.com"
   },
   {
     "id": 807,
@@ -5663,20 +3647,6 @@
     "email": "arsyadbjbaru@gmail.com"
   },
   {
-    "id": 810,
-    "name": "Ruddy Eldiani",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240002133",
-    "email": "ruddy.eldiani@gmail.com"
-  },
-  {
-    "id": 811,
-    "name": "Achmad Rizmi, S. Hut",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240001956",
-    "email": "achmad.rizmi73@gmail.com"
-  },
-  {
     "id": 812,
     "name": "Muhammad Warso",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -5689,13 +3659,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23240002073",
     "email": "rahmatremix3@gmail.com"
-  },
-  {
-    "id": 814,
-    "name": "Syaifuddin Anwari",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03240002316",
-    "email": "syaifuddinanwari08@gmail.com"
   },
   {
     "id": 815,
@@ -5733,25 +3696,11 @@
     "email": "fajar1608@gmail.com"
   },
   {
-    "id": 820,
-    "name": "Agustina",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240019253",
-    "email": "tina.widyp@gmail.com"
-  },
-  {
     "id": 821,
     "name": "Muhammad Dinal",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23240021644",
     "email": "muhammaddinal103@gmail.com"
-  },
-  {
-    "id": 822,
-    "name": "Toni Utomo",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240021710",
-    "email": "momohanacaraka@gmail.com"
   },
   {
     "id": 823,
@@ -5768,32 +3717,11 @@
     "email": "johanaljohan73@gmail.com"
   },
   {
-    "id": 825,
-    "name": "Ainul Mustaqim",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08240021782",
-    "email": "ainulmustaqimkehutanan@gmail.com"
-  },
-  {
     "id": 826,
     "name": "Muhammad Noorifansyah",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23240021781",
     "email": "ifantsmj@gmail.com"
-  },
-  {
-    "id": 827,
-    "name": "Yoga Bayu Prasetya",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240018286",
-    "email": "yogabayuprasetya08@gmail.com"
-  },
-  {
-    "id": 828,
-    "name": "Riky Andika",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240021923",
-    "email": "rikyandika966@gmail.com"
   },
   {
     "id": 829,
@@ -5810,13 +3738,6 @@
     "email": "neovistarwhite@gmail.com"
   },
   {
-    "id": 831,
-    "name": "Rusni Fitri",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240022104",
-    "email": "onealwood@gmail.com"
-  },
-  {
     "id": 832,
     "name": "M. Arsyad",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -5831,32 +3752,11 @@
     "email": "hfitri695@gmail.com"
   },
   {
-    "id": 834,
-    "name": "Muhammad Kurniawan",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16240022196",
-    "email": "kurniawanmuh17@gmail.com"
-  },
-  {
     "id": 835,
     "name": "Muhammad Hafizh Afriza",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23240022568",
     "email": "hafizhafriza@gmail.com"
-  },
-  {
-    "id": 836,
-    "name": "Syahrudin",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03240022616",
-    "email": "syahrudinbintahanbaru@gmail.com"
-  },
-  {
-    "id": 837,
-    "name": "Muhammad Adnan Nurwachid",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01240022673",
-    "email": "adnanda4@gmail.com"
   },
   {
     "id": 838,
@@ -5880,25 +3780,11 @@
     "email": "mthoha253@gmail.com"
   },
   {
-    "id": 841,
-    "name": "Aurora Putri Modi Sandiana Bes",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250022784",
-    "email": "auroraputribes@gmail.com"
-  },
-  {
     "id": 842,
     "name": "Aurora Putri Modi Sandiana Bes",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23250022784",
     "email": "auroraputribes@gmail.com"
-  },
-  {
-    "id": 843,
-    "name": "Krisbiantoro",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK GETAH",
-    "registration_number": "14250022792",
-    "email": "krisbiantoro993@gmail.com"
   },
   {
     "id": 844,
@@ -5971,13 +3857,6 @@
     "email": "adiboynew@gmail.com"
   },
   {
-    "id": 854,
-    "name": "Ridho Agustiandi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08250022933",
-    "email": "eidhobart@gmail.com"
-  },
-  {
     "id": 855,
     "name": "Muhammad Anam",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -6006,25 +3885,11 @@
     "email": "julkurnaindidi@gmail.com"
   },
   {
-    "id": 859,
-    "name": "Muhammad Syamsudin Noor",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023081",
-    "email": "mhsyamnoor@gmail.com"
-  },
-  {
     "id": 860,
     "name": "Supran Jaya",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "24250023084",
     "email": "supranjayaskm60@gmail.com"
-  },
-  {
-    "id": 861,
-    "name": "Ebbie Virgo Nata",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023022",
-    "email": "ebbievirgonata@gmail.com"
   },
   {
     "id": 862,
@@ -6041,13 +3906,6 @@
     "email": "rizkyibrahimsaputra@gmail.com"
   },
   {
-    "id": 864,
-    "name": "Alfian Ramadhany",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023429",
-    "email": "25alfianramadhany@gmail.com"
-  },
-  {
     "id": 865,
     "name": "Syaiful Anwar",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -6055,256 +3913,11 @@
     "email": "syaifulanwarbahalap@gmail.com"
   },
   {
-    "id": 866,
-    "name": "Adrian Praditya Shouta",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16250023613",
-    "email": "aditshouta@gmail.com"
-  },
-  {
-    "id": 867,
-    "name": "Adrian Praditya Shouta",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023613",
-    "email": "aditshouta@gmail.com"
-  },
-  {
-    "id": 868,
-    "name": "Rodianor",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16250023614",
-    "email": "rodianor.nap@gmail.com"
-  },
-  {
     "id": 869,
     "name": "Rodianor",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23250023614",
     "email": "rodianor.nap@gmail.com"
-  },
-  {
-    "id": 870,
-    "name": "Rodianor",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023614",
-    "email": "rodianor.nap@gmail.com"
-  },
-  {
-    "id": 871,
-    "name": "Muhammad Ainung",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16250023616",
-    "email": "inungm56@gmail.com"
-  },
-  {
-    "id": 872,
-    "name": "Muhammad Ainung",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023616",
-    "email": "inungm56@gmail.com"
-  },
-  {
-    "id": 873,
-    "name": "Ahmad Khomarudin",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16250023617",
-    "email": "ahmadganisph@gmail.com"
-  },
-  {
-    "id": 874,
-    "name": "Ahmad Khomarudin",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023617",
-    "email": "ahmadganisph@gmail.com"
-  },
-  {
-    "id": 875,
-    "name": "Achmad Rizky Frianno",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16250023618",
-    "email": "friannorizky@gmail.com"
-  },
-  {
-    "id": 876,
-    "name": "Achmad Rizky Frianno",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023618",
-    "email": "friannorizky@gmail.com"
-  },
-  {
-    "id": 877,
-    "name": "Ilham",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16250023619",
-    "email": "ilham.smkk@gmail.com"
-  },
-  {
-    "id": 878,
-    "name": "Ilham",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023619",
-    "email": "ilham.smkk@gmail.com"
-  },
-  {
-    "id": 879,
-    "name": "Ilham",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023619",
-    "email": "ilham.smkk@gmail.com"
-  },
-  {
-    "id": 880,
-    "name": "Petrus Sitinjak",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16250023620",
-    "email": "petrussitinjak206@gmail.com"
-  },
-  {
-    "id": 881,
-    "name": "Petrus Sitinjak",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023620",
-    "email": "petrussitinjak206@gmail.com"
-  },
-  {
-    "id": 882,
-    "name": "M. Rizal Akbar",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023621",
-    "email": "muhammadrizalakbar19@gmail.com"
-  },
-  {
-    "id": 883,
-    "name": "M. Rizal Akbar",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023621",
-    "email": "muhammadrizalakbar19@gmail.com"
-  },
-  {
-    "id": 884,
-    "name": "Ahmad Rosadi",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023622",
-    "email": "ahmadrosadi2107@gmail.com"
-  },
-  {
-    "id": 885,
-    "name": "Ahmad Rosadi",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023622",
-    "email": "ahmadrosadi2107@gmail.com"
-  },
-  {
-    "id": 886,
-    "name": "M. Burhanudin Iqbal",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023625",
-    "email": "mbiqbal26@gmail.com"
-  },
-  {
-    "id": 887,
-    "name": "M. Burhanudin Iqbal",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023625",
-    "email": "mbiqbal26@gmail.com"
-  },
-  {
-    "id": 888,
-    "name": "Syach Ilyasa Samudra",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023626",
-    "email": "ilyasasamudra1@gmail.com"
-  },
-  {
-    "id": 889,
-    "name": "Syach Ilyasa Samudra",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023626",
-    "email": "ilyasasamudra1@gmail.com"
-  },
-  {
-    "id": 890,
-    "name": "Viby Hendriawan",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023631",
-    "email": "vibyhendriawan@yahoo.com"
-  },
-  {
-    "id": 891,
-    "name": "Viby Hendriawan",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023631",
-    "email": "vibyhendriawan@yahoo.com"
-  },
-  {
-    "id": 892,
-    "name": "Abdul Rahman",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023632",
-    "email": "abdulrahman630309@gmail.com"
-  },
-  {
-    "id": 893,
-    "name": "Abdul Rahman",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023632",
-    "email": "abdulrahman630309@gmail.com"
-  },
-  {
-    "id": 894,
-    "name": "Yuda Pranata",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023633",
-    "email": "Yudhapranata852@gmail.com"
-  },
-  {
-    "id": 895,
-    "name": "Yuda Pranata",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023633",
-    "email": "Yudhapranata852@gmail.com"
-  },
-  {
-    "id": 896,
-    "name": "Muhammad Akbar",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023635",
-    "email": "mhmmdakbar698@gmail.com"
-  },
-  {
-    "id": 897,
-    "name": "Humaira",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK BATANG",
-    "registration_number": "11250023640",
-    "email": "irahumaira91@gmail.com"
-  },
-  {
-    "id": 898,
-    "name": "Toni Utomo",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250021710",
-    "email": "momohanacaraka@gmail.com"
-  },
-  {
-    "id": 899,
-    "name": "Ir. Eric Sundara",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250016165",
-    "email": "ericsundara2021@gmail.com"
-  },
-  {
-    "id": 900,
-    "name": "Khalid Sabirin",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01250023642",
-    "email": "kholidsobirin@gmail.com"
-  },
-  {
-    "id": 901,
-    "name": "Lalang Sagita",
-    "qualification_name": "GANISPH PEMBINAAN HUTAN",
-    "registration_number": "03250023644",
-    "email": "Lalangsagita2001@gmail.com"
   },
   {
     "id": 902,
@@ -6321,32 +3934,11 @@
     "email": "Bilal.ainurrohmad98@gmail.com"
   },
   {
-    "id": 904,
-    "name": "Fema Novita Sari",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08250023757",
-    "email": "femanovitasari01@gmail.com"
-  },
-  {
     "id": 905,
     "name": "Parinus",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23250023770",
     "email": "parinustio28@gmail.com"
-  },
-  {
-    "id": 906,
-    "name": "Heru Iswahyudi",
-    "qualification_name": "GANISPH PEMANENAN HUTAN",
-    "registration_number": "02250023773",
-    "email": "heruiswahyudi71@gmail.com"
-  },
-  {
-    "id": 907,
-    "name": "Seftry Laurenta Simanjuntak",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16250023925",
-    "email": "Seftrysimanjuntak@gmail.com"
   },
   {
     "id": 908,
@@ -6370,53 +3962,11 @@
     "email": "ambiyacitra@gmail.com"
   },
   {
-    "id": 911,
-    "name": "Hendro Nasution",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08250024079",
-    "email": "ufindra89@gmail.com"
-  },
-  {
-    "id": 912,
-    "name": "Muhammad Irpani",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08250024080",
-    "email": "mirpani015@gmail.com"
-  },
-  {
-    "id": 913,
-    "name": "Ahmadun Supriadi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08250024081",
-    "email": "ahmadunsprd@gmail.com"
-  },
-  {
-    "id": 914,
-    "name": "Muhammad Aldi",
-    "qualification_name": "GANISPH PENGUJIAN KAYU LAPIS",
-    "registration_number": "08250024082",
-    "email": "muhammadaldija@gmail.com"
-  },
-  {
-    "id": 915,
-    "name": "Muhammad Ade Rusmana",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK BATANG",
-    "registration_number": "11250024083",
-    "email": "aderusmana81@gmail.com"
-  },
-  {
     "id": 916,
     "name": "M. Raflian Noor",
     "qualification_name": "GANISPH PENGUJIAN KAYU GERGAJIAN",
     "registration_number": "24250024429",
     "email": "raflibandsaw@gmail.com"
-  },
-  {
-    "id": 917,
-    "name": "Muhammad Juanito Azhar",
-    "qualification_name": "GANISPH PENGUJIAN KELOMPOK RESIN",
-    "registration_number": "13250015438",
-    "email": "juanmja06@gmail.com"
   },
   {
     "id": 918,
@@ -6459,13 +4009,6 @@
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23260024663",
     "email": "annisanovirax@gmail.com"
-  },
-  {
-    "id": 924,
-    "name": "Muhammad Hijrah Salam",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16260001964",
-    "email": "m.hijrahsalamm@gmail.com"
   },
   {
     "id": 925,
@@ -6538,69 +4081,6 @@
     "email": "mb2751622@gmail.com"
   },
   {
-    "id": 935,
-    "name": "Toni Utomo",
-    "qualification_name": "GANISPH PENGUKURAN DAN PERPETAAN HUTAN",
-    "registration_number": "16260021710",
-    "email": "momohanacaraka@gmail.com"
-  },
-  {
-    "id": 936,
-    "name": "Muhammad Rizky Ibrahim Saputra",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01260018856",
-    "email": "rizkyibrahimsaputra@gmail.com"
-  },
-  {
-    "id": 937,
-    "name": "Ilham",
-    "qualification_name": "GANISPH PEMANFAATAN JASA LINGKUNGAN KARBON",
-    "registration_number": "25260023619",
-    "email": "ilham.smkk@gmail.com"
-  },
-  {
-    "id": 938,
-    "name": "Muhammad Ainung",
-    "qualification_name": "GANISPH PEMANFAATAN JASA LINGKUNGAN KARBON",
-    "registration_number": "25260023616",
-    "email": "inungm56@gmail.com"
-  },
-  {
-    "id": 939,
-    "name": "Subairi",
-    "qualification_name": "GANISPH PEMANFAATAN JASA LINGKUNGAN KARBON",
-    "registration_number": "25260019752",
-    "email": "bieryunlam@gmail.com"
-  },
-  {
-    "id": 940,
-    "name": "Toni Utomo",
-    "qualification_name": "GANISPH PEMANFAATAN JASA LINGKUNGAN KARBON",
-    "registration_number": "25260021710",
-    "email": "momohanacaraka@gmail.com"
-  },
-  {
-    "id": 941,
-    "name": "M. Rizal Akbar",
-    "qualification_name": "GANISPH PEMANFAATAN JASA LINGKUNGAN KARBON",
-    "registration_number": "25260023621",
-    "email": "muhammadrizalakbar19@gmail.com"
-  },
-  {
-    "id": 942,
-    "name": "Muhammad Juanito Azhar",
-    "qualification_name": "GANISPH PEMANFAATAN JASA LINGKUNGAN KARBON",
-    "registration_number": "25260015438",
-    "email": "juanmja06@gmail.com"
-  },
-  {
-    "id": 943,
-    "name": "Yuda Pranata",
-    "qualification_name": "GANISPH PEMANFAATAN JASA LINGKUNGAN KARBON",
-    "registration_number": "25260023633",
-    "email": "Yudhapranata852@gmail.com"
-  },
-  {
     "id": 944,
     "name": "Jhony Julian Ihsanu Hidayaturrahmani",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
@@ -6622,24 +4102,10 @@
     "email": "ahmdmukti99@gmail.com"
   },
   {
-    "id": 947,
-    "name": "Dedy Yusfredy",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01260011215",
-    "email": "dyusfredy@gmail.com"
-  },
-  {
     "id": 948,
     "name": "Sukarman",
     "qualification_name": "GANISPH PENGUJIAN KAYU BULAT",
     "registration_number": "23260025246",
     "email": "kppdarussalam@gmail.com"
-  },
-  {
-    "id": 949,
-    "name": "Dhimas Angraetna Raharja",
-    "qualification_name": "GANISPH PERENCANAAN HUTAN",
-    "registration_number": "01260025324",
-    "email": "dhimasangraetnaraharja@gmail.com"
   }
 ]

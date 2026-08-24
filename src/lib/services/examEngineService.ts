@@ -128,6 +128,86 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
   });
 
 // ------------------------------------------------------------------
+// SELF-ENROLLMENT: Get available exams matching user's qualification
+// ------------------------------------------------------------------
+export const getAvailableExamsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    // Auto-sync qualifications from master_ganisph first
+    await syncMasterGanisphQualifications(db, session.userId);
+
+    // Get published exams that match the user's qualifications
+    // but are NOT yet enrolled (either manually or already visible via qual match)
+    const available = await db.prepare(`
+      SELECT DISTINCT p.*, q.code as qualification_code, q.name as qualification_name,
+             COALESCE(b.total_questions, 50) as total_questions
+      FROM exam_packages p
+      JOIN qualifications q ON p.qualification_id = q.id
+      LEFT JOIN exam_blueprints b ON p.blueprint_id = b.id
+      WHERE (p.status = 'PUBLISHED' OR p.status = 'ACTIVE')
+        AND p.qualification_id IN (
+          SELECT qualification_id FROM user_qualifications WHERE user_id = ?
+        )
+        AND p.id NOT IN (
+          SELECT exam_id FROM exam_enrollments WHERE user_id = ?
+        )
+      ORDER BY p.id DESC
+    `).all(session.userId, session.userId);
+
+    return Array.isArray(available) ? available : [];
+  });
+
+// ------------------------------------------------------------------
+// SELF-ENROLLMENT: Participant registers themselves to an exam
+// ------------------------------------------------------------------
+export const selfEnrollFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; exam_id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    // 1. Verify exam is published/active
+    const exam = await db.prepare("SELECT * FROM exam_packages WHERE id = ?").get(data.exam_id) as any;
+    if (!exam || (exam.status !== "PUBLISHED" && exam.status !== "ACTIVE")) {
+      return { success: false, error: "Paket ujian tidak aktif atau belum dipublikasikan." };
+    }
+
+    // 2. Verify user's qualification matches exam qualification
+    const userQual = await db.prepare(
+      "SELECT id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?"
+    ).get(session.userId, exam.qualification_id);
+
+    if (!userQual) {
+      return { success: false, error: "Kualifikasi Anda tidak sesuai dengan paket ujian ini." };
+    }
+
+    // 3. Check if already enrolled or already has access via qualification
+    const existing = await db.prepare(
+      "SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?"
+    ).get(data.exam_id, session.userId);
+    if (existing) {
+      return { success: false, error: "Anda sudah terdaftar pada paket ujian ini." };
+    }
+
+    // 4. Enroll
+    try {
+      const res = await db.prepare(
+        "INSERT INTO exam_enrollments (exam_id, user_id) VALUES (?, ?)"
+      ).run(data.exam_id, session.userId);
+      await logAudit(session.userId, "SELF_ENROLL", "exam_enrollments", res.lastInsertRowid as number, {
+        exam_id: data.exam_id,
+        user_id: session.userId,
+      });
+      return { success: true };
+    } catch {
+      return { success: false, error: "Gagal mendaftar. Anda mungkin sudah terdaftar." };
+    }
+  });
+
+// ------------------------------------------------------------------
 // START ATTEMPT (SERVER-CONTROLLED)
 // ------------------------------------------------------------------
 export const startExamAttemptFn = createServerFn({ method: "POST" })

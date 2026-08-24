@@ -480,7 +480,7 @@ function AdminQuestionsPage() {
                   <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <th className="px-5 py-3.5 w-12 text-center">No</th>
                     <th className="px-4 py-3.5">Pertanyaan</th>
-                    <th className="px-4 py-3.5 w-28">Kualifikasi</th>
+                    <th className="px-4 py-3.5 w-48">Kode Unit Kompetensi</th>
                     <th className="px-4 py-3.5 w-44">Materi</th>
                     <th className="px-4 py-3.5 w-28">Kode Materi</th>
                     <th className="px-4 py-3.5 w-20 text-center">Jawaban</th>
@@ -513,7 +513,16 @@ function AdminQuestionsPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3.5">
-                          <div className="flex flex-col gap-1.5 max-w-[200px]">
+                          <div className="flex flex-col gap-1.5 max-w-[220px]">
+                            {/* Unit Code Badge */}
+                            {q.competency_unit_code ? (
+                              <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" title={q.competency_unit_title}>
+                                {q.competency_unit_code}
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-muted-foreground italic">-</span>
+                            )}
+
                             {/* Qualification Badges */}
                             <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
                               {(q.linked_qualification_codes ? q.linked_qualification_codes.split("; ") : [q.qualification_code]).map((code: string) => (
@@ -522,13 +531,6 @@ function AdminQuestionsPage() {
                                 </span>
                               ))}
                             </div>
-
-                            {/* Unit Code Badge */}
-                            {q.competency_unit_code && (
-                              <span className="w-fit rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" title={q.competency_unit_title}>
-                                {q.competency_unit_code}
-                              </span>
-                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3.5 font-bold text-charcoal">{q.subject_name || "Keselamatan dan Kesehatan Kerja"}</td>

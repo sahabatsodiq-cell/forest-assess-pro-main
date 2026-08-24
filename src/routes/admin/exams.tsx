@@ -7,6 +7,7 @@ import {
   deleteExamFn,
   publishExamFn,
   getQualificationsFn,
+  getCompetencyUnitsFn,
 } from "@/lib/services/adminService";
 import { Package, Plus, Edit2, Trash2, Check, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -34,6 +35,8 @@ function AdminExamsPage() {
   const [passingGrade, setPassingGrade] = useState(70);
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [competencyUnits, setCompetencyUnits] = useState<any[]>([]);
+  const [selectedUnits, setSelectedUnits] = useState<string[]>([]);
 
   // Edit Modal State
   const [editOpen, setEditOpen] = useState(false);
@@ -46,6 +49,49 @@ function AdminExamsPage() {
   const [editPassingGrade, setEditPassingGrade] = useState(70);
   const [editStatus, setEditStatus] = useState("PUBLISHED");
   const [editLoading, setEditLoading] = useState(false);
+  const [editCompetencyUnits, setEditCompetencyUnits] = useState<any[]>([]);
+  const [editSelectedUnits, setEditSelectedUnits] = useState<string[]>([]);
+
+  // Effect to load competency units for creation target qualification
+  useEffect(() => {
+    if (!qualificationId) {
+      setCompetencyUnits([]);
+      setSelectedUnits([]);
+      return;
+    }
+    const token = localStorage.getItem("askganis_token") || "";
+    getCompetencyUnitsFn({ data: { token, qualification_id: Number(qualificationId) } })
+      .then((res) => {
+        setCompetencyUnits(Array.isArray(res) ? res : []);
+      })
+      .catch((err) => console.error(err));
+  }, [qualificationId]);
+
+  // Effect to load competency units for editing target qualification
+  useEffect(() => {
+    if (!editQualId) {
+      setEditCompetencyUnits([]);
+      return;
+    }
+    const token = localStorage.getItem("askganis_token") || "";
+    getCompetencyUnitsFn({ data: { token, qualification_id: Number(editQualId) } })
+      .then((res) => {
+        setEditCompetencyUnits(Array.isArray(res) ? res : []);
+      })
+      .catch((err) => console.error(err));
+  }, [editQualId]);
+
+  // Effect to calculate duration for creation modal
+  useEffect(() => {
+    const calculatedDuration = Math.round((selectedUnits.length * 5 * 100) / 60);
+    setDurationMinutes(calculatedDuration || 0);
+  }, [selectedUnits]);
+
+  // Effect to calculate duration for editing modal
+  useEffect(() => {
+    const calculatedDuration = Math.round((editSelectedUnits.length * 5 * 100) / 60);
+    setEditDurationMinutes(calculatedDuration || 0);
+  }, [editSelectedUnits]);
 
   const loadData = async () => {
     const token = localStorage.getItem("askganis_token");
@@ -75,6 +121,10 @@ function AdminExamsPage() {
       setFormError("Pilih kualifikasi target terlebih dahulu.");
       return;
     }
+    if (selectedUnits.length === 0) {
+      setFormError("Pilih minimal satu Unit Kompetensi.");
+      return;
+    }
 
     setFormLoading(true);
     setFormError(null);
@@ -86,7 +136,7 @@ function AdminExamsPage() {
           token,
           qualification_id: Number(qualificationId),
           name,
-          code,
+          code: selectedUnits.join("; "),
           instructions,
           duration_minutes: Number(durationMinutes),
           passing_grade: Number(passingGrade),
@@ -98,6 +148,7 @@ function AdminExamsPage() {
         setCreateOpen(false);
         setName("");
         setCode("");
+        setSelectedUnits([]);
         loadData();
       } else {
         setFormError(res.error || "Gagal membuat paket ujian.");
@@ -115,6 +166,8 @@ function AdminExamsPage() {
     setEditQualId(item.qualification_id);
     setEditName(item.name || "");
     setEditCode(item.code || "");
+    const parsedCodes = item.code ? item.code.split("; ") : [];
+    setEditSelectedUnits(parsedCodes);
     setEditInstructions(item.instructions || "");
     setEditDurationMinutes(item.duration_minutes || 60);
     setEditPassingGrade(item.passing_grade || 70);
@@ -127,6 +180,11 @@ function AdminExamsPage() {
     e.preventDefault();
     if (!editItem || !editQualId) return;
 
+    if (editSelectedUnits.length === 0) {
+      toast.error("Pilih minimal satu Unit Kompetensi.");
+      return;
+    }
+
     setEditLoading(true);
     const token = localStorage.getItem("askganis_token") || "";
 
@@ -137,7 +195,7 @@ function AdminExamsPage() {
           id: editItem.id,
           qualification_id: Number(editQualId),
           name: editName,
-          code: editCode,
+          code: editSelectedUnits.join("; "),
           instructions: editInstructions,
           duration_minutes: Number(editDurationMinutes),
           passing_grade: Number(editPassingGrade),
@@ -247,29 +305,44 @@ function AdminExamsPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Kode Ujian</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="PKB"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono font-bold"
-                  />
+              <div>
+                <label className="block text-xs font-bold uppercase text-charcoal">Kode Unit Kompetensi</label>
+                <div className="mt-1 max-h-36 overflow-y-auto rounded-md border border-border p-2 space-y-1.5 bg-gray-50/50">
+                  {competencyUnits.length === 0 ? (
+                    <span className="text-[11px] text-muted-foreground italic">Pilih kualifikasi target terlebih dahulu</span>
+                  ) : (
+                    competencyUnits.map((u) => (
+                      <label key={u.id} className="flex items-center gap-2 text-xs text-charcoal font-medium cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedUnits.includes(u.code)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedUnits([...selectedUnits, u.code]);
+                            } else {
+                              setSelectedUnits(selectedUnits.filter((code) => code !== u.code));
+                            }
+                          }}
+                          className="rounded border-border text-forest-900 focus:ring-forest-900"
+                        />
+                        <span className="font-semibold font-mono text-[11px]">{u.code}</span>
+                        <span className="text-muted-foreground truncate">— {u.title}</span>
+                      </label>
+                    ))
+                  )}
                 </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Nama Ujian</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Pengujian Kayu Bulat Rimba"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase text-charcoal">Nama Ujian</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Pengujian Kayu Bulat Rimba"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -277,13 +350,15 @@ function AdminExamsPage() {
                   <label className="block text-xs font-bold uppercase text-charcoal">Durasi (Menit)</label>
                   <input
                     type="number"
+                    readOnly
                     required
-                    min={5}
-                    max={300}
                     value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                    className="mt-1 w-full rounded-md border border-border bg-gray-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground select-none cursor-not-allowed"
+                    title="Dihitung otomatis: jumlah unit kompetensi x 5 x 100 detik"
                   />
+                  <span className="text-[10px] text-muted-foreground block mt-0.5 font-medium">
+                    (Otomatis: {selectedUnits.length} unit × 5 × 100s)
+                  </span>
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase text-charcoal">Passing Grade (%)</label>
@@ -357,42 +432,60 @@ function AdminExamsPage() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Kode Ujian</label>
-                <input
-                  type="text"
-                  required
-                  value={editCode}
-                  onChange={(e) => setEditCode(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Nama Ujian</label>
-                <input
-                  type="text"
-                  required
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                />
-              </div>
-            </div>
+             <div>
+               <label className="block text-xs font-bold uppercase text-charcoal">Kode Unit Kompetensi</label>
+               <div className="mt-1 max-h-36 overflow-y-auto rounded-md border border-border p-2 space-y-1.5 bg-gray-50/50">
+                 {editCompetencyUnits.length === 0 ? (
+                   <span className="text-[11px] text-muted-foreground italic">Pilih kualifikasi target terlebih dahulu</span>
+                 ) : (
+                   editCompetencyUnits.map((u) => (
+                     <label key={u.id} className="flex items-center gap-2 text-xs text-charcoal font-medium cursor-pointer">
+                       <input
+                         type="checkbox"
+                         checked={editSelectedUnits.includes(u.code)}
+                         onChange={(e) => {
+                           if (e.target.checked) {
+                             setEditSelectedUnits([...editSelectedUnits, u.code]);
+                           } else {
+                             setEditSelectedUnits(editSelectedUnits.filter((code) => code !== u.code));
+                           }
+                         }}
+                         className="rounded border-border text-forest-900 focus:ring-forest-900"
+                       />
+                       <span className="font-semibold font-mono text-[11px]">{u.code}</span>
+                       <span className="text-muted-foreground truncate">— {u.title}</span>
+                     </label>
+                   ))
+                 )}
+               </div>
+             </div>
+
+             <div>
+               <label className="block text-xs font-bold uppercase text-charcoal">Nama Ujian</label>
+               <input
+                 type="text"
+                 required
+                 value={editName}
+                 onChange={(e) => setEditName(e.target.value)}
+                 className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+               />
+             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold uppercase text-charcoal">Durasi (Menit)</label>
-                <input
-                  type="number"
-                  required
-                  min={5}
-                  max={300}
-                  value={editDurationMinutes}
-                  onChange={(e) => setEditDurationMinutes(Number(e.target.value))}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                />
-              </div>
+               <div>
+                 <label className="block text-xs font-bold uppercase text-charcoal">Durasi (Menit)</label>
+                 <input
+                   type="number"
+                   readOnly
+                   required
+                   value={editDurationMinutes}
+                   className="mt-1 w-full rounded-md border border-border bg-gray-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground select-none cursor-not-allowed"
+                   title="Dihitung otomatis: jumlah unit kompetensi x 5 x 100 detik"
+                 />
+                 <span className="text-[10px] text-muted-foreground block mt-0.5 font-medium">
+                   (Otomatis: {editSelectedUnits.length} unit × 5 × 100s)
+                 </span>
+               </div>
               <div>
                 <label className="block text-xs font-bold uppercase text-charcoal">Passing Grade (%)</label>
                 <input

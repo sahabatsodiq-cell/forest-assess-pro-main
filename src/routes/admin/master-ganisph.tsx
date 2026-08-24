@@ -31,6 +31,7 @@ function AdminMasterGanisphPage() {
   const [assignmentType, setAssignmentType] = useState("");
   const [name, setName] = useState("");
   const [qualName, setQualName] = useState("");
+  const [email, setEmail] = useState("");
   const [regNo, setRegNo] = useState("");
   const [regActiveEnd, setRegActiveEnd] = useState("");
   const [assignActiveEnd, setAssignActiveEnd] = useState("");
@@ -44,6 +45,7 @@ function AdminMasterGanisphPage() {
   const [editAssignmentType, setEditAssignmentType] = useState("");
   const [editName, setEditName] = useState("");
   const [editQualName, setEditQualName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editRegNo, setEditRegNo] = useState("");
   const [editRegActiveEnd, setEditRegActiveEnd] = useState("");
   const [editAssignActiveEnd, setEditAssignActiveEnd] = useState("");
@@ -87,6 +89,7 @@ function AdminMasterGanisphPage() {
           assignment_type: assignmentType || undefined,
           name,
           qualification_name: qualName,
+          email: email || undefined,
           registration_number: regNo || undefined,
           register_active_end: regActiveEnd || undefined,
           assignment_active_end: assignActiveEnd || undefined,
@@ -101,6 +104,7 @@ function AdminMasterGanisphPage() {
         setAssignmentType("");
         setName("");
         setQualName("");
+        setEmail("");
         setRegNo("");
         setRegActiveEnd("");
         setAssignActiveEnd("");
@@ -123,6 +127,7 @@ function AdminMasterGanisphPage() {
     setEditAssignmentType(item.assignment_type || "");
     setEditName(item.name || "");
     setEditQualName(item.qualification_name || "");
+    setEditEmail(item.email || "");
     setEditRegNo(item.registration_number || "");
     setEditRegActiveEnd(item.register_active_end || "");
     setEditAssignActiveEnd(item.assignment_active_end || "");
@@ -147,6 +152,7 @@ function AdminMasterGanisphPage() {
           assignment_type: editAssignmentType || undefined,
           name: editName,
           qualification_name: editQualName,
+          email: editEmail || undefined,
           registration_number: editRegNo || undefined,
           register_active_end: editRegActiveEnd || undefined,
           assignment_active_end: editAssignActiveEnd || undefined,
@@ -332,6 +338,17 @@ function AdminMasterGanisphPage() {
                 />
               </div>
 
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold uppercase text-charcoal">Email GANISPH <span className="text-muted-foreground font-normal normal-case">(opsional — untuk sinkronisasi otomatis ke akun peserta)</span></label>
+                <input
+                  type="email"
+                  placeholder="contoh@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+                />
+              </div>
+
               <div className="md:col-span-2 flex gap-2 pt-2">
                 <button
                   type="button"
@@ -441,6 +458,17 @@ function AdminMasterGanisphPage() {
                 type="text"
                 value={editRegencyCity}
                 onChange={(e) => setEditRegencyCity(e.target.value)}
+                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold uppercase text-charcoal">Email GANISPH <span className="text-muted-foreground font-normal normal-case">(opsional — untuk sinkronisasi otomatis ke akun peserta)</span></label>
+              <input
+                type="email"
+                placeholder="contoh@email.com"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
                 className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none"
               />
             </div>

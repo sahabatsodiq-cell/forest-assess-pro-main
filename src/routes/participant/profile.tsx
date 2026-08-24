@@ -7,7 +7,7 @@ import {
   updateParticipantQualificationRegNoFn,
   removeParticipantQualificationFn,
 } from "@/lib/services/examEngineService";
-import { User, Mail, Hash, Award, KeyRound, Save, Plus, Trash2, Check, Edit2, ShieldCheck } from "lucide-react";
+import { User, Mail, Hash, Award, KeyRound, Save, Plus, Trash2, Check, Edit2, ShieldCheck, Building2, Briefcase, CalendarCheck, CalendarClock, MapPin, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -221,6 +221,7 @@ function ParticipantProfilePage() {
 
   const userQualifications = profileData?.qualifications || [];
   const allQualifications = profileData?.allQualifications || [];
+  const ganisphAssignments = profileData?.ganisphAssignments || [];
 
   // Filter qualifications already added
   const existingQualIds = userQualifications.map((q: any) => q.qualification_id || q.id);
@@ -577,6 +578,105 @@ function ParticipantProfilePage() {
           </div>
         )}
       </div>
+      {/* Data Penugasan GANISPH dari Master (Read-only, auto-synced) */}
+      {ganisphAssignments.length > 0 && (
+        <div className="rounded-xl border border-border/60 bg-white p-6 shadow-sm space-y-5 dark:bg-charcoal dark:border-charcoal/60">
+          <div className="border-b border-border/40 pb-4 dark:border-charcoal/60">
+            <h2 className="font-display text-base font-bold text-charcoal dark:text-forest-100 flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-forest-700 dark:text-forest-400" />
+              Data Penugasan GANISPH
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground dark:text-forest-100/70">
+              Data penugasan resmi Anda yang tersinkronisasi otomatis dari database Master GANISPH.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {ganisphAssignments.map((asgn: any, idx: number) => {
+              const isExpiredReg = asgn.register_active_end && new Date(asgn.register_active_end.split('-').reverse().join('-')) < new Date();
+              const isExpiredAssign = asgn.assignment_active_end && new Date(asgn.assignment_active_end.split('-').reverse().join('-')) < new Date();
+
+              return (
+                <div
+                  key={asgn.master_id}
+                  className="rounded-xl border border-border/40 bg-forest-50/30 p-5 space-y-4 dark:bg-charcoal/60 dark:border-charcoal/60"
+                >
+                  {/* Header row */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-black text-amber-800 dark:bg-amber-950/40 dark:border-amber-700/50 dark:text-amber-300">
+                        {asgn.assignment_type || "-"}
+                      </span>
+                      <span className="rounded bg-forest-50 border border-forest-100 px-2.5 py-1 text-[11px] font-bold text-forest-900 dark:bg-forest-900/40 dark:border-forest-700/50 dark:text-forest-100">
+                        {asgn.qualification_name}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-muted-foreground dark:text-forest-100/50">#{idx + 1}</span>
+                  </div>
+
+                  {/* Detail grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                    <div className="flex items-start gap-2">
+                      <Building2 className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Nama Perusahaan</div>
+                        <div className="text-xs font-bold text-charcoal dark:text-forest-100">{asgn.company_name || "-"}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <Hash className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Nomor Register GANISPH</div>
+                        <div className="text-xs font-black font-mono text-forest-900 dark:text-forest-300">{asgn.registration_number || "-"}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <CalendarCheck className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Masa Aktif Register s/d</div>
+                        <div className={`text-xs font-bold ${
+                          isExpiredReg ? 'text-red-600 dark:text-red-400' : 'text-charcoal dark:text-forest-100'
+                        }`}>
+                          {asgn.register_active_end || "-"}
+                          {isExpiredReg && <span className="ml-1.5 text-[9px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded">EXPIRED</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2">
+                      <CalendarClock className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Masa Aktif Penugasan s/d</div>
+                        <div className={`text-xs font-bold ${
+                          isExpiredAssign ? 'text-red-600 dark:text-red-400' : 'text-charcoal dark:text-forest-100'
+                        }`}>
+                          {asgn.assignment_active_end || "-"}
+                          {isExpiredAssign && <span className="ml-1.5 text-[9px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded">EXPIRED</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2 sm:col-span-2">
+                      <MapPin className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
+                      <div>
+                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Kabupaten/Kota</div>
+                        <div className="text-xs font-bold text-charcoal dark:text-forest-100">{asgn.regency_city || "-"}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground dark:text-forest-100/60">
+            <RefreshCw className="h-3 w-3" />
+            Data disinkronisasi otomatis dari Master GANISPH. Hubungi admin untuk perubahan data.
+          </div>
+        </div>
+      )}
     </div>
   );
 }

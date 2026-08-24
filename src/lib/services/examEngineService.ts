@@ -37,24 +37,27 @@ function getReverseMapping(mappingStr: string): Record<string, string> {
 
 async function syncMasterGanisphQualifications(db: any, userId: number) {
   const user = await db.prepare("SELECT id, name, email, participant_number FROM users WHERE id = ?").get(userId);
-  if (!user || !user.email) return;
+  if (!user) return;
 
+  // Match by email OR registration_number (registration_number stored in participant_number)
   const masterRows = await db.prepare(`
     SELECT * FROM master_ganisph
-    WHERE LOWER(email) = LOWER(?) OR (registration_number IS NOT NULL AND registration_number = ?)
-  `).all(user.email, user.participant_number || "");
+    WHERE
+      (email IS NOT NULL AND email != '' AND LOWER(email) = LOWER(?))
+      OR (registration_number IS NOT NULL AND registration_number != '' AND registration_number = ?)
+  `).all(user.email || '', user.participant_number || '');
 
   const masterList = Array.isArray(masterRows) ? masterRows : [];
   if (masterList.length === 0) return;
 
   // Auto-set name from master_ganisph if user's name is empty or generic
   const masterName = masterList[0]?.name;
-  if (masterName && (!user.name || user.name.trim() === "" || /^(Peserta|REG-)/i.test(user.name.trim()))) {
+  if (masterName && (!user.name || user.name.trim() === '' || /^(Peserta|REG-)/i.test(user.name.trim()))) {
     await db.prepare("UPDATE users SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(masterName, userId);
   }
 
   const firstReg = masterList.find((m: any) => m.registration_number)?.registration_number;
-  if (firstReg && (!user.participant_number || user.participant_number.trim() === "")) {
+  if (firstReg && (!user.participant_number || user.participant_number.trim() === '')) {
     await db.prepare("UPDATE users SET participant_number = ? WHERE id = ?").run(firstReg, userId);
   }
 
@@ -62,14 +65,22 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
   const qualArray = Array.isArray(allQuals) ? allQuals : [];
 
   for (const mItem of masterList) {
-    const mQualNameUpper = (mItem.qualification_name || "").toUpperCase();
+    // Populate bridge table: user_ganisph_assignments
+    await db.prepare(`
+      INSERT INTO user_ganisph_assignments (user_id, master_ganisph_id, synced_at)
+      VALUES (?, ?, CURRENT_TIMESTAMP)
+      ON CONFLICT (user_id, master_ganisph_id) DO UPDATE SET synced_at = CURRENT_TIMESTAMP
+    `).run(userId, mItem.id);
+
+    // Sync qualification to user_qualifications
+    const mQualNameUpper = (mItem.qualification_name || '').toUpperCase();
     const matchedQual = qualArray.find((q: any) => {
-      const qCodeUpper = (q.code || "").toUpperCase();
-      const qNameUpper = (q.name || "").toUpperCase();
+      const qCodeUpper = (q.code || '').toUpperCase();
+      const qNameUpper = (q.name || '').toUpperCase();
       return (
         mQualNameUpper.includes(qCodeUpper) ||
         mQualNameUpper.includes(qNameUpper) ||
-        qNameUpper.includes(mQualNameUpper.replace("GANISPH ", ""))
+        qNameUpper.includes(mQualNameUpper.replace('GANISPH ', ''))
       );
     });
 
@@ -616,10 +627,31 @@ export const getParticipantProfileDetailsFn = createServerFn({ method: "POST" })
       SELECT id, code, name, description FROM qualifications WHERE status = 'ACTIVE' ORDER BY code ASC
     `).all();
 
+    // Fetch complete assignment data from master_ganisph via bridge table
+    const ganisphAssignments = await db.prepare(`
+      SELECT
+        mg.id as master_id,
+        mg.company_name,
+        mg.assignment_type,
+        mg.name as ganisph_name,
+        mg.qualification_name,
+        mg.registration_number,
+        mg.register_active_end,
+        mg.assignment_active_end,
+        mg.regency_city,
+        mg.email,
+        uga.synced_at
+      FROM user_ganisph_assignments uga
+      JOIN master_ganisph mg ON uga.master_ganisph_id = mg.id
+      WHERE uga.user_id = ?
+      ORDER BY mg.qualification_name ASC
+    `).all(session.userId);
+
     return {
       user,
       qualifications: Array.isArray(userQuals) ? userQuals : [],
       allQualifications: Array.isArray(allQuals) ? allQuals : [],
+      ganisphAssignments: Array.isArray(ganisphAssignments) ? ganisphAssignments : [],
     };
   });
 

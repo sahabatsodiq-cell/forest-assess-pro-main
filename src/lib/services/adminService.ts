@@ -147,7 +147,7 @@ export const getMasterGanisphFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
     let query = `
-      SELECT id, company_name, assignment_type, name, qualification_name, registration_number, register_active_end, assignment_active_end, regency_city, created_at
+      SELECT id, company_name, assignment_type, name, qualification_name, email, registration_number, register_active_end, assignment_active_end, regency_city, created_at
       FROM master_ganisph
     `;
     const params: any[] = [];
@@ -167,6 +167,7 @@ export const createMasterGanisphFn = createServerFn({ method: "POST" })
     assignment_type?: string | undefined;
     name: string;
     qualification_name: string;
+    email?: string | undefined;
     registration_number?: string | undefined;
     register_active_end?: string | undefined;
     assignment_active_end?: string | undefined;
@@ -176,13 +177,14 @@ export const createMasterGanisphFn = createServerFn({ method: "POST" })
     const session = verifyAdminSession(data.token);
     const db = await getDb();
     const res = await db.prepare(`
-      INSERT INTO master_ganisph (company_name, assignment_type, name, qualification_name, registration_number, register_active_end, assignment_active_end, regency_city)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO master_ganisph (company_name, assignment_type, name, qualification_name, email, registration_number, register_active_end, assignment_active_end, regency_city)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       data.company_name || null,
       data.assignment_type || null,
       data.name,
       data.qualification_name,
+      data.email || null,
       data.registration_number || null,
       data.register_active_end || null,
       data.assignment_active_end || null,
@@ -201,6 +203,7 @@ export const updateMasterGanisphFn = createServerFn({ method: "POST" })
     assignment_type?: string | undefined;
     name: string;
     qualification_name: string;
+    email?: string | undefined;
     registration_number?: string | undefined;
     register_active_end?: string | undefined;
     assignment_active_end?: string | undefined;
@@ -211,13 +214,14 @@ export const updateMasterGanisphFn = createServerFn({ method: "POST" })
     const db = await getDb();
     await db.prepare(`
       UPDATE master_ganisph
-      SET company_name = ?, assignment_type = ?, name = ?, qualification_name = ?, registration_number = ?, register_active_end = ?, assignment_active_end = ?, regency_city = ?
+      SET company_name = ?, assignment_type = ?, name = ?, qualification_name = ?, email = ?, registration_number = ?, register_active_end = ?, assignment_active_end = ?, regency_city = ?
       WHERE id = ?
     `).run(
       data.company_name || null,
       data.assignment_type || null,
       data.name,
       data.qualification_name,
+      data.email || null,
       data.registration_number || null,
       data.register_active_end || null,
       data.assignment_active_end || null,

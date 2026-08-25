@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getAdminResultsFn } from "@/lib/services/adminService";
-import { BarChart3, Check, X, Search } from "lucide-react";
+import { Award, Search } from "lucide-react";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { getCompetencyStatus } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/results")({
   component: AdminResultsPage,
@@ -28,15 +29,20 @@ function AdminResultsPage() {
     }
   };
 
+
   useEffect(() => {
     loadData();
   }, []);
 
   const filtered = results.filter((r) => {
+    const s = search.toLowerCase();
     return (
-      (r.user_name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (r.exam_name || "").toLowerCase().includes(search.toLowerCase()) ||
-      (r.qualification_code || "").toLowerCase().includes(search.toLowerCase())
+      (r.user_name || "").toLowerCase().includes(s) ||
+      (r.participant_number || "").toLowerCase().includes(s) ||
+      (r.user_email || "").toLowerCase().includes(s) ||
+      (r.exam_name || "").toLowerCase().includes(s) ||
+      (r.exam_code || "").toLowerCase().includes(s) ||
+      (r.qualification_code || "").toLowerCase().includes(s)
     );
   });
 
@@ -44,19 +50,24 @@ function AdminResultsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-black text-charcoal">Hasil Evaluasi Asesmen</h1>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Rekapitulasi hasil ujian teori online peserta beserta status kelulusan dan rincian skor.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-black text-charcoal flex items-center gap-2">
+            <Award className="h-6 w-6 text-forest-700" />
+            Hasil & Skor Ujian Peserta
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Pantau hasil penilaian asesmen kompetensi seluruh peserta secara real-time.
+          </p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-white p-4">
+      <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Cari peserta, kualifikasi, atau nama ujian..."
+            placeholder="Cari nama peserta, nomor registrasi, email, atau nama ujian..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -69,14 +80,14 @@ function AdminResultsPage() {
 
       <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-muted-foreground">Memuat hasil evaluasi...</div>
+          <div className="p-8 text-center text-xs text-muted-foreground">Memuat data hasil ujian...</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    <th className="px-6 py-3.5">Peserta</th>
+                    <th className="px-6 py-3.5">Nama Peserta</th>
                     <th className="px-4 py-3.5">Kualifikasi & Ujian</th>
                     <th className="px-4 py-3.5 text-center">Soal (Benar/Salah/Kosong)</th>
                     <th className="px-4 py-3.5 text-center">Skor Akhir</th>
@@ -93,7 +104,7 @@ function AdminResultsPage() {
                     </tr>
                   ) : (
                     paginated.map((r) => {
-                      const isPassed = r.score >= r.passing_grade;
+                      const status = getCompetencyStatus(r.score, r.passing_grade || 61);
                       return (
                         <tr key={r.id} className="hover:bg-forest-50/10 transition-colors">
                           <td className="px-6 py-3.5">
@@ -116,11 +127,9 @@ function AdminResultsPage() {
                             {r.passing_grade}
                           </td>
                           <td className="px-6 py-3.5 text-center">
-                            <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold ${
-                              isPassed ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-                            }`}>
-                              {isPassed ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                              {isPassed ? 'LULUS' : 'TIDAK LULUS'}
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${status.badgeClass}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${status.dotClass}`} />
+                              {status.label}
                             </span>
                           </td>
                         </tr>

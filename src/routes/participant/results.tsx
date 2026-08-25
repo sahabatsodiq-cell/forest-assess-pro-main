@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getParticipantDashboardFn } from "@/lib/services/examEngineService";
-import { FileCheck, CheckCircle2, XCircle, ChevronRight, Award } from "lucide-react";
+import { FileCheck, ChevronRight, Award } from "lucide-react";
+import { getCompetencyStatus } from "@/lib/utils";
 
 export const Route = createFileRoute("/participant/results")({
   component: ParticipantResultsPage,
@@ -72,8 +73,8 @@ function ParticipantResultsPage() {
               <tbody className="divide-y divide-border/40 dark:divide-charcoal/60">
                 {completedExams.map((exam: any) => {
                   const score = Number(exam.attempt_score || 0);
-                  const passing = Number(exam.passing_grade || 70);
-                  const isPassed = score >= passing;
+                  const passing = Number(exam.passing_grade || 61);
+                  const status = getCompetencyStatus(score, passing);
 
                   return (
                     <tr key={exam.id} className="transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40">
@@ -92,13 +93,9 @@ function ParticipantResultsPage() {
                         {passing}%
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${
-                          isPassed
-                            ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800"
-                            : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800"
-                        }`}>
-                          {isPassed ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                          {isPassed ? "KOMPETEN" : "BELUM KOMPETEN"}
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold ${status.badgeClass}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${status.dotClass}`} />
+                          {status.label}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">
@@ -121,3 +118,4 @@ function ParticipantResultsPage() {
     </div>
   );
 }
+

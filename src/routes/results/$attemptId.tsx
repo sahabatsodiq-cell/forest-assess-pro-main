@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getParticipantResultDetailFn } from "@/lib/services/examEngineService";
-import { Award, Check, X, ArrowLeft, BarChart3 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { getCompetencyStatus } from "@/lib/utils";
 
 export const Route = createFileRoute("/results/$attemptId")({
   component: ParticipantResultDetailPage,
@@ -50,7 +51,7 @@ function ParticipantResultDetailPage() {
     );
   }
 
-  const isPassed = result.score >= result.passing_grade;
+  const status = getCompetencyStatus(result.score, result.passing_grade || 61);
 
   return (
     <div className="mx-auto max-w-2xl py-8 px-4 space-y-8">
@@ -73,13 +74,12 @@ function ParticipantResultDetailPage() {
 
         {/* Status Badge */}
         <div className="flex justify-center">
-          <div className={`inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-extrabold border ${
-            isPassed ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-          }`}>
-            {isPassed ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
-            <span>STATUS: {isPassed ? 'LULUS' : 'TIDAK LULUS'}</span>
+          <div className={`inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-extrabold ${status.badgeClass}`}>
+            <span className={`h-2.5 w-2.5 rounded-full ${status.dotClass}`} />
+            <span>STATUS: {status.label}</span>
           </div>
         </div>
+
 
         {/* Big Score Display */}
         <div className="py-4 border-y border-border/30">

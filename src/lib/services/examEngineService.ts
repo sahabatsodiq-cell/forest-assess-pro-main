@@ -146,11 +146,22 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
       ORDER BY p.id DESC
     `).all(session.userId, session.userId, session.userId);
 
+    // Get all user's registered qualifications
+    const userQualifications = await db.prepare(`
+      SELECT uq.qualification_id, q.code, q.name, q.description, uq.registration_number
+      FROM user_qualifications uq
+      JOIN qualifications q ON uq.qualification_id = q.id
+      WHERE uq.user_id = ?
+      ORDER BY q.code ASC
+    `).all(session.userId);
+
     return {
       user,
       enrolledExams: Array.isArray(enrolledExams) ? enrolledExams : [],
+      userQualifications: Array.isArray(userQualifications) ? userQualifications : [],
     };
   });
+
 
 // ------------------------------------------------------------------
 // SELF-ENROLLMENT: Get available exams matching user's qualification

@@ -1076,40 +1076,49 @@ export const approveExamRequestFn = createServerFn({ method: "POST" })
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
-    const req = await db.prepare("SELECT * FROM exam_registration_requests WHERE id = ?").get(data.request_id) as any;
+    const req = await db.prepare("SELECT * FROM exam_registration_requests WHERE id = ?").get(Number(data.request_id)) as any;
     if (!req) return { success: false, error: "Pengajuan tidak ditemukan." };
-    if (req.status !== "PENDING") return { success: false, error: "Pengajuan ini sudah diproses sebelumnya." };
+    if (req.status !== "PENDING" && req.status !== "APPROVED") {
+      return { success: false, error: "Pengajuan ini sudah diproses atau ditolak." };
+    }
 
     // Cari paket ujian untuk kualifikasi ini jika tidak ada exam_package_id yang diberikan
-    let examPackageId = data.exam_package_id;
+    let examPackageId = data.exam_package_id ? Number(data.exam_package_id) : undefined;
     if (!examPackageId) {
       const pkg = await db.prepare(
-        "SELECT id FROM exam_packages WHERE qualification_id = ? AND (status = 'PUBLISHED' OR status = 'ACTIVE') ORDER BY id DESC LIMIT 1"
-      ).get(req.qualification_id) as any;
-      if (pkg) examPackageId = pkg.id;
+        "SELECT id, status FROM exam_packages WHERE qualification_id = ? ORDER BY id DESC LIMIT 1"
+      ).get(Number(req.qualification_id)) as any;
+
+      if (pkg) {
+        examPackageId = pkg.id;
+        // Jika paket masih DRAFT, otomatis ubah ke PUBLISHED agar peserta bisa langsung ujian
+        if (pkg.status === "DRAFT") {
+          await db.prepare("UPDATE exam_packages SET status = 'PUBLISHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(pkg.id);
+        }
+      }
     }
 
     // Jika ada paket ujian, langsung enroll peserta
     if (examPackageId) {
       const alreadyEnrolled = await db.prepare(
         "SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?"
-      ).get(examPackageId, req.user_id);
+      ).get(examPackageId, Number(req.user_id));
 
       if (!alreadyEnrolled) {
         await db.prepare(
           "INSERT INTO exam_enrollments (exam_id, user_id) VALUES (?, ?)"
-        ).run(examPackageId, req.user_id);
+        ).run(examPackageId, Number(req.user_id));
       }
     }
 
-    // Update status pengajuan
+    // Update status pengajuan ke APPROVED
     await db.prepare(`
       UPDATE exam_registration_requests
       SET status = 'APPROVED', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(session.userId, data.request_id);
+    `).run(session.userId, Number(data.request_id));
 
-    await logAudit(session.userId, "APPROVE_EXAM_REQUEST", "exam_registration_requests", data.request_id, {
+    await logAudit(session.userId, "APPROVE_EXAM_REQUEST", "exam_registration_requests", Number(data.request_id), {
       user_id: req.user_id,
       qualification_id: req.qualification_id,
       exam_package_id: examPackageId,
@@ -1120,9 +1129,10 @@ export const approveExamRequestFn = createServerFn({ method: "POST" })
       enrolled: !!examPackageId,
       message: examPackageId
         ? "Pengajuan disetujui. Peserta telah didaftarkan ke paket ujian."
-        : "Pengajuan disetujui. Peserta akan terdaftar otomatis saat paket ujian dipublikasikan.",
+        : "Pengajuan disetujui. Silakan buat paket ujian untuk kualifikasi ini agar peserta dapat memulai ujian.",
     };
   });
+
 
 export const rejectExamRequestFn = createServerFn({ method: "POST" })
   .validator((data: { token: string; request_id: number; notes?: string }) => data)

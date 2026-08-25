@@ -267,13 +267,21 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
     }
 
     // 3. Check existing attempt
+    // 3. Check existing attempt
     const existingAttempt = await db.prepare("SELECT * FROM exam_attempts WHERE exam_id = ? AND user_id = ?").get(data.exam_id, session.userId);
     if (existingAttempt) {
       if (existingAttempt.status === "SUBMITTED" || existingAttempt.status === "AUTO_SUBMITTED") {
         return { success: false, error: "Anda sudah menyelesaikan ujian ini." };
       }
-      // Resume existing IN_PROGRESS attempt
-      return { success: true, attemptId: existingAttempt.id };
+
+      // Check if existing attempt has questions, if 0 questions populate them
+      const qCount = await db.prepare("SELECT COUNT(*) as count FROM attempt_questions WHERE attempt_id = ?").get(existingAttempt.id);
+      if (Number(qCount?.count || 0) > 0) {
+        return { success: true, attemptId: existingAttempt.id };
+      }
+
+      // If existing attempt has 0 questions, clean up and re-generate
+      await db.prepare("DELETE FROM exam_attempts WHERE id = ?").run(existingAttempt.id);
     }
 
     // 4. Create new attempt & select questions from blueprint
@@ -312,11 +320,12 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
     const currentQuestionCount = await db.prepare("SELECT COUNT(*) as count FROM attempt_questions WHERE attempt_id = ?").get(attemptId);
     if (Number(currentQuestionCount?.count || 0) === 0) {
       const fallbackQuestions = await db.prepare(`
-        SELECT DISTINCT q.id 
+        SELECT q.id 
         FROM questions q
         LEFT JOIN qualification_competency_units qcu ON q.competency_unit_id = qcu.competency_unit_id
         WHERE q.status = 'ACTIVE'
           AND (q.qualification_id = ? OR qcu.qualification_id = ?)
+        GROUP BY q.id
         ORDER BY RANDOM() LIMIT 50
       `).all(exam.qualification_id, exam.qualification_id);
 
@@ -332,6 +341,7 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
         `).run(attemptId, q.id, order++, optionMapping);
       }
     }
+
 
     await logAudit(session.userId, "START_EXAM", "exam_attempts", attemptId, { exam_id: data.exam_id });
     return { success: true, attemptId };

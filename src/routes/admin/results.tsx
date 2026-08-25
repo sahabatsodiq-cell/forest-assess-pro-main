@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getAdminResultsFn } from "@/lib/services/adminService";
-import { Award, Search } from "lucide-react";
+import { getAdminResultsFn, deleteAttemptFn } from "@/lib/services/adminService";
+import { Award, Search, Trash2, Loader2 } from "lucide-react";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { getCompetencyStatus } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/results")({
   component: AdminResultsPage,
@@ -15,6 +16,20 @@ function AdminResultsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const checkUserRole = () => {
+    const userStr = localStorage.getItem("askganis_user");
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        setIsSuperAdmin(u.role === "SUPER_ADMIN");
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
 
   const loadData = async () => {
     const token = localStorage.getItem("askganis_token");
@@ -29,10 +44,33 @@ function AdminResultsPage() {
     }
   };
 
-
   useEffect(() => {
+    checkUserRole();
     loadData();
   }, []);
+
+  const handleDeleteAttempt = async (attemptId: number, userName: string, examName: string) => {
+    const confirmDelete = window.confirm(
+      `Apakah Anda yakin ingin menghapus/reset hasil ujian dari "${userName}" pada paket "${examName}"?\n\nTindakan ini akan menghapus riwayat nilai secara permanen dan peserta dapat kembali mengulang ujian dari awal.`
+    );
+    if (!confirmDelete) return;
+
+    setDeletingId(attemptId);
+    const token = localStorage.getItem("askganis_token") || "";
+    try {
+      const res = await deleteAttemptFn({ data: { token, id: attemptId } });
+      if (res.success) {
+        toast.success("Berhasil menghapus/reset riwayat ujian peserta.");
+        await loadData();
+      } else {
+        toast.error(res.error || "Gagal menghapus riwayat ujian.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filtered = results.filter((r) => {
     const s = search.toLowerCase();
@@ -93,12 +131,13 @@ function AdminResultsPage() {
                     <th className="px-4 py-3.5 text-center">Skor Akhir</th>
                     <th className="px-4 py-3.5 text-center">Passing Grade</th>
                     <th className="px-6 py-3.5 text-center">Status Kelulusan</th>
+                    {isSuperAdmin && <th className="px-6 py-3.5 text-center">Aksi</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20 text-xs">
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                      <td colSpan={isSuperAdmin ? 7 : 6} className="px-6 py-8 text-center text-muted-foreground">
                         Belum ada hasil ujian yang terkumpul.
                       </td>
                     </tr>
@@ -132,6 +171,22 @@ function AdminResultsPage() {
                               {status.label}
                             </span>
                           </td>
+                          {isSuperAdmin && (
+                            <td className="px-6 py-3.5 text-center">
+                              <button
+                                onClick={() => handleDeleteAttempt(r.id, r.user_name, r.exam_name)}
+                                disabled={deletingId === r.id}
+                                className="inline-flex items-center justify-center rounded-lg p-2 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                                title="Hapus/Reset Hasil Ujian"
+                              >
+                                {deletingId === r.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       );
                     })
@@ -153,3 +208,4 @@ function AdminResultsPage() {
     </div>
   );
 }
+

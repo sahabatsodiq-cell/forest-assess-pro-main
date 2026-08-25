@@ -1158,3 +1158,48 @@ export const rejectExamRequestFn = createServerFn({ method: "POST" })
 
     return { success: true };
   });
+
+function verifySuperAdminSession(token: string) {
+  if (!token) throw new Error("Unauthorized");
+  const session = verifySessionToken(token);
+  if (!session || session.role !== "SUPER_ADMIN") {
+    throw new Error("Forbidden: Super Admin access required");
+  }
+  return session;
+}
+
+export const deleteAttemptFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifySuperAdminSession(data.token);
+    const db = await getDb();
+
+    // Get attempt details for audit log before delete
+    const attempt = await db.prepare(`
+      SELECT a.*, u.name as user_name, p.name as exam_name 
+      FROM exam_attempts a
+      JOIN users u ON a.user_id = u.id
+      JOIN exam_packages p ON a.exam_id = p.id
+      WHERE a.id = ?
+    `).get(data.id) as any;
+
+    if (!attempt) {
+      return { success: false, error: "Data pengerjaan tidak ditemukan." };
+    }
+
+    // Delete the attempt (will cascade to attempt_questions)
+    await db.prepare("DELETE FROM exam_attempts WHERE id = ?").run(data.id);
+
+    // Log audit action
+    await logAudit(session.userId, "DELETE_EXAM_ATTEMPT", "exam_attempts", data.id, {
+      attempt_id: data.id,
+      user_id: attempt.user_id,
+      user_name: attempt.user_name,
+      exam_id: attempt.exam_id,
+      exam_name: attempt.exam_name,
+      score: attempt.score
+    });
+
+    return { success: true };
+  });
+

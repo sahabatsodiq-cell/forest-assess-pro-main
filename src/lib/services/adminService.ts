@@ -73,16 +73,19 @@ export const createUserFn = createServerFn({ method: "POST" })
     const existing = await db.prepare("SELECT id FROM users WHERE email = ?").get(data.email);
     if (existing) return { success: false, error: "Email sudah terdaftar." };
 
+    const isAdminRole = data.role === "ADMIN" || data.role === "SUPER_ADMIN";
+    const partNo = isAdminRole ? null : (data.participant_number || null);
+
     const passHash = hashPassword(data.password);
     const res = await db.prepare(`
       INSERT INTO users (name, email, password_hash, role, participant_number, is_active)
       VALUES (?, ?, ?, ?, ?, 1)
       RETURNING id
-    `).run(data.name, data.email, passHash, data.role, data.participant_number || null);
+    `).run(data.name, data.email, passHash, data.role, partNo);
 
     const userId = (res as any).lastInsertRowid;
 
-    if (Array.isArray(data.qualification_ids) && data.qualification_ids.length > 0) {
+    if (!isAdminRole && Array.isArray(data.qualification_ids) && data.qualification_ids.length > 0) {
       for (const qId of data.qualification_ids) {
         await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?) ON CONFLICT DO NOTHING").run(userId, qId);
       }
@@ -93,26 +96,45 @@ export const createUserFn = createServerFn({ method: "POST" })
   });
 
 export const updateUserFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; id: number; name: string; role: string; participant_number?: string | undefined; password?: string | undefined; qualification_ids?: number[] | undefined }) => data)
+  .validator((data: { token: string; id: number; name: string; role: string; email?: string | undefined; participant_number?: string | undefined; password?: string | undefined; qualification_ids?: number[] | undefined }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
 
-    if (data.password) {
-      const passHash = hashPassword(data.password);
-      await db.prepare("UPDATE users SET name = ?, role = ?, participant_number = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.role, data.participant_number || null, passHash, data.id);
-    } else {
-      await db.prepare("UPDATE users SET name = ?, role = ?, participant_number = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, data.role, data.participant_number || null, data.id);
+    // Check if user exists
+    const currentUser = await db.prepare("SELECT id, email FROM users WHERE id = ?").get(data.id);
+    if (!currentUser) return { success: false, error: "Pengguna tidak ditemukan." };
+
+    // Check duplicate email if email is being updated
+    const newEmail = data.email && data.email.trim() !== "" ? data.email.trim() : currentUser.email;
+    if (newEmail.toLowerCase() !== currentUser.email.toLowerCase()) {
+      const existing = await db.prepare("SELECT id FROM users WHERE LOWER(email) = LOWER(?) AND id != ?").get(newEmail, data.id);
+      if (existing) {
+        return { success: false, error: "Alamat email sudah digunakan oleh pengguna lain." };
+      }
     }
 
-    if (Array.isArray(data.qualification_ids)) {
+    const isAdminRole = data.role === "ADMIN" || data.role === "SUPER_ADMIN";
+    const partNo = isAdminRole ? null : (data.participant_number || null);
+
+    if (data.password && data.password.trim() !== "") {
+      const passHash = hashPassword(data.password.trim());
+      await db.prepare("UPDATE users SET name = ?, email = ?, role = ?, participant_number = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, newEmail, data.role, partNo, passHash, data.id);
+    } else {
+      await db.prepare("UPDATE users SET name = ?, email = ?, role = ?, participant_number = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.name, newEmail, data.role, partNo, data.id);
+    }
+
+    if (isAdminRole) {
+      await db.prepare("DELETE FROM user_qualifications WHERE user_id = ?").run(data.id);
+      await db.prepare("DELETE FROM user_ganisph_assignments WHERE user_id = ?").run(data.id);
+    } else if (Array.isArray(data.qualification_ids)) {
       await db.prepare("DELETE FROM user_qualifications WHERE user_id = ?").run(data.id);
       for (const qId of data.qualification_ids) {
         await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?) ON CONFLICT DO NOTHING").run(data.id, qId);
       }
     }
 
-    await logAudit(session.userId, "UPDATE_USER", "users", data.id, { name: data.name, role: data.role });
+    await logAudit(session.userId, "UPDATE_USER", "users", data.id, { name: data.name, email: newEmail, role: data.role });
     return { success: true };
   });
 
@@ -153,6 +175,41 @@ export const deleteUserFn = createServerFn({ method: "POST" })
 
     await logAudit(session.userId, "DELETE_USER", "users", data.id, { id: data.id });
     return { success: true };
+  });
+
+export const adminResetUserPasswordFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number; newPassword?: string | undefined }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    const user = await db.prepare("SELECT id, name, email FROM users WHERE id = ?").get(data.id);
+    if (!user) return { success: false, error: "Pengguna tidak ditemukan." };
+
+    // Generate random password if not provided
+    const newPass = data.newPassword && data.newPassword.trim() !== ""
+      ? data.newPassword.trim()
+      : `Ganis${Math.floor(100000 + Math.random() * 900000)}!`;
+
+    const passHash = hashPassword(newPass);
+    await db.prepare("UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(passHash, data.id);
+
+    const { sendPasswordChangeNotificationEmail } = await import("./emailService");
+    await sendPasswordChangeNotificationEmail({
+      email: user.email,
+      name: user.name,
+      newPassword: newPass,
+      resetReason: "Reset Kata Sandi oleh Admin",
+    });
+
+    await logAudit(session.userId, "ADMIN_RESET_USER_PASSWORD", "users", data.id, { email: user.email });
+
+    return {
+      success: true,
+      emailSent: true,
+      userEmail: user.email,
+      newPassword: newPass,
+    };
   });
 
 // ------------------------------------------------------------------

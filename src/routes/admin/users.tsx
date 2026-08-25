@@ -7,6 +7,7 @@ import {
   toggleUserStatusFn, 
   deleteUserFn, 
   verifyUserFn, 
+  adminResetUserPasswordFn,
   getQualificationsFn 
 } from "@/lib/services/adminService";
 import { 
@@ -21,7 +22,9 @@ import {
   CheckCircle2, 
   AlertTriangle,
   Mail,
-  FileText
+  FileText,
+  KeyRound,
+  RefreshCw
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DataTablePagination } from "@/components/DataTablePagination";
@@ -45,6 +48,9 @@ function AdminUsersPage() {
   const [verifyTarget, setVerifyTarget] = useState<any | null>(null);
   const [editTarget, setEditTarget] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [resetPasswordTarget, setResetPasswordTarget] = useState<any | null>(null);
+  const [resetNewPass, setResetNewPass] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Create Form State
   const [name, setName] = useState("");
@@ -166,6 +172,7 @@ function AdminUsersPage() {
         token,
         id: editTarget.id,
         name: editName,
+        email: editEmail,
         role: editRole,
         participant_number: editParticipantNumber || undefined,
         qualification_ids: editSelectedQualIds,
@@ -181,7 +188,7 @@ function AdminUsersPage() {
         setEditTarget(null);
         loadData();
       } else {
-        setEditFormError("Gagal memperbarui data pengguna.");
+        setEditFormError(res.error || "Gagal memperbarui data pengguna.");
       }
     } catch (err: any) {
       setEditFormError(err.message || "Terjadi kesalahan.");
@@ -243,6 +250,43 @@ function AdminUsersPage() {
     } catch (err) {
       console.error(err);
       toast.error("Gagal menghapus pengguna.");
+    }
+  };
+
+  // ------------------------------------------------------------------
+  // ADMIN RESET PASSWORD & EMAIL DISPATCH
+  // ------------------------------------------------------------------
+  const generateRandomPassword = () => {
+    const pass = `Ganis${Math.floor(100000 + Math.random() * 900000)}!`;
+    setResetNewPass(pass);
+  };
+
+  const handleAdminResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetPasswordTarget) return;
+    setResetLoading(true);
+    const token = localStorage.getItem("askganis_token") || "";
+
+    try {
+      const res = await adminResetUserPasswordFn({
+        data: {
+          token,
+          id: resetPasswordTarget.id,
+          newPassword: resetNewPass,
+        },
+      });
+
+      if (res.success) {
+        toast.success(`Password baru untuk ${resetPasswordTarget.name} (${res.userEmail}) berhasil disimpan & notifikasi email telah terkirim!`, { duration: 6000 });
+        setResetPasswordTarget(null);
+        setResetNewPass("");
+      } else {
+        toast.error(res.error || "Gagal mereset password.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan.");
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -338,13 +382,23 @@ function AdminUsersPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase text-charcoal">Nomor KTP / NIK</label>
-                  <input
-                    type="text"
-                    value={participantNumber}
-                    onChange={(e) => setParticipantNumber(e.target.value)}
-                    placeholder="6371xxxxxxxxxxxx"
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono focus:border-forest-700 focus:outline-none"
-                  />
+                  {role === "PESERTA" ? (
+                    <input
+                      type="text"
+                      value={participantNumber}
+                      onChange={(e) => setParticipantNumber(e.target.value)}
+                      placeholder="6371xxxxxxxxxxxx"
+                      className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono focus:border-forest-700 focus:outline-none"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      disabled
+                      value="-"
+                      title="Akun Admin tidak memerlukan Nomor KTP / NIK"
+                      className="mt-1 w-full rounded-md border border-border bg-gray-100 px-3 py-1.5 text-xs text-muted-foreground font-mono cursor-not-allowed"
+                    />
+                  )}
                 </div>
               </div>
 
@@ -464,10 +518,10 @@ function AdminUsersPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3.5 font-mono text-muted-foreground font-bold">
-                            {u.participant_number || "-"}
+                            {u.role === "PESERTA" ? (u.participant_number || "-") : "-"}
                           </td>
                           <td className="px-4 py-3.5">
-                            {u.qualification_codes ? (
+                            {u.role === "PESERTA" && u.qualification_codes ? (
                               <div className="flex flex-wrap items-center gap-1">
                                 {u.qualification_codes.split("; ").map((qc: string, idx: number, arr: string[]) => (
                                   <span key={qc} className="inline-flex items-center gap-1">
@@ -479,7 +533,7 @@ function AdminUsersPage() {
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-gray-400 italic text-[11px]">-</span>
+                              <span className="text-gray-400 font-mono text-xs">-</span>
                             )}
                           </td>
                           <td className="px-4 py-3.5">
@@ -513,6 +567,20 @@ function AdminUsersPage() {
                                   <span>Verifikasi</span>
                                 </button>
                               )}
+
+                              {/* Reset Password Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setResetPasswordTarget(u);
+                                  setResetNewPass(`Ganis${Math.floor(100000 + Math.random() * 900000)}!`);
+                                }}
+                                className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100 transition-colors"
+                                title="Reset Kata Sandi & Kirim Notifikasi Email"
+                              >
+                                <KeyRound className="h-3.5 w-3.5 text-blue-600" />
+                                <span className="hidden sm:inline">Reset Pass</span>
+                              </button>
 
                               {/* Edit Button */}
                               <button
@@ -570,6 +638,77 @@ function AdminUsersPage() {
           </>
         )}
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* MODAL RESET PASSWORD ADMIN                                         */}
+      {/* ------------------------------------------------------------------ */}
+      {resetPasswordTarget && (
+        <Dialog open={!!resetPasswordTarget} onOpenChange={(val) => !val && setResetPasswordTarget(null)}>
+          <DialogContent className="max-w-md bg-white p-6">
+            <DialogHeader>
+              <DialogTitle className="font-display text-base font-bold text-charcoal flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-forest-700" />
+                Reset Kata Sandi Pengguna (Admin)
+              </DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={handleAdminResetPassword} className="mt-4 space-y-4 text-xs">
+              <div className="rounded-lg border border-blue-200 bg-blue-50/80 p-3 text-blue-900 leading-relaxed">
+                <p className="font-bold">Reset Kata Sandi & Notifikasi Email</p>
+                <p className="mt-0.5 text-[11px] text-blue-800">
+                  Password baru akan langsung dienkripsi dan pemberitahuan akan disampaikan secara otomatis ke email pengguna.
+                </p>
+              </div>
+
+              <div className="space-y-1 rounded-md border border-border/40 bg-gray-50 p-3">
+                <div className="text-[10px] font-bold uppercase text-muted-foreground">Pengguna Target</div>
+                <div className="font-extrabold text-charcoal text-sm">{resetPasswordTarget.name}</div>
+                <div className="font-mono text-xs text-muted-foreground">{resetPasswordTarget.email}</div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase text-charcoal">Password Baru</label>
+                  <button
+                    type="button"
+                    onClick={generateRandomPassword}
+                    className="text-[11px] font-bold text-forest-700 hover:underline flex items-center gap-1"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    Generate Password Acak
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  required
+                  value={resetNewPass}
+                  onChange={(e) => setResetNewPass(e.target.value)}
+                  placeholder="Masukkan password baru"
+                  className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setResetPasswordTarget(null)}
+                  className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-charcoal hover:bg-gray-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetLoading || !resetNewPass}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-forest-900 px-4 py-1.5 text-xs font-bold text-white hover:bg-forest-700 disabled:opacity-50"
+                >
+                  <Mail className="h-3.5 w-3.5 text-emerald-400" />
+                  {resetLoading ? "Menyimpan & Mengirim..." : "Simpan & Kirim Email"}
+                </button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* ------------------------------------------------------------------ */}
       {/* MODAL VERIFIKASI & VALIDASI AKUN                                  */}
@@ -675,9 +814,10 @@ function AdminUsersPage() {
                 <label className="block text-xs font-bold uppercase text-charcoal">Email</label>
                 <input
                   type="email"
-                  disabled
+                  required
                   value={editEmail}
-                  className="mt-1 w-full rounded-md border border-border bg-gray-100 px-3 py-1.5 text-xs text-muted-foreground font-mono"
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-border bg-white px-3 py-1.5 text-xs text-charcoal font-mono focus:border-forest-700 focus:outline-none"
                 />
               </div>
 
@@ -709,13 +849,23 @@ function AdminUsersPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase text-charcoal">Nomor KTP / NIK</label>
-                  <input
-                    type="text"
-                    value={editParticipantNumber}
-                    onChange={(e) => setEditParticipantNumber(e.target.value)}
-                    placeholder="6371xxxxxxxxxxxx"
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono focus:border-forest-700 focus:outline-none"
-                  />
+                  {editRole === "PESERTA" ? (
+                    <input
+                      type="text"
+                      value={editParticipantNumber}
+                      onChange={(e) => setEditParticipantNumber(e.target.value)}
+                      placeholder="6371xxxxxxxxxxxx"
+                      className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono focus:border-forest-700 focus:outline-none"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      disabled
+                      value="-"
+                      title="Akun Admin tidak memerlukan Nomor KTP / NIK"
+                      className="mt-1 w-full rounded-md border border-border bg-gray-100 px-3 py-1.5 text-xs text-muted-foreground font-mono cursor-not-allowed"
+                    />
+                  )}
                 </div>
               </div>
 

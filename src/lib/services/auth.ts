@@ -142,6 +142,39 @@ export const registerFn = createServerFn({ method: "POST" })
     };
   });
 
+export const requestPasswordResetFn = createServerFn({ method: "POST" })
+  .validator((data: { email: string }) => data)
+  .handler(async ({ data }) => {
+    const { email } = data;
+    if (!email) return { success: false, error: "Alamat email wajib diisi." };
+
+    const db = await getDb();
+    const user = await db.prepare("SELECT id, name, email FROM users WHERE LOWER(email) = LOWER(?)").get(email);
+    if (!user) {
+      // Don't leak user existence for security, return generic success message
+      return {
+        success: true,
+        message: "Jika email terdaftar, instruksi reset kata sandi telah dikirimkan ke email Anda.",
+      };
+    }
+
+    const { sendPasswordResetLinkEmail } = await import("./emailService");
+    const resetLink = `http://localhost:3000/login?mode=reset&email=${encodeURIComponent(user.email)}`;
+
+    await sendPasswordResetLinkEmail({
+      email: user.email,
+      name: user.name,
+      resetLink,
+    });
+
+    await logAudit(user.id, "REQUEST_PASSWORD_RESET", "users", user.id, { email: user.email });
+
+    return {
+      success: true,
+      message: "Instruksi reset kata sandi telah dikirimkan ke email Anda. Silakan periksa email Anda.",
+    };
+  });
+
 export const getCurrentUserFn = createServerFn({ method: "GET" })
   .handler(async () => {
     return null;

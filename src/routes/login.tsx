@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { loginFn, registerFn, checkFirstUserFn } from "@/lib/services/auth";
-import { ArrowRight, Lock, Mail, ShieldCheck, User, Sparkles } from "lucide-react";
+import { loginFn, registerFn, checkFirstUserFn, requestPasswordResetFn } from "@/lib/services/auth";
+import { ArrowRight, Lock, Mail, ShieldCheck, User, Sparkles, KeyRound } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -19,6 +20,13 @@ function LoginPage() {
   const [name, setName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+
+  // Forgot Password State
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null);
+  const [forgotError, setForgotError] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -95,6 +103,27 @@ function LoginPage() {
       setError(err.message || "Terjadi kesalahan saat pendaftaran.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRequestPasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotMessage(null);
+    setForgotError(null);
+
+    try {
+      const res = await requestPasswordResetFn({ data: { email: forgotEmail } });
+      if (res.success) {
+        setForgotMessage(res.message || "Instruksi reset kata sandi telah dikirimkan ke email Anda.");
+        toast.success("Instruksi reset kata sandi terkirim ke email!");
+      } else {
+        setForgotError(res.error || "Gagal mengajukan reset kata sandi.");
+      }
+    } catch (err: any) {
+      setForgotError(err.message || "Terjadi kesalahan.");
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -187,9 +216,23 @@ function LoginPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal">
-                  Password
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-charcoal">
+                    Password
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotEmail(email);
+                      setForgotMessage(null);
+                      setForgotError(null);
+                      setForgotOpen(true);
+                    }}
+                    className="text-[11px] font-bold text-forest-700 hover:underline"
+                  >
+                    Lupa Kata Sandi?
+                  </button>
+                </div>
                 <div className="relative mt-1">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
@@ -312,6 +355,87 @@ function LoginPage() {
 
         </div>
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* MODAL LUPA KATA SANDI MANDIRI                                      */}
+      {/* ------------------------------------------------------------------ */}
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent className="max-w-md bg-white p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-base font-bold text-charcoal flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-forest-700" />
+              Lupa Kata Sandi Akun
+            </DialogTitle>
+          </DialogHeader>
+
+          {forgotMessage && (
+            <div className="rounded-lg bg-green-50 p-3.5 text-xs font-semibold text-green-800 border border-green-200 leading-relaxed">
+              ✅ {forgotMessage}
+            </div>
+          )}
+
+          {forgotError && (
+            <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700 border border-red-100">
+              {forgotError}
+            </div>
+          )}
+
+          {!forgotMessage && (
+            <form onSubmit={handleRequestPasswordReset} className="mt-2 space-y-4 text-xs">
+              <p className="text-muted-foreground leading-relaxed">
+                Masukkan alamat email terdaftar akun Anda. Kami akan mengirimkan instruksi dan tautan untuk membuat kata sandi baru.
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-charcoal">
+                  Alamat Email Terdaftar
+                </label>
+                <div className="relative mt-1">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="nama@domain.com"
+                    className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm focus:border-forest-700 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(false)}
+                  className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-charcoal hover:bg-gray-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={forgotLoading || !forgotEmail}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-forest-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-forest-700 disabled:opacity-50"
+                >
+                  {forgotLoading ? "Mengirim..." : "Kirim Instruksi Reset Email"}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+          )}
+
+          {forgotMessage && (
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setForgotOpen(false)}
+                className="rounded-lg bg-forest-900 px-4 py-1.5 text-xs font-bold text-white hover:bg-forest-700"
+              >
+                Tutup
+              </button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

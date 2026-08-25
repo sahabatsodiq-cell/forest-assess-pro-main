@@ -1038,3 +1038,113 @@ export const getAuditLogsFn = createServerFn({ method: "POST" })
     `).all();
     return Array.isArray(res) ? res : [];
   });
+
+// ------------------------------------------------------------------
+// EXAM REGISTRATION REQUESTS — Admin Side
+// ------------------------------------------------------------------
+
+export const getExamRegistrationRequestsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; status?: string }) => data)
+  .handler(async ({ data }) => {
+    verifyAdminSession(data.token);
+    const db = await getDb();
+
+    let query = `
+      SELECT r.id, r.user_id, r.qualification_id, r.notes, r.status, r.created_at, r.reviewed_at,
+             u.name as user_name, u.email as user_email, u.participant_number,
+             q.code as qualification_code, q.name as qualification_name,
+             rv.name as reviewed_by_name
+      FROM exam_registration_requests r
+      JOIN users u ON r.user_id = u.id
+      JOIN qualifications q ON r.qualification_id = q.id
+      LEFT JOIN users rv ON r.reviewed_by = rv.id
+    `;
+    const params: any[] = [];
+    if (data.status && data.status !== "ALL") {
+      query += " WHERE r.status = ?";
+      params.push(data.status);
+    }
+    query += " ORDER BY r.created_at DESC";
+
+    const rows = await db.prepare(query).all(...params);
+    return Array.isArray(rows) ? rows : [];
+  });
+
+export const approveExamRequestFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; request_id: number; exam_package_id?: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    const req = await db.prepare("SELECT * FROM exam_registration_requests WHERE id = ?").get(data.request_id) as any;
+    if (!req) return { success: false, error: "Pengajuan tidak ditemukan." };
+    if (req.status !== "PENDING") return { success: false, error: "Pengajuan ini sudah diproses sebelumnya." };
+
+    // Cari paket ujian untuk kualifikasi ini jika tidak ada exam_package_id yang diberikan
+    let examPackageId = data.exam_package_id;
+    if (!examPackageId) {
+      const pkg = await db.prepare(
+        "SELECT id FROM exam_packages WHERE qualification_id = ? AND (status = 'PUBLISHED' OR status = 'ACTIVE') ORDER BY id DESC LIMIT 1"
+      ).get(req.qualification_id) as any;
+      if (pkg) examPackageId = pkg.id;
+    }
+
+    // Jika ada paket ujian, langsung enroll peserta
+    if (examPackageId) {
+      const alreadyEnrolled = await db.prepare(
+        "SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?"
+      ).get(examPackageId, req.user_id);
+
+      if (!alreadyEnrolled) {
+        await db.prepare(
+          "INSERT INTO exam_enrollments (exam_id, user_id) VALUES (?, ?)"
+        ).run(examPackageId, req.user_id);
+      }
+    }
+
+    // Update status pengajuan
+    await db.prepare(`
+      UPDATE exam_registration_requests
+      SET status = 'APPROVED', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(session.userId, data.request_id);
+
+    await logAudit(session.userId, "APPROVE_EXAM_REQUEST", "exam_registration_requests", data.request_id, {
+      user_id: req.user_id,
+      qualification_id: req.qualification_id,
+      exam_package_id: examPackageId,
+    });
+
+    return {
+      success: true,
+      enrolled: !!examPackageId,
+      message: examPackageId
+        ? "Pengajuan disetujui. Peserta telah didaftarkan ke paket ujian."
+        : "Pengajuan disetujui. Peserta akan terdaftar otomatis saat paket ujian dipublikasikan.",
+    };
+  });
+
+export const rejectExamRequestFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; request_id: number; notes?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    const req = await db.prepare("SELECT * FROM exam_registration_requests WHERE id = ?").get(data.request_id) as any;
+    if (!req) return { success: false, error: "Pengajuan tidak ditemukan." };
+    if (req.status !== "PENDING") return { success: false, error: "Pengajuan ini sudah diproses sebelumnya." };
+
+    await db.prepare(`
+      UPDATE exam_registration_requests
+      SET status = 'REJECTED', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP,
+          notes = COALESCE(?, notes), updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(session.userId, data.notes || null, data.request_id);
+
+    await logAudit(session.userId, "REJECT_EXAM_REQUEST", "exam_registration_requests", data.request_id, {
+      user_id: req.user_id,
+      qualification_id: req.qualification_id,
+    });
+
+    return { success: true };
+  });

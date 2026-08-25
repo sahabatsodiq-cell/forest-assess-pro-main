@@ -736,3 +736,98 @@ export const removeParticipantQualificationFn = createServerFn({ method: "POST" 
 
     return { success: true };
   });
+
+// ------------------------------------------------------------------
+// EXAM REGISTRATION REQUESTS (Self-Service Opsi A)
+// ------------------------------------------------------------------
+
+/**
+ * Peserta mengajukan permohonan ujian untuk kualifikasi tertentu.
+ * Jika sudah ada paket PUBLISHED untuk kualifikasi → langsung enroll.
+ * Jika belum ada paket → simpan sebagai PENDING request.
+ */
+export const submitExamRequestFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; qualification_id: number; notes?: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    // 1. Verifikasi peserta memiliki kualifikasi ini
+    const userQual = await db.prepare(
+      "SELECT id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?"
+    ).get(session.userId, data.qualification_id);
+
+    if (!userQual) {
+      return { success: false, error: "Anda tidak memiliki kualifikasi yang dipilih." };
+    }
+
+    // 2. Cek apakah sudah ada PENDING request untuk kualifikasi yang sama
+    const existingPending = await db.prepare(
+      "SELECT id FROM exam_registration_requests WHERE user_id = ? AND qualification_id = ? AND status = 'PENDING'"
+    ).get(session.userId, data.qualification_id);
+
+    if (existingPending) {
+      return { success: false, error: "Pengajuan untuk kualifikasi ini sudah ada dan sedang menunggu persetujuan Admin." };
+    }
+
+    // 3. Cek apakah sudah ada paket ujian PUBLISHED untuk kualifikasi ini
+    const publishedPackage = await db.prepare(
+      "SELECT id FROM exam_packages WHERE qualification_id = ? AND (status = 'PUBLISHED' OR status = 'ACTIVE') ORDER BY id DESC LIMIT 1"
+    ).get(data.qualification_id);
+
+    if (publishedPackage) {
+      // Langsung enroll ke paket yang tersedia
+      const alreadyEnrolled = await db.prepare(
+        "SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?"
+      ).get((publishedPackage as any).id, session.userId);
+
+      if (alreadyEnrolled) {
+        return { success: false, error: "Anda sudah terdaftar di paket ujian untuk kualifikasi ini." };
+      }
+
+      const res = await db.prepare(
+        "INSERT INTO exam_enrollments (exam_id, user_id) VALUES (?, ?)"
+      ).run((publishedPackage as any).id, session.userId);
+
+      await logAudit(session.userId, "SELF_ENROLL_VIA_REQUEST", "exam_enrollments", res.lastInsertRowid as number, {
+        exam_id: (publishedPackage as any).id,
+        qualification_id: data.qualification_id,
+      });
+
+      return { success: true, enrolled: true, message: "Berhasil! Paket ujian langsung tersedia di Ujian Saya." };
+    }
+
+    // 4. Belum ada paket → simpan sebagai PENDING request
+    const res = await db.prepare(
+      "INSERT INTO exam_registration_requests (user_id, qualification_id, notes, status) VALUES (?, ?, ?, 'PENDING')"
+    ).run(session.userId, data.qualification_id, data.notes || null);
+
+    await logAudit(session.userId, "SUBMIT_EXAM_REQUEST", "exam_registration_requests", res.lastInsertRowid as number, {
+      qualification_id: data.qualification_id,
+    });
+
+    return { success: true, enrolled: false, message: "Pengajuan berhasil dikirim. Admin akan segera meninjau dan menyetujui permohonan Anda." };
+  });
+
+/**
+ * Peserta melihat daftar pengajuan pendaftaran ujiannya sendiri.
+ */
+export const getMyExamRequestsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    const rows = await db.prepare(`
+      SELECT r.id, r.qualification_id, r.notes, r.status, r.created_at, r.reviewed_at,
+             q.code as qualification_code, q.name as qualification_name,
+             u.name as reviewed_by_name
+      FROM exam_registration_requests r
+      JOIN qualifications q ON r.qualification_id = q.id
+      LEFT JOIN users u ON r.reviewed_by = u.id
+      WHERE r.user_id = ?
+      ORDER BY r.created_at DESC
+    `).all(session.userId);
+
+    return Array.isArray(rows) ? rows : [];
+  });

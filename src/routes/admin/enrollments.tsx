@@ -1,16 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getEnrollmentsFn, enrollParticipantFn, deleteEnrollmentFn, getExamsFn, getUsersFn } from "@/lib/services/adminService";
-import { UserCheck, Plus, Trash2, Search } from "lucide-react";
+import {
+  getEnrollmentsFn,
+  enrollParticipantFn,
+  deleteEnrollmentFn,
+  getExamsFn,
+  getUsersFn,
+  getExamRegistrationRequestsFn,
+  approveExamRequestFn,
+  rejectExamRequestFn,
+} from "@/lib/services/adminService";
+import { UserCheck, Plus, Trash2, Search, Inbox, Check, X, Clock, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/enrollments")({
   component: AdminEnrollmentsPage,
 });
 
 function AdminEnrollmentsPage() {
+  const [activeTab, setActiveTab] = useState<"enrolled" | "requests">("enrolled");
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,19 +36,22 @@ function AdminEnrollmentsPage() {
   const [userId, setUserId] = useState<number | "">("");
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
   const loadData = async () => {
     const token = localStorage.getItem("askganis_token");
     if (!token) return;
     try {
-      const [eData, exData, uData] = await Promise.all([
+      const [eData, exData, uData, rData] = await Promise.all([
         getEnrollmentsFn({ data: { token } }),
         getExamsFn({ data: { token } }),
         getUsersFn({ data: { token } }),
+        getExamRegistrationRequestsFn({ data: { token, status: "ALL" } }),
       ]);
       setEnrollments(eData);
       setExams(exData);
       setUsers(uData.filter((u: any) => u.role === "PESERTA"));
+      setRequests(rData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -71,6 +86,7 @@ function AdminEnrollmentsPage() {
       if (res.success) {
         setOpen(false);
         setUserId("");
+        toast.success("Peserta berhasil didaftarkan.");
         loadData();
       } else {
         setFormError(res.error || "Gagal mendaftarkan peserta.");
@@ -87,13 +103,55 @@ function AdminEnrollmentsPage() {
     const token = localStorage.getItem("askganis_token") || "";
     try {
       await deleteEnrollmentFn({ data: { token, id } });
+      toast.success("Pendaftaran dihapus.");
       loadData();
     } catch (err) {
       console.error(err);
     }
   };
 
-  const filtered = enrollments.filter((e) => {
+  const handleApproveRequest = async (requestId: number) => {
+    setActionLoadingId(requestId);
+    const token = localStorage.getItem("askganis_token") || "";
+    try {
+      const res = await approveExamRequestFn({ data: { token, request_id: requestId } });
+      if (res.success) {
+        toast.success(res.message);
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menyetujui pengajuan.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleRejectRequest = async (requestId: number) => {
+    const notes = prompt("Alasan penolakan (opsional):");
+    if (notes === null) return; // user cancelled prompt
+
+    setActionLoadingId(requestId);
+    const token = localStorage.getItem("askganis_token") || "";
+    try {
+      const res = await rejectExamRequestFn({ data: { token, request_id: requestId, notes: notes || undefined } });
+      if (res.success) {
+        toast.success("Pengajuan berhasil ditolak.");
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menolak pengajuan.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const pendingRequestsCount = requests.filter((r) => r.status === "PENDING").length;
+
+  const filteredEnrollments = enrollments.filter((e) => {
     const s = search.toLowerCase();
     return (
       (e.user_name || "").toLowerCase().includes(s) ||
@@ -104,7 +162,19 @@ function AdminEnrollmentsPage() {
     );
   });
 
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const filteredRequests = requests.filter((r) => {
+    const s = search.toLowerCase();
+    return (
+      (r.user_name || "").toLowerCase().includes(s) ||
+      (r.user_email || "").toLowerCase().includes(s) ||
+      (r.participant_number || "").toLowerCase().includes(s) ||
+      (r.qualification_code || "").toLowerCase().includes(s) ||
+      (r.qualification_name || "").toLowerCase().includes(s)
+    );
+  });
+
+  const currentList = activeTab === "enrolled" ? filteredEnrollments : filteredRequests;
+  const paginated = currentList.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="space-y-6">
@@ -112,7 +182,7 @@ function AdminEnrollmentsPage() {
         <div>
           <h1 className="font-display text-2xl font-black text-charcoal">Pendaftaran Ujian</h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Kelola hak akses dan alokasi peserta ujian pada paket ujian aktif.
+            Kelola pendaftaran peserta dan persetujuan pengajuan pendaftaran mandiri.
           </p>
         </div>
 
@@ -183,13 +253,48 @@ function AdminEnrollmentsPage() {
         </Dialog>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-border/60">
+        <button
+          onClick={() => { setActiveTab("enrolled"); setPage(1); }}
+          className={`flex items-center gap-2 pb-3 px-1 border-b-2 text-xs font-bold transition-all ${
+            activeTab === "enrolled"
+              ? "border-forest-900 text-forest-900"
+              : "border-transparent text-muted-foreground hover:text-charcoal"
+          }`}
+        >
+          <UserCheck className="h-4 w-4" />
+          Pendaftaran Terdaftar ({enrollments.length})
+        </button>
+        <button
+          onClick={() => { setActiveTab("requests"); setPage(1); }}
+          className={`flex items-center gap-2 pb-3 px-1 border-b-2 text-xs font-bold transition-all ${
+            activeTab === "requests"
+              ? "border-forest-900 text-forest-900"
+              : "border-transparent text-muted-foreground hover:text-charcoal"
+          }`}
+        >
+          <Inbox className="h-4 w-4" />
+          Pengajuan Masuk
+          {pendingRequestsCount > 0 && (
+            <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[9px] font-black text-white">
+              {pendingRequestsCount} MENUNGGU
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Search Input Bar */}
       <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Cari nama peserta, nomor registrasi, email, atau nama ujian..."
+            placeholder={
+              activeTab === "enrolled"
+                ? "Cari nama peserta, nomor registrasi, email, atau nama ujian..."
+                : "Cari nama peserta, kualifikasi, atau email..."
+            }
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -200,10 +305,11 @@ function AdminEnrollmentsPage() {
         </div>
       </div>
 
+      {/* Table Container */}
       <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-xs text-muted-foreground">Memuat data pendaftaran...</div>
-        ) : (
+          <div className="p-8 text-center text-xs text-muted-foreground">Memuat data...</div>
+        ) : activeTab === "enrolled" ? (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -217,7 +323,7 @@ function AdminEnrollmentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20 text-xs">
-                  {filtered.length === 0 ? (
+                  {filteredEnrollments.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                         Belum ada pendaftaran peserta.
@@ -255,10 +361,119 @@ function AdminEnrollmentsPage() {
             <DataTablePagination
               currentPage={page}
               pageSize={pageSize}
-              totalItems={filtered.length}
+              totalItems={filteredEnrollments.length}
               onPageChange={setPage}
               onPageSizeChange={setPageSize}
               itemLabel="pendaftaran"
+            />
+          </>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <th className="px-6 py-3.5">Peserta</th>
+                    <th className="px-4 py-3.5">Kualifikasi Diminta</th>
+                    <th className="px-4 py-3.5">Catatan Peserta</th>
+                    <th className="px-4 py-3.5">Tanggal Pengajuan</th>
+                    <th className="px-4 py-3.5">Status</th>
+                    <th className="px-6 py-3.5 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/20 text-xs">
+                  {filteredRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                        Belum ada pengajuan pendaftaran mandiri dari peserta.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginated.map((r) => (
+                      <tr key={r.id} className="hover:bg-forest-50/10 transition-colors">
+                        <td className="px-6 py-3.5">
+                          <div className="font-bold text-charcoal">{r.user_name}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono">
+                            {r.participant_number || r.user_email}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="inline-block rounded bg-forest-50 px-2 py-0.5 text-[10px] font-bold text-forest-900 border border-forest-100 mb-0.5">
+                            {r.qualification_code}
+                          </span>
+                          <div className="font-semibold text-charcoal">{r.qualification_name}</div>
+                        </td>
+                        <td className="px-4 py-3.5 text-muted-foreground italic">
+                          {r.notes || "-"}
+                        </td>
+                        <td className="px-4 py-3.5 text-muted-foreground">
+                          {new Date(r.created_at).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                              r.status === "PENDING"
+                                ? "bg-amber-100 text-amber-800"
+                                : r.status === "APPROVED"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {r.status === "PENDING" && <Clock className="h-3 w-3" />}
+                            {r.status === "APPROVED" && <Check className="h-3 w-3" />}
+                            {r.status === "REJECTED" && <X className="h-3 w-3" />}
+                            {r.status === "PENDING" ? "MENUNGGU" : r.status === "APPROVED" ? "DISETUJUI" : "DITOLAK"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3.5 text-right">
+                          {r.status === "PENDING" ? (
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => handleApproveRequest(r.id)}
+                                disabled={actionLoadingId === r.id}
+                                className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1 text-[11px] font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                              >
+                                {actionLoadingId === r.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Check className="h-3 w-3" />
+                                )}
+                                Setujui
+                              </button>
+                              <button
+                                onClick={() => handleRejectRequest(r.id)}
+                                disabled={actionLoadingId === r.id}
+                                className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                                Tolak
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">
+                              Diproses{r.reviewed_by_name ? ` oleh ${r.reviewed_by_name}` : ""}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <DataTablePagination
+              currentPage={page}
+              pageSize={pageSize}
+              totalItems={filteredRequests.length}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="pengajuan"
             />
           </>
         )}

@@ -213,8 +213,8 @@ export const selfEnrollFn = createServerFn({ method: "POST" })
 
     // 2. Verify user's qualification matches exam qualification
     const userQual = await db.prepare(
-      "SELECT id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?"
-    ).get(session.userId, exam.qualification_id);
+      "SELECT qualification_id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?"
+    ).get(session.userId, Number(data.qualification_id));
 
     if (!userQual) {
       return { success: false, error: "Kualifikasi Anda tidak sesuai dengan paket ujian ini." };
@@ -765,8 +765,8 @@ export const submitExamRequestFn = createServerFn({ method: "POST" })
 
     // 1. Verifikasi peserta memiliki kualifikasi ini
     const userQual = await db.prepare(
-      "SELECT id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?"
-    ).get(session.userId, data.qualification_id);
+      "SELECT qualification_id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?"
+    ).get(session.userId, Number(data.qualification_id));
 
     if (!userQual) {
       return { success: false, error: "Anda tidak memiliki kualifikasi yang dipilih." };
@@ -775,7 +775,7 @@ export const submitExamRequestFn = createServerFn({ method: "POST" })
     // 2. Cek apakah sudah ada PENDING request untuk kualifikasi yang sama
     const existingPending = await db.prepare(
       "SELECT id FROM exam_registration_requests WHERE user_id = ? AND qualification_id = ? AND status = 'PENDING'"
-    ).get(session.userId, data.qualification_id);
+    ).get(session.userId, Number(data.qualification_id));
 
     if (existingPending) {
       return { success: false, error: "Pengajuan untuk kualifikasi ini sudah ada dan sedang menunggu persetujuan Admin." };
@@ -784,7 +784,7 @@ export const submitExamRequestFn = createServerFn({ method: "POST" })
     // 3. Cek apakah sudah ada paket ujian PUBLISHED untuk kualifikasi ini
     const publishedPackage = await db.prepare(
       "SELECT id FROM exam_packages WHERE qualification_id = ? AND (status = 'PUBLISHED' OR status = 'ACTIVE') ORDER BY id DESC LIMIT 1"
-    ).get(data.qualification_id);
+    ).get(Number(data.qualification_id));
 
     if (publishedPackage) {
       // Langsung enroll ke paket yang tersedia
@@ -802,7 +802,7 @@ export const submitExamRequestFn = createServerFn({ method: "POST" })
 
       await logAudit(session.userId, "SELF_ENROLL_VIA_REQUEST", "exam_enrollments", res.lastInsertRowid as number, {
         exam_id: (publishedPackage as any).id,
-        qualification_id: data.qualification_id,
+        qualification_id: Number(data.qualification_id),
       });
 
       return { success: true, enrolled: true, message: "Berhasil! Paket ujian langsung tersedia di Ujian Saya." };
@@ -811,14 +811,15 @@ export const submitExamRequestFn = createServerFn({ method: "POST" })
     // 4. Belum ada paket → simpan sebagai PENDING request
     const res = await db.prepare(
       "INSERT INTO exam_registration_requests (user_id, qualification_id, notes, status) VALUES (?, ?, ?, 'PENDING')"
-    ).run(session.userId, data.qualification_id, data.notes || null);
+    ).run(session.userId, Number(data.qualification_id), data.notes || null);
 
     await logAudit(session.userId, "SUBMIT_EXAM_REQUEST", "exam_registration_requests", res.lastInsertRowid as number, {
-      qualification_id: data.qualification_id,
+      qualification_id: Number(data.qualification_id),
     });
 
     return { success: true, enrolled: false, message: "Pengajuan berhasil dikirim. Admin akan segera meninjau dan menyetujui permohonan Anda." };
   });
+
 
 /**
  * Peserta melihat daftar pengajuan pendaftaran ujiannya sendiri.

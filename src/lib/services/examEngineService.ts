@@ -39,14 +39,28 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
   const user = await db.prepare("SELECT id, name, email, participant_number FROM users WHERE id = ?").get(userId);
   if (!user) return;
 
-  // Match by email OR registration_number (registration_number stored in participant_number)
-  const masterRows = await db.prepare(`
+  // Collect registration numbers already attached to this user's qualifications
+  const userQualsRegs = await db.prepare(`
+    SELECT registration_number FROM user_qualifications 
+    WHERE user_id = ? AND registration_number IS NOT NULL AND registration_number != ''
+  `).all(userId);
+  const userRegList = Array.isArray(userQualsRegs) ? userQualsRegs.map((r: any) => r.registration_number) : [];
+
+  let query = `
     SELECT * FROM master_ganisph
     WHERE
       (email IS NOT NULL AND email != '' AND LOWER(email) = LOWER(?))
       OR (registration_number IS NOT NULL AND registration_number != '' AND registration_number = ?)
-  `).all(user.email || '', user.participant_number || '');
+  `;
+  const params: any[] = [user.email || '', user.participant_number || ''];
 
+  if (userRegList.length > 0) {
+    const placeholders = userRegList.map(() => '?').join(',');
+    query += ` OR (registration_number IS NOT NULL AND registration_number IN (${placeholders}))`;
+    params.push(...userRegList);
+  }
+
+  const masterRows = await db.prepare(query).all(...params);
   const masterList = Array.isArray(masterRows) ? masterRows : [];
   if (masterList.length === 0) return;
 
@@ -673,6 +687,7 @@ export const updateParticipantProfileDetailsFn = createServerFn({ method: "POST"
       `).run(data.name, data.participant_number || null, session.userId);
     }
 
+    await syncMasterGanisphQualifications(db, session.userId);
     return { success: true, error: undefined as string | undefined };
   });
 
@@ -689,6 +704,7 @@ export const addParticipantQualificationFn = createServerFn({ method: "POST" })
         registration_number = EXCLUDED.registration_number
     `).run(session.userId, data.qualification_id, data.registration_number || null);
 
+    await syncMasterGanisphQualifications(db, session.userId);
     return { success: true, error: undefined as string | undefined };
   });
 
@@ -703,6 +719,7 @@ export const updateParticipantQualificationRegNoFn = createServerFn({ method: "P
       WHERE user_id = ? AND qualification_id = ?
     `).run(data.registration_number, session.userId, data.qualification_id);
 
+    await syncMasterGanisphQualifications(db, session.userId);
     return { success: true };
   });
 

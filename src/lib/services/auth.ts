@@ -84,11 +84,16 @@ export const registerFn = createServerFn({ method: "POST" })
     const isActive = isFirstUser ? 1 : 0;
 
     // Check if email matches master_ganisph data for pre-verification auto-fill
-    const masterRow = await db.prepare(`
-      SELECT ktp_number, qualification_code FROM master_ganisph WHERE LOWER(email) = LOWER(?) LIMIT 1
-    `).get(email);
+    let masterRow: any = null;
+    try {
+      masterRow = await db.prepare(`
+        SELECT registration_number, qualification_name FROM master_ganisph WHERE LOWER(email) = LOWER(?) LIMIT 1
+      `).get(email);
+    } catch (e) {
+      // master_ganisph optional lookup fallback
+    }
 
-    const defaultParticipantNumber = participant_number || masterRow?.ktp_number || (isFirstUser ? "SA-001" : `REG-${Date.now().toString().slice(-4)}`);
+    const defaultParticipantNumber = participant_number || masterRow?.registration_number || (isFirstUser ? "SA-001" : `REG-${Date.now().toString().slice(-4)}`);
 
     const passHash = hashPassword(password);
     const res = await db.prepare(`
@@ -106,10 +111,10 @@ export const registerFn = createServerFn({ method: "POST" })
     const userId = Number(res.lastInsertRowid);
 
     // Auto-associate qualification from master_ganisph if found
-    if (masterRow?.qualification_code) {
-      const qCodes = masterRow.qualification_code.split(",").map((c: string) => c.trim());
+    if (masterRow?.qualification_name) {
+      const qCodes = masterRow.qualification_name.split(",").map((c: string) => c.trim());
       for (const qc of qCodes) {
-        const qObj = await db.prepare("SELECT id FROM qualifications WHERE code = ?").get(qc);
+        const qObj = await db.prepare("SELECT id FROM qualifications WHERE code = ? OR name = ?").get(qc, qc);
         if (qObj?.id) {
           await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?) ON CONFLICT DO NOTHING").run(userId, qObj.id);
         }

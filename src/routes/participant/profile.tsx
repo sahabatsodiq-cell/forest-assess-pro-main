@@ -584,96 +584,78 @@ function ParticipantProfilePage() {
           <div className="border-b border-border/40 pb-4 dark:border-charcoal/60">
             <h2 className="font-display text-base font-bold text-charcoal dark:text-forest-100 flex items-center gap-2">
               <Briefcase className="h-5 w-5 text-forest-700 dark:text-forest-400" />
-              Data Penugasan GANISPH
+              Data Penugasan GANISPH Resmi
             </h2>
             <p className="mt-0.5 text-xs text-muted-foreground dark:text-forest-100/70">
-              Data penugasan resmi Anda yang tersinkronisasi otomatis dari database Master GANISPH.
+              Daftar seluruh SK penugasan resmi Anda yang tersinkronisasi otomatis dari database Master GANISPH.
             </p>
           </div>
 
-          <div className="space-y-4">
-            {ganisphAssignments.map((asgn: any, idx: number) => {
-              const isExpiredReg = asgn.register_active_end && new Date(asgn.register_active_end.split('-').reverse().join('-')) < new Date();
-              const isExpiredAssign = asgn.assignment_active_end && new Date(asgn.assignment_active_end.split('-').reverse().join('-')) < new Date();
+          <div className="overflow-x-auto rounded-xl border border-border/60 bg-white dark:bg-charcoal dark:border-charcoal/60">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="border-b border-border/50 bg-forest-50/50 text-[10px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-charcoal/80 dark:border-charcoal/60 dark:text-forest-100/70">
+                <tr>
+                  <th scope="col" className="px-4 py-3.5 w-12">NO</th>
+                  <th scope="col" className="px-4 py-3.5">NAMA PERUSAHAAN</th>
+                  <th scope="col" className="px-3 py-3.5">PENUGASAN</th>
+                  <th scope="col" className="px-4 py-3.5">NAMA GANISPH</th>
+                  <th scope="col" className="px-4 py-3.5">KUALIFIKASI</th>
+                  <th scope="col" className="px-4 py-3.5">NOMOR REGISTER</th>
+                  <th scope="col" className="px-3 py-3.5">MASA AKTIF REGISTER END</th>
+                  <th scope="col" className="px-3 py-3.5">MASA AKTIF PENUGASAN END</th>
+                  <th scope="col" className="px-4 py-3.5">KABUPATEN/KOTA</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 dark:divide-charcoal/60">
+                {ganisphAssignments.map((asgn: any, idx: number) => {
+                  const isExpiredReg = asgn.register_active_end && new Date(asgn.register_active_end.split('-').reverse().join('-')) < new Date();
+                  const isExpiredAssign = asgn.assignment_active_end && new Date(asgn.assignment_active_end.split('-').reverse().join('-')) < new Date();
 
-              return (
-                <div
-                  key={asgn.master_id}
-                  className="rounded-xl border border-border/40 bg-forest-50/30 p-5 space-y-4 dark:bg-charcoal/60 dark:border-charcoal/60"
-                >
-                  {/* Header row */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs font-black text-amber-800 dark:bg-amber-950/40 dark:border-amber-700/50 dark:text-amber-300">
-                        {asgn.assignment_type || "-"}
-                      </span>
-                      <span className="rounded bg-forest-50 border border-forest-100 px-2.5 py-1 text-[11px] font-bold text-forest-900 dark:bg-forest-900/40 dark:border-forest-700/50 dark:text-forest-100">
-                        {asgn.qualification_name}
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-mono text-muted-foreground dark:text-forest-100/50">#{idx + 1}</span>
-                  </div>
-
-                  {/* Detail grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                    <div className="flex items-start gap-2">
-                      <Building2 className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
-                      <div>
-                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Nama Perusahaan</div>
-                        <div className="text-xs font-bold text-charcoal dark:text-forest-100">{asgn.company_name || "-"}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <Hash className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
-                      <div>
-                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Nomor Register GANISPH</div>
-                        <div className="text-xs font-black font-mono text-forest-900 dark:text-forest-300">{asgn.registration_number || "-"}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <CalendarCheck className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
-                      <div>
-                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Masa Aktif Register s/d</div>
-                        <div className={`text-xs font-bold ${
-                          isExpiredReg ? 'text-red-600 dark:text-red-400' : 'text-charcoal dark:text-forest-100'
-                        }`}>
+                  return (
+                    <tr key={asgn.master_id || idx} className="transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40">
+                      <td className="px-4 py-4 font-mono font-bold text-muted-foreground text-[11px]">{idx + 1}</td>
+                      <td className="px-4 py-4 font-extrabold text-charcoal dark:text-forest-100">
+                        {asgn.company_name || "-"}
+                      </td>
+                      <td className="px-3 py-4">
+                        <span className="inline-block rounded-md bg-amber-50 border border-amber-300 px-2 py-0.5 text-[10px] font-black text-amber-900 shadow-xs dark:bg-amber-950/40 dark:border-amber-700/50 dark:text-amber-300">
+                          {asgn.assignment_type || "B1"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 font-bold text-charcoal dark:text-forest-100">
+                        {asgn.ganisph_name || name}
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="inline-block rounded bg-emerald-50 px-2 py-1 text-[10px] font-extrabold text-emerald-900 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700/50">
+                          {asgn.qualification_name}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 font-mono font-black text-forest-900 dark:text-forest-300 text-xs">
+                        {asgn.registration_number || "-"}
+                      </td>
+                      <td className="px-3 py-4 font-mono text-[11px] font-bold text-muted-foreground dark:text-forest-100/80">
+                        <span className={isExpiredReg ? "text-red-600 font-black" : ""}>
                           {asgn.register_active_end || "-"}
-                          {isExpiredReg && <span className="ml-1.5 text-[9px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded">EXPIRED</span>}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <CalendarClock className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
-                      <div>
-                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Masa Aktif Penugasan s/d</div>
-                        <div className={`text-xs font-bold ${
-                          isExpiredAssign ? 'text-red-600 dark:text-red-400' : 'text-charcoal dark:text-forest-100'
-                        }`}>
+                        </span>
+                      </td>
+                      <td className="px-3 py-4 font-mono text-[11px] font-bold text-muted-foreground dark:text-forest-100/80">
+                        <span className={isExpiredAssign ? "text-red-600 font-black" : ""}>
                           {asgn.assignment_active_end || "-"}
-                          {isExpiredAssign && <span className="ml-1.5 text-[9px] font-black text-red-500 bg-red-50 px-1.5 py-0.5 rounded">EXPIRED</span>}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2 sm:col-span-2">
-                      <MapPin className="h-4 w-4 text-forest-700 dark:text-forest-400 mt-0.5 shrink-0" />
-                      <div>
-                        <div className="text-[9px] font-bold uppercase text-muted-foreground dark:text-forest-100/60">Kabupaten/Kota</div>
-                        <div className="text-xs font-bold text-charcoal dark:text-forest-100">{asgn.regency_city || "-"}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-[11px] font-bold uppercase text-muted-foreground dark:text-forest-100/80">
+                        {asgn.regency_city || "-"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
 
           <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground dark:text-forest-100/60">
-            <RefreshCw className="h-3 w-3" />
-            Data disinkronisasi otomatis dari Master GANISPH. Hubungi admin untuk perubahan data.
+            <RefreshCw className="h-3 w-3 text-forest-700" />
+            Data penugasan disinkronisasi secara otomatis dari Master GANISPH berdasarkan NIK & Nomor Register Anda.
           </div>
         </div>
       )}

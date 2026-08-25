@@ -18,7 +18,7 @@ export const loginFn = createServerFn({ method: "POST" })
     }
 
     if (user.is_active !== 1) {
-      return { success: false, error: "Akun Anda telah dinonaktifkan." };
+      return { success: false, error: "Akun Anda sedang dalam proses Verifikasi & Validasi oleh Admin." };
     }
 
     // Auto-sync name from master_ganisph if user name is empty or generic
@@ -81,27 +81,49 @@ export const registerFn = createServerFn({ method: "POST" })
     const userCount = Number(countRes?.count ?? countRes?.["COUNT(*)"] ?? 0);
     const isFirstUser = userCount === 0;
     const role = isFirstUser ? "SUPER_ADMIN" : "PESERTA";
+    const isActive = isFirstUser ? 1 : 0;
+
+    // Check if email matches master_ganisph data for pre-verification auto-fill
+    const masterRow = await db.prepare(`
+      SELECT ktp_number, qualification_code FROM master_ganisph WHERE LOWER(email) = LOWER(?) LIMIT 1
+    `).get(email);
+
+    const defaultParticipantNumber = participant_number || masterRow?.ktp_number || (isFirstUser ? "SA-001" : `REG-${Date.now().toString().slice(-4)}`);
 
     const passHash = hashPassword(password);
     const res = await db.prepare(`
       INSERT INTO users (name, email, password_hash, role, participant_number, is_active)
-      VALUES (?, ?, ?, ?, ?, 1)
+      VALUES (?, ?, ?, ?, ?, ?)
     `).run(
       name,
       email,
       passHash,
       role,
-      participant_number || (isFirstUser ? "SA-001" : `REG-${Date.now().toString().slice(-4)}`)
+      defaultParticipantNumber,
+      isActive
     );
 
     const userId = Number(res.lastInsertRowid);
-    const token = createSessionToken(userId, role, email);
 
-    await logAudit(userId, isFirstUser ? "REGISTER_FIRST_ADMIN" : "REGISTER_PESERTA", "users", userId, { role, isFirstUser });
+    // Auto-associate qualification from master_ganisph if found
+    if (masterRow?.qualification_code) {
+      const qCodes = masterRow.qualification_code.split(",").map((c: string) => c.trim());
+      for (const qc of qCodes) {
+        const qObj = await db.prepare("SELECT id FROM qualifications WHERE code = ?").get(qc);
+        if (qObj?.id) {
+          await db.prepare("INSERT INTO user_qualifications (user_id, qualification_id) VALUES (?, ?) ON CONFLICT DO NOTHING").run(userId, qObj.id);
+        }
+      }
+    }
+
+    const token = isActive ? createSessionToken(userId, role, email) : null;
+
+    await logAudit(userId, isFirstUser ? "REGISTER_FIRST_ADMIN" : "REGISTER_PESERTA", "users", userId, { role, isFirstUser, is_active: isActive });
 
     return {
       success: true,
       isFirstUser,
+      isPendingVerification: !isFirstUser,
       role,
       token,
       user: {
@@ -109,7 +131,8 @@ export const registerFn = createServerFn({ method: "POST" })
         name,
         email,
         role,
-        participant_number: participant_number || (isFirstUser ? "SA-001" : null),
+        is_active: isActive,
+        participant_number: defaultParticipantNumber,
       },
     };
   });

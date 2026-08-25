@@ -126,6 +126,35 @@ export const toggleUserStatusFn = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const verifyUserFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+    await db.prepare("UPDATE users SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.id);
+    await logAudit(session.userId, "VERIFY_USER", "users", data.id, { is_active: 1 });
+    return { success: true };
+  });
+
+export const deleteUserFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    // Clean up dependent foreign keys
+    await db.prepare("DELETE FROM user_qualifications WHERE user_id = ?").run(data.id);
+    await db.prepare("DELETE FROM user_ganisph_assignments WHERE user_id = ?").run(data.id);
+    await db.prepare("DELETE FROM exam_enrollments WHERE user_id = ?").run(data.id);
+    await db.prepare("DELETE FROM exam_attempts WHERE user_id = ?").run(data.id);
+
+    // Delete user record
+    await db.prepare("DELETE FROM users WHERE id = ?").run(data.id);
+
+    await logAudit(session.userId, "DELETE_USER", "users", data.id, { id: data.id });
+    return { success: true };
+  });
+
 // ------------------------------------------------------------------
 // QUALIFICATIONS CRUD
 // ------------------------------------------------------------------

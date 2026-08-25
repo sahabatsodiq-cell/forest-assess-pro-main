@@ -74,17 +74,19 @@ function LoginPage() {
 
     try {
       const res = await registerFn({ data: { name, email: regEmail, password: regPassword } });
-      if (res.success && res.token && res.user) {
-        localStorage.setItem("askganis_token", res.token);
-        localStorage.setItem("askganis_user", JSON.stringify(res.user));
-        document.cookie = `session_token=${res.token}; path=/; max-age=86400; SameSite=Strict`;
-
-        if (res.isFirstUser) {
+      if (res.success && res.user) {
+        if (res.isFirstUser && res.token) {
+          localStorage.setItem("askganis_token", res.token);
+          localStorage.setItem("askganis_user", JSON.stringify(res.user));
+          document.cookie = `session_token=${res.token}; path=/; max-age=86400; SameSite=Strict`;
           toast.success("Pendaftaran berhasil! Akun Anda didaftarkan sebagai ADMIN UTAMA.", { duration: 5000 });
           navigate({ to: "/admin" });
         } else {
-          toast.success("Pendaftaran akun berhasil! Silakan lengkapi profil Anda.");
-          navigate({ to: "/participant/profile" });
+          setEmail(regEmail);
+          setPassword("");
+          setRegPassword("");
+          setMode("login");
+          toast.success("Pendaftaran berhasil! Akun Anda sedang dalam proses Verifikasi & Validasi oleh Admin. Silakan tunggu hingga akun disetujui.", { duration: 7000 });
         }
       } else {
         setError(res.error || "Pendaftaran gagal.");

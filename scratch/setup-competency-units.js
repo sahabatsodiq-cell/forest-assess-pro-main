@@ -236,7 +236,7 @@ const pdfData = [
       { code: "A.02GNS01.003.1", title: "Melakukan komunikasi efektif.", subjectCode: "Kom-Tif", questionCount: 5 },
       { code: "KHT.WM03.002.01", title: "Melakukan pengolahan dan analisis data debit aliran", subjectCode: "Debit-Air", questionCount: 5 },
       { code: "KHT.WM03.003.01", title: "Melakukan pengolahan dan analisis data sedimentasi", subjectCode: "Sedimen", questionCount: 5 },
-      { code: "KHT.WM03.004K.01", title: "Melakukan pengolahan dan analisis data curah hujan", subjectCode: "Curah-Hujan", questionCount: 5 },
+      { code: "KHT.WM03.004.01", title: "Melakukan pengolahan dan analisis data curah hujan", subjectCode: "Curah-Hujan", questionCount: 5 },
       { code: "KHT.PH02.036.01", title: "Merencanakan pemanfaatan produk jasa lingkungan", subjectCode: "Ren-Jasling", questionCount: 5 },
       { code: "KHT.PH02.037.01", title: "Mengadministrasikan produk jasa lingkungan", subjectCode: "Adm-Jasling", questionCount: 5 },
     ]

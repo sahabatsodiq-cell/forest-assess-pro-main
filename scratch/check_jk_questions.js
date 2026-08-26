@@ -5,10 +5,12 @@ const connectionString = "postgresql://postgres.lfuzlvmytjbxuakpanfo:bobbY_%23%2
 async function main() {
   const sql = postgres(connectionString);
 
-  console.log("=== QUESTIONS FOR subject_id = 20 (Jenis-Kayu) ===");
-  const qList = await sql`SELECT * FROM questions WHERE subject_id = 20 OR competency_unit_id = 430`;
-  console.log("Questions found:", qList.length);
-  console.log(qList);
+  const questions = await sql`
+    SELECT id, question_text, correct_answer, option_a, option_b, option_c, option_d 
+    FROM questions 
+    WHERE subject_id = 38 OR competency_unit_id = 448
+  `;
+  console.log("Current Questions:", questions);
 
   await sql.end();
 }

@@ -5,11 +5,12 @@ const connectionString = "postgresql://postgres.lfuzlvmytjbxuakpanfo:bobbY_%23%2
 async function main() {
   const sql = postgres(connectionString);
 
-  const qual = await sql`SELECT qualification_id FROM subjects WHERE id = 38`;
-  console.log("Subject qualification_id:", qual);
-
-  const quals = await sql`SELECT * FROM qualifications LIMIT 5`;
-  console.log("Qualifications:", quals);
+  const questions = await sql`
+    SELECT id, question_text, correct_answer, option_a, option_b, option_c, option_d 
+    FROM questions 
+    WHERE subject_id = 39 OR competency_unit_id = 449
+  `;
+  console.log("Current Questions for Berat-Kulit:", questions);
 
   await sql.end();
 }

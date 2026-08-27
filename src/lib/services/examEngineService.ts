@@ -2,9 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
 import { verifySessionToken, logAudit } from "../auth";
 
-function verifyParticipantSession(token: string) {
-  if (!token) throw new Error("Unauthorized");
-  const session = verifySessionToken(token);
+function verifyParticipantSession(token?: string) {
+  let activeToken = token;
+  if (!activeToken && typeof window === "undefined") {
+    try {
+      const { getCookie } = require("@tanstack/react-start/server");
+      activeToken = getCookie("session_token");
+    } catch {
+      // Ignore if not in server context
+    }
+  }
+  if (!activeToken) throw new Error("Unauthorized");
+  const session = verifySessionToken(activeToken);
   if (!session) throw new Error("Unauthorized");
   return session;
 }

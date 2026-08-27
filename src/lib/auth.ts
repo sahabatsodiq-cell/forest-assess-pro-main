@@ -78,13 +78,26 @@ export function verifySessionToken(token: string): { userId: number; role: strin
   }
 }
 
-// Extract cookies from a headers string or Request
-export function getSessionTokenFromRequest(request: Request): string | null {
-  const cookieHeader = request.headers.get("Cookie") || "";
-  const cookies = cookieHeader.split(";").map((c) => c.trim());
-  const sessionCookie = cookies.find((c) => c.startsWith(`${SESSION_COOKIE_NAME}=`));
-  if (!sessionCookie) return null;
-  return sessionCookie.substring(SESSION_COOKIE_NAME.length + 1);
+// Extract cookies from a headers string, Request, or server environment
+export function getSessionTokenFromRequest(request?: Request): string | null {
+  if (request) {
+    const cookieHeader = request.headers.get("Cookie") || "";
+    const cookies = cookieHeader.split(";").map((c) => c.trim());
+    const sessionCookie = cookies.find((c) => c.startsWith(`${SESSION_COOKIE_NAME}=`));
+    if (sessionCookie) {
+      return sessionCookie.substring(SESSION_COOKIE_NAME.length + 1);
+    }
+  }
+  if (typeof window === "undefined") {
+    try {
+      const { getCookie } = require("@tanstack/react-start/server");
+      const token = getCookie(SESSION_COOKIE_NAME);
+      if (token) return token;
+    } catch {
+      // Ignore if not in server context
+    }
+  }
+  return null;
 }
 
 // Get authenticated user

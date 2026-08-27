@@ -9,6 +9,7 @@ import {
   Menu,
   Award,
 } from "lucide-react";
+import { logoutFn } from "@/lib/services/auth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/lib/theme-context";
 import { LanguageToggle, useI18n } from "@/lib/i18n-context";
@@ -64,7 +65,12 @@ function ParticipantLayout() {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logoutFn();
+    } catch {
+      // Ignore errors
+    }
     localStorage.removeItem("askganis_token");
     localStorage.removeItem("askganis_user");
     document.cookie = "session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";

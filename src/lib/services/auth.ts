@@ -35,6 +35,19 @@ export const loginFn = createServerFn({ method: "POST" })
     const token = createSessionToken(user.id, user.role, user.email);
     await logAudit(user.id, "LOGIN", "users", user.id, { role: user.role });
 
+    try {
+      const { setCookie } = await import("@tanstack/react-start/server");
+      setCookie("session_token", token, {
+        path: "/",
+        httpOnly: true,
+        secure: process.env["NODE_ENV"] === "production" || process.env["VERCEL"] === "1",
+        sameSite: "lax",
+        maxAge: 86400,
+      });
+    } catch (err) {
+      console.error("Cookie set error:", err);
+    }
+
     return {
       success: true,
       token,
@@ -123,6 +136,21 @@ export const registerFn = createServerFn({ method: "POST" })
 
     const token = isActive ? createSessionToken(userId, role, email) : null;
 
+    if (token) {
+      try {
+        const { setCookie } = await import("@tanstack/react-start/server");
+        setCookie("session_token", token, {
+          path: "/",
+          httpOnly: true,
+          secure: process.env["NODE_ENV"] === "production" || process.env["VERCEL"] === "1",
+          sameSite: "lax",
+          maxAge: 86400,
+        });
+      } catch (err) {
+        console.error("Cookie set error:", err);
+      }
+    }
+
     await logAudit(userId, isFirstUser ? "REGISTER_FIRST_ADMIN" : "REGISTER_PESERTA", "users", userId, { role, isFirstUser, is_active: isActive });
 
     return {
@@ -175,7 +203,40 @@ export const requestPasswordResetFn = createServerFn({ method: "POST" })
     };
   });
 
+export const logoutFn = createServerFn({ method: "POST" })
+  .handler(async () => {
+    try {
+      const { deleteCookie } = await import("@tanstack/react-start/server");
+      deleteCookie("session_token", { path: "/" });
+    } catch (err) {
+      console.error("Logout cookie error:", err);
+    }
+    return { success: true };
+  });
+
 export const getCurrentUserFn = createServerFn({ method: "GET" })
   .handler(async () => {
-    return null;
+    try {
+      const { getCookie } = await import("@tanstack/react-start/server");
+      const token = getCookie("session_token");
+      if (!token) return null;
+
+      const { verifySessionToken } = await import("../auth");
+      const session = verifySessionToken(token);
+      if (!session) return null;
+
+      const db = await getDb();
+      const user = await db.prepare("SELECT id, name, email, role, participant_number, is_active FROM users WHERE id = ?").get(session.userId);
+      if (!user || user.is_active !== 1) return null;
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        participant_number: user.participant_number,
+      };
+    } catch {
+      return null;
+    }
   });

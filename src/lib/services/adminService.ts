@@ -2,9 +2,18 @@ import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
 import { hashPassword, verifySessionToken, logAudit, hasPermission } from "../auth";
 
-function verifyAdminSession(token: string) {
-  if (!token) throw new Error("Unauthorized");
-  const session = verifySessionToken(token);
+function verifyAdminSession(token?: string) {
+  let activeToken = token;
+  if (!activeToken && typeof window === "undefined") {
+    try {
+      const { getCookie } = require("@tanstack/react-start/server");
+      activeToken = getCookie("session_token");
+    } catch {
+      // Ignore if not in server context
+    }
+  }
+  if (!activeToken) throw new Error("Unauthorized");
+  const session = verifySessionToken(activeToken);
   if (!session || !hasPermission(session.role, "user.view")) {
     throw new Error("Forbidden: Admin access required");
   }

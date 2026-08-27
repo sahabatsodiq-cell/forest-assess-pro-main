@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
 import { hashPassword, verifySessionToken, logAudit, hasPermission } from "../auth";
@@ -20,11 +21,58 @@ function verifyAdminSession(token?: string) {
   return session;
 }
 
+const tokenSchema = z.object({
+  token: z.string().optional(),
+});
+
+const createUserSchema = z.object({
+  token: z.string().optional(),
+  name: z.string().trim().min(1, "Nama wajib diisi"),
+  email: z.string().trim().email("Format email tidak valid"),
+  password: z.string().min(6, "Password minimal 6 karakter"),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "PESERTA"]),
+  participant_number: z.string().optional(),
+  is_active: z.boolean().optional(),
+});
+
+const updateUserSchema = z.object({
+  token: z.string().optional(),
+  id: z.number().int().positive(),
+  name: z.string().trim().min(1).optional(),
+  email: z.string().trim().email().optional(),
+  role: z.enum(["SUPER_ADMIN", "ADMIN", "PESERTA"]).optional(),
+  participant_number: z.string().optional(),
+  is_active: z.boolean().optional(),
+});
+
+const toggleUserStatusSchema = z.object({
+  token: z.string().optional(),
+  id: z.number().int().positive(),
+  is_active: z.boolean(),
+});
+
+const deleteUserSchema = z.object({
+  token: z.string().optional(),
+  id: z.number().int().positive(),
+});
+
+const resetUserPasswordSchema = z.object({
+  token: z.string().optional(),
+  id: z.number().int().positive(),
+  new_password: z.string().min(6, "Password minimal 6 karakter"),
+});
+
+const examRequestActionSchema = z.object({
+  token: z.string().optional(),
+  request_id: z.number().int().positive(),
+  notes: z.string().optional(),
+});
+
 // ------------------------------------------------------------------
 // DASHBOARD STATS
 // ------------------------------------------------------------------
 export const getAdminStatsFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string }) => data)
+  .validator((data?: unknown) => tokenSchema.parse(data || {}))
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();

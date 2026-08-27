@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
 import { verifySessionToken, logAudit } from "../auth";
@@ -17,6 +18,33 @@ function verifyParticipantSession(token?: string) {
   if (!session) throw new Error("Unauthorized");
   return session;
 }
+
+const tokenSchema = z.object({
+  token: z.string().optional(),
+});
+
+const startExamAttemptSchema = z.object({
+  token: z.string().optional(),
+  exam_id: z.number().int().positive(),
+});
+
+const saveAnswerSchema = z.object({
+  token: z.string().optional(),
+  attempt_id: z.number().int().positive(),
+  question_id: z.number().int().positive(),
+  selected_option: z.string().trim().min(1),
+});
+
+const attemptIdSchema = z.object({
+  token: z.string().optional(),
+  attempt_id: z.number().int().positive(),
+});
+
+const submitExamRequestSchema = z.object({
+  token: z.string().optional(),
+  qualification_id: z.number().int().positive(),
+  notes: z.string().optional(),
+});
 
 // Option Shuffling Helpers
 function generateOptionMapping(): string {
@@ -176,7 +204,7 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
 // SELF-ENROLLMENT: Get available exams matching user's qualification
 // ------------------------------------------------------------------
 export const getAvailableExamsFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string }) => data)
+  .validator((data?: unknown) => tokenSchema.parse(data || {}))
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
@@ -209,7 +237,7 @@ export const getAvailableExamsFn = createServerFn({ method: "POST" })
 // SELF-ENROLLMENT: Participant registers themselves to an exam
 // ------------------------------------------------------------------
 export const selfEnrollFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; exam_id: number }) => data)
+  .validator((data) => startExamAttemptSchema.parse(data))
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
@@ -256,7 +284,7 @@ export const selfEnrollFn = createServerFn({ method: "POST" })
 // START ATTEMPT (SERVER-CONTROLLED)
 // ------------------------------------------------------------------
 export const startExamAttemptFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; exam_id: number }) => data)
+  .validator((data) => startExamAttemptSchema.parse(data))
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
@@ -481,7 +509,7 @@ export const saveAnswerFn = createServerFn({ method: "POST" })
 // SUBMIT EXAM ATTEMPT & SERVER-SIDE SCORING
 // ------------------------------------------------------------------
 export const submitExamAttemptFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; attempt_id: number }) => data)
+  .validator((data) => attemptIdSchema.parse(data))
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();

@@ -1,9 +1,26 @@
+import { z } from "zod";
 import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
 import { hashPassword, verifyPassword, createSessionToken, getAuthenticatedUser, logAudit, hasPermission } from "../auth";
 
+const loginSchema = z.object({
+  email: z.string().trim().email("Format email tidak valid"),
+  password: z.string().min(1, "Password wajib diisi"),
+});
+
+const registerSchema = z.object({
+  name: z.string().trim().min(1, "Nama wajib diisi"),
+  email: z.string().trim().email("Format email tidak valid"),
+  password: z.string().min(6, "Password minimal 6 karakter"),
+  participant_number: z.string().optional(),
+});
+
+const requestPasswordResetSchema = z.object({
+  email: z.string().trim().email("Format email tidak valid"),
+});
+
 export const loginFn = createServerFn({ method: "POST" })
-  .validator((data: { email?: string; password?: string }) => data)
+  .validator((data) => loginSchema.parse(data))
   .handler(async ({ data }) => {
     const { email, password } = data;
     if (!email || !password) {
@@ -70,7 +87,7 @@ export const checkFirstUserFn = createServerFn({ method: "GET" })
   });
 
 export const registerFn = createServerFn({ method: "POST" })
-  .validator((data: { name?: string; email?: string; password?: string; participant_number?: string }) => data)
+  .validator((data) => registerSchema.parse(data))
   .handler(async ({ data }) => {
     const { name, email, password, participant_number } = data;
     if (!name || !email || !password) {
@@ -171,7 +188,7 @@ export const registerFn = createServerFn({ method: "POST" })
   });
 
 export const requestPasswordResetFn = createServerFn({ method: "POST" })
-  .validator((data: { email: string }) => data)
+  .validator((data) => requestPasswordResetSchema.parse(data))
   .handler(async ({ data }) => {
     const { email } = data;
     if (!email) return { success: false, error: "Alamat email wajib diisi." };

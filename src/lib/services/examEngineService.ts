@@ -214,7 +214,7 @@ export const selfEnrollFn = createServerFn({ method: "POST" })
     // 2. Verify user's qualification matches exam qualification
     const userQual = await db.prepare(
       "SELECT qualification_id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?"
-    ).get(session.userId, Number(data.qualification_id));
+    ).get(session.userId, Number(exam.qualification_id));
 
     if (!userQual) {
       return { success: false, error: "Kualifikasi Anda tidak sesuai dengan paket ujian ini." };
@@ -768,7 +768,7 @@ export const removeParticipantQualificationFn = createServerFn({ method: "POST" 
  * Jika belum ada paket → simpan sebagai PENDING request.
  */
 export const submitExamRequestFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; qualification_id: number; notes?: string }) => data)
+  .validator((data: { token: string; qualification_id: number; notes?: string | undefined }) => data)
   .handler(async ({ data }) => {
     const session = verifyParticipantSession(data.token);
     const db = await getDb();

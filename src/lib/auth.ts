@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { getDb } from "./db";
 
 const SESSION_COOKIE_NAME = "session_token";
-const JWT_SECRET = process.env["JWT_SECRET"] || "askganisph-secret-key-for-local-dev-2026";
+const JWT_SECRET = process.env["JWT_SECRET"] || "askganisph-fallback-dev-secret-key";
 
 const PBKDF2_ITERATIONS = 600000;
 

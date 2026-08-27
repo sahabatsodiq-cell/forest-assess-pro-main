@@ -1135,7 +1135,7 @@ export const approveExamRequestFn = createServerFn({ method: "POST" })
 
 
 export const rejectExamRequestFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; request_id: number; notes?: string }) => data)
+  .validator((data: { token: string; request_id: number; notes?: string | undefined }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();

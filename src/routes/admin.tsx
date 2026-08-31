@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/lib/theme-context";
 import { LanguageToggle, useI18n } from "@/lib/i18n-context";
+import { CoffeeDonationModal } from "@/components/CoffeeDonationModal";
 import { BadgeStatus } from "@/components/ui/badge-status";
 import { logoutFn } from "@/lib/services/auth";
 
@@ -281,6 +282,7 @@ function AdminLayout() {
 
           {/* Right Topbar Utilities & Executive Profile Menu */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <CoffeeDonationModal />
             <LanguageToggle />
             <ThemeToggle />
             

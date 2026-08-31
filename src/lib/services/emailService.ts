@@ -57,3 +57,51 @@ export async function sendPasswordResetLinkEmail({
 
   return { success: true, emailSent: true };
 }
+
+export interface CoffeeReceiptParams {
+  donor_name: string;
+  donor_email: string;
+  amount: number;
+  transaction_id: string;
+  paid_at: string;
+  message?: string;
+}
+
+/**
+ * Send official E-Receipt email after successful Coffee Donation via Mayar.id
+ */
+export async function sendCoffeeDonationReceiptEmail({
+  donor_name,
+  donor_email,
+  amount,
+  transaction_id,
+  paid_at,
+  message,
+}: CoffeeReceiptParams) {
+  const formattedAmount = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount);
+
+  console.log("=================================================");
+  console.log("☕ [E-RECEIPT EMAIL DISPATCHED]");
+  console.log(`TO: ${donor_name} <${donor_email}>`);
+  console.log(`SUBJECT: [ASKGANISPH] Bukti Pembayaran - Traktir Kopi Kreator (${formattedAmount})`);
+  console.log(`BODY:`);
+  console.log(`Yth. ${donor_name},`);
+  console.log(`Terima kasih banyak atas dukungan Anda untuk platform ASKGANISPH!`);
+  console.log(`Dukungan Anda sangat berarti untuk menjaga server ASKGANISPH tetap menyala dan gratis selamanya.`);
+  console.log(``);
+  console.log(`DETAIL TRANSAKSI PEMBAYARAN:`);
+  console.log(`-----------------------------------------------`);
+  console.log(`ID Transaksi / Invoice : ${transaction_id}`);
+  console.log(`Nominal Traktiran Kopi : ${formattedAmount}`);
+  console.log(`Tanggal & Waktu        : ${new Date(paid_at).toLocaleString("id-ID")}`);
+  console.log(`Status Pembayaran      : LUNAS / SUCCESS (Powered by Mayar.id)`);
+  if (message) {
+    console.log(`Pesan Penyemangat      : "${message}"`);
+  }
+  console.log(`-----------------------------------------------`);
+  console.log(`Salam hangat,`);
+  console.log(`Tim Kreator ASKGANISPH`);
+  console.log("=================================================");
+
+  return { success: true, emailSent: true };
+}

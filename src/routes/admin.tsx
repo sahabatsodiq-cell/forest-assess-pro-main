@@ -3,9 +3,13 @@ import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, Users, Award, ListChecks, BookOpen, Database, 
   Package, UserCheck, BarChart3, History, LogOut, Menu,
-  ChevronLeft, ChevronRight, Search, ShieldCheck, TreePine
+  ChevronLeft, ChevronRight, Search, ShieldCheck, User, Settings, UserCircle
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/lib/theme-context";
 import { LanguageToggle, useI18n } from "@/lib/i18n-context";
 import { BadgeStatus } from "@/components/ui/badge-status";
@@ -15,39 +19,40 @@ export const Route = createFileRoute("/admin")({
   component: AdminLayout,
 });
 
+interface NavItem {
+  label: string;
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
 interface NavGroup {
   title: string;
-  items: {
-    label: string;
-    to: string;
-    icon: React.ComponentType<{ className?: string }>;
-    badge?: string;
-  }[];
+  items: NavItem[];
 }
 
 const adminNavGroups: NavGroup[] = [
   {
-    title: "UTAMA",
+    title: "WORKSPACE",
     items: [
       { label: "Dashboard", to: "/admin", icon: LayoutDashboard },
-    ],
-  },
-  {
-    title: "DATA MASTER",
-    items: [
       { label: "Kualifikasi", to: "/admin/qualifications", icon: Award },
       { label: "Unit Kompetensi", to: "/admin/competency-units", icon: ListChecks },
-      { label: "Master GANISPH", to: "/admin/master-ganisph", icon: UserCheck },
-      { label: "Materi & Modul", to: "/admin/subjects", icon: BookOpen },
     ],
   },
   {
-    title: "ASESMEN & UJIAN",
+    title: "MASTER DATA",
     items: [
+      { label: "Master GANISPH", to: "/admin/master-ganisph", icon: UserCheck },
+      { label: "Materi & Modul", to: "/admin/subjects", icon: BookOpen },
       { label: "Bank Soal", to: "/admin/questions", icon: Database },
+    ],
+  },
+  {
+    title: "ASESMEN",
+    items: [
       { label: "Paket Ujian", to: "/admin/exams", icon: Package },
       { label: "Pendaftaran", to: "/admin/enrollments", icon: UserCheck },
-      { label: "Hasil & Analitik", to: "/admin/results", icon: BarChart3 },
+      { label: "Hasil Ujian", to: "/admin/results", icon: BarChart3 },
     ],
   },
   {
@@ -103,7 +108,7 @@ function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-ivory dark:bg-charcoal">
+      <div className="flex h-screen items-center justify-center bg-background text-foreground">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-forest-900 border-t-transparent dark:border-forest-500" />
           <div className="text-xs font-bold tracking-wider uppercase text-forest-900 dark:text-forest-300">
@@ -115,21 +120,21 @@ function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-ivory dark:bg-zinc-950 text-charcoal dark:text-zinc-100 transition-colors duration-200">
+    <div className="flex min-h-screen bg-background text-foreground transition-colors duration-200">
       
-      {/* Desktop Collapsible Sidebar */}
+      {/* Desktop Collapsible Executive Sidebar */}
       <aside
-        className={`hidden shrink-0 border-r border-border/60 bg-white dark:bg-zinc-900/90 backdrop-blur-md md:flex md:flex-col transition-all duration-300 relative ${
+        className={`hidden shrink-0 border-r border-border/70 bg-white dark:bg-zinc-900/95 backdrop-blur-md md:flex md:flex-col transition-all duration-300 relative z-20 ${
           collapsed ? "w-20" : "w-64"
         }`}
       >
-        {/* Brand Logo Header */}
-        <div className="flex h-16 items-center justify-between border-b border-border/40 px-4">
+        {/* Official Brand Logo Header */}
+        <div className="flex h-16 items-center justify-between border-b border-border/60 px-4">
           <Link to="/admin" className="flex items-center gap-2.5 overflow-hidden group">
             <img
               src="/assets/logo-askganisph.png"
               alt="Logo AskGanisPH"
-              className="h-9 w-auto object-contain shrink-0 transition-transform group-hover:scale-105"
+              className="h-9 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105"
             />
             {!collapsed && (
               <div className="flex flex-col truncate">
@@ -143,7 +148,7 @@ function AdminLayout() {
             )}
           </Link>
 
-          {/* Collapse Toggle Button */}
+          {/* Sidebar Collapse Toggle Button */}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg border border-border/60 bg-slate-50 text-muted-foreground hover:bg-forest-50 hover:text-forest-900 dark:bg-zinc-800 dark:border-zinc-700 dark:hover:bg-zinc-700 transition-colors"
@@ -158,7 +163,7 @@ function AdminLayout() {
           {adminNavGroups.map((group, groupIdx) => (
             <div key={groupIdx} className="space-y-1.5">
               {!collapsed && (
-                <div className="px-3 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase">
+                <div className="px-3 text-[10px] font-extrabold tracking-wider text-muted-foreground/80 uppercase">
                   {group.title}
                 </div>
               )}
@@ -166,16 +171,21 @@ function AdminLayout() {
                 <Link
                   key={item.to}
                   to={item.to}
-                  activeProps={{ className: "bg-forest-900 text-white font-semibold shadow-xs dark:bg-forest-700" }}
-                  inactiveProps={{
-                    className: "text-charcoal/70 hover:bg-forest-50 hover:text-forest-900 dark:text-zinc-400 dark:hover:bg-zinc-800/80 dark:hover:text-forest-200 font-medium",
+                  activeOptions={{ exact: item.to === "/admin" }}
+                  activeProps={{
+                    className:
+                      "bg-forest-100/90 text-forest-900 font-extrabold dark:bg-forest-950/80 dark:text-emerald-300 shadow-2xs relative border-l-3 border-forest-900 dark:border-emerald-500",
                   }}
-                  className={`flex items-center gap-3 rounded-lg py-2.5 transition-all text-xs group relative ${
+                  inactiveProps={{
+                    className:
+                      "text-charcoal/75 hover:bg-forest-50/70 hover:text-forest-900 dark:text-zinc-400 dark:hover:bg-zinc-800/80 dark:hover:text-emerald-200 font-medium",
+                  }}
+                  className={`flex items-center gap-3 rounded-lg py-2.5 transition-all duration-200 text-xs group relative active:scale-[0.99] active:translate-y-0.5 ${
                     collapsed ? "justify-center px-2" : "px-3.5"
                   }`}
                   title={collapsed ? item.label : undefined}
                 >
-                  <item.icon className="h-4 w-4 shrink-0 transition-transform group-hover:scale-110" />
+                  <item.icon className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
                   {!collapsed && <span className="truncate">{item.label}</span>}
                 </Link>
               ))}
@@ -183,16 +193,16 @@ function AdminLayout() {
           ))}
         </nav>
 
-        {/* Sidebar Footer User Card */}
-        <div className="border-t border-border/40 p-3">
-          <div className={`flex items-center gap-3 rounded-xl p-2 bg-slate-50 dark:bg-zinc-800/50 ${collapsed ? "justify-center" : ""}`}>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-forest-900 text-white font-bold text-xs dark:bg-forest-700">
+        {/* Sidebar Footer User Info */}
+        <div className="border-t border-border/60 p-3">
+          <div className={`flex items-center gap-3 rounded-xl p-2 bg-slate-50/80 dark:bg-zinc-800/60 ${collapsed ? "justify-center" : ""}`}>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-forest-900 text-white font-bold text-xs dark:bg-forest-700 shadow-2xs">
               {user?.name?.[0]?.toUpperCase() || "A"}
             </div>
             {!collapsed && (
               <div className="flex flex-col truncate">
                 <span className="text-xs font-bold truncate text-charcoal dark:text-zinc-200">{user?.name}</span>
-                <BadgeStatus status={user?.role || "ADMIN"} size="sm" showDot={false} className="w-max mt-0.5" />
+                <BadgeStatus status={user?.role || "ADMIN"} size="sm" showDot={false} className="w-max mt-0.5 text-[9px] py-0 px-1.5" />
               </div>
             )}
           </div>
@@ -203,14 +213,14 @@ function AdminLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         
         {/* Top Header */}
-        <header className="flex h-16 items-center justify-between border-b border-border/50 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-4 sm:px-6 sticky top-0 z-30">
+        <header className="flex h-16 items-center justify-between border-b border-border/60 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-4 sm:px-6 sticky top-0 z-30">
           
           <div className="flex items-center gap-3">
             {/* Mobile Sheet Trigger */}
             <Sheet>
               <SheetTrigger asChild>
                 <button
-                  className="rounded-lg border border-border/60 p-2 text-charcoal md:hidden hover:bg-forest-50 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  className="rounded-lg border border-border/60 p-2 text-charcoal md:hidden hover:bg-forest-50 dark:text-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                   aria-label="Buka navigasi admin"
                 >
                   <Menu className="h-5 w-5" />
@@ -241,7 +251,11 @@ function AdminLayout() {
                         <Link
                           key={item.to}
                           to={item.to}
-                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-charcoal hover:bg-forest-50 hover:text-forest-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                          activeOptions={{ exact: item.to === "/admin" }}
+                          activeProps={{
+                            className: "bg-forest-100 text-forest-900 font-bold dark:bg-forest-950 dark:text-emerald-300",
+                          }}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium text-charcoal hover:bg-forest-50 hover:text-forest-900 dark:text-zinc-300 dark:hover:bg-zinc-800 transition-colors"
                         >
                           <item.icon className="h-4 w-4" />
                           <span>{item.label}</span>
@@ -253,7 +267,7 @@ function AdminLayout() {
               </SheetContent>
             </Sheet>
 
-            {/* Quick Search Launcher Button */}
+            {/* Quick Search Launcher Trigger */}
             <div className="relative hidden lg:block w-72">
               <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-slate-50 dark:bg-zinc-800/60 dark:border-zinc-700 px-3 py-1.5 text-xs text-muted-foreground hover:border-forest-700/50 cursor-pointer transition-colors">
                 <Search className="h-3.5 w-3.5" />
@@ -265,28 +279,56 @@ function AdminLayout() {
             </div>
           </div>
 
-          {/* Right Topbar Utilities */}
+          {/* Right Topbar Utilities & Executive Profile Menu */}
           <div className="flex items-center gap-2 sm:gap-3">
             <LanguageToggle />
             <ThemeToggle />
             
             <div className="h-4 w-[1px] bg-border/60 dark:bg-zinc-700 hidden sm:block" />
 
-            <div className="hidden sm:flex flex-col text-right text-xs">
-              <span className="font-bold text-charcoal dark:text-zinc-100 truncate max-w-[140px]">{user?.name}</span>
-              <span className="text-[10px] text-forest-700 font-semibold dark:text-forest-300 truncate max-w-[140px]">
-                {user?.email || user?.role}
-              </span>
-            </div>
+            {/* Executive Profile Dropdown Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 rounded-xl p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors focus:outline-none cursor-pointer">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-forest-900 text-white font-bold text-xs dark:bg-forest-700 shadow-2xs">
+                    {user?.name?.[0]?.toUpperCase() || "A"}
+                  </div>
+                  <div className="hidden sm:flex flex-col text-left text-xs leading-tight">
+                    <span className="font-bold text-charcoal dark:text-zinc-100 truncate max-w-[120px]">{user?.name}</span>
+                    <span className="text-[10px] text-forest-700 font-semibold dark:text-forest-300 truncate">
+                      {user?.role === "SUPER_ADMIN" ? "Super Admin" : "Admin"}
+                    </span>
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-zinc-900 border-border dark:border-zinc-800 p-1.5">
+                <DropdownMenuLabel className="font-normal p-2">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-xs font-bold text-charcoal dark:text-zinc-100">{user?.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{user?.email || "admin@askganisph.id"}</p>
+                    <BadgeStatus status={user?.role || "ADMIN"} size="sm" showDot={false} className="w-max mt-1 text-[9px]" />
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="dark:bg-zinc-800" />
+                <DropdownMenuItem className="cursor-pointer text-xs py-2 text-charcoal dark:text-zinc-200 focus:bg-forest-50 dark:focus:bg-zinc-800">
+                  <User className="h-4 w-4 mr-2 text-forest-700 dark:text-forest-400" />
+                  <span>Profil Saya</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-xs py-2 text-charcoal dark:text-zinc-200 focus:bg-forest-50 dark:focus:bg-zinc-800">
+                  <Settings className="h-4 w-4 mr-2 text-forest-700 dark:text-forest-400" />
+                  <span>Pengaturan Akun</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="dark:bg-zinc-800" />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer text-xs py-2 text-rose-600 dark:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-950/40 font-semibold"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Keluar Akun (Logout)</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-charcoal hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-all dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 dark:hover:border-rose-800/50 shadow-xs"
-              title="Keluar dari akun admin"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{t("nav_logout")}</span>
-            </button>
           </div>
         </header>
 
@@ -299,4 +341,3 @@ function AdminLayout() {
     </div>
   );
 }
-

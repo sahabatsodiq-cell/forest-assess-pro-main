@@ -131,7 +131,11 @@ export const createUserFn = createServerFn({ method: "POST" })
     if (existing) return { success: false, error: "Email sudah terdaftar." };
 
     const isAdminRole = data.role === "ADMIN" || data.role === "SUPER_ADMIN";
-    const partNo = isAdminRole ? null : (data.participant_number || null);
+    let partNo = isAdminRole ? null : (data.participant_number || null);
+    if (!isAdminRole && !partNo) {
+      const { generateRandomRegistrationCode } = await import("./auth");
+      partNo = await generateRandomRegistrationCode(db);
+    }
 
     const passHash = hashPassword(data.password);
     const res = await db.prepare(`
@@ -210,9 +214,18 @@ export const verifyUserFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
-    await db.prepare("UPDATE users SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.id);
-    await logAudit(session.userId, "VERIFY_USER", "users", data.id, { is_active: 1 });
-    return { success: true };
+
+    const targetUser = await db.prepare("SELECT id, role, participant_number FROM users WHERE id = ?").get(data.id);
+    let partNo = targetUser?.participant_number;
+
+    if (targetUser?.role === "PESERTA" && (!partNo || !partNo.startsWith("REG-AK-"))) {
+      const { generateRandomRegistrationCode } = await import("./auth");
+      partNo = await generateRandomRegistrationCode(db);
+    }
+
+    await db.prepare("UPDATE users SET is_active = 1, participant_number = COALESCE(?, participant_number), updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(partNo, data.id);
+    await logAudit(session.userId, "VERIFY_USER", "users", data.id, { is_active: 1, participant_number: partNo });
+    return { success: true, participant_number: partNo };
   });
 
 export const deleteUserFn = createServerFn({ method: "POST" })

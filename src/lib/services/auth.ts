@@ -4,7 +4,7 @@ import { getDb } from "../db";
 import { hashPassword, verifyPassword, createSessionToken, getAuthenticatedUser, logAudit, hasPermission } from "../auth";
 
 const loginSchema = z.object({
-  email: z.string().trim().email("Format email tidak valid"),
+  email: z.string().trim().min(1, "Email atau Nomor Registrasi (Username) wajib diisi"),
   password: z.string().min(1, "Password wajib diisi"),
 });
 
@@ -19,19 +19,40 @@ const requestPasswordResetSchema = z.object({
   email: z.string().trim().email("Format email tidak valid"),
 });
 
+export async function generateRandomRegistrationCode(db: any): Promise<string> {
+  const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let attempts = 0;
+  while (attempts < 100) {
+    let code = "";
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const fullCode = `REG-AK-${code}`;
+    const existing = await db.prepare("SELECT id FROM users WHERE UPPER(participant_number) = UPPER(?)").get(fullCode);
+    if (!existing) {
+      return fullCode;
+    }
+    attempts++;
+  }
+  return `REG-AK-${Date.now().toString(36).toUpperCase().slice(-6)}`;
+}
+
 export const loginFn = createServerFn({ method: "POST" })
   .validator((data) => loginSchema.parse(data))
   .handler(async ({ data }) => {
     const { email, password } = data;
     if (!email || !password) {
-      return { success: false, error: "Email dan password wajib diisi." };
+      return { success: false, error: "Email/Nomor Registrasi dan password wajib diisi." };
     }
 
     const db = await getDb();
-    const user = await db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    const loginIdentifier = email.trim();
+    const user = await db.prepare(
+      "SELECT * FROM users WHERE LOWER(email) = LOWER(?) OR UPPER(participant_number) = UPPER(?)"
+    ).get(loginIdentifier, loginIdentifier);
 
     if (!user || !verifyPassword(password, user.password_hash)) {
-      return { success: false, error: "Email atau password salah." };
+      return { success: false, error: "Email/Nomor Registrasi atau password salah." };
     }
 
     if (user.is_active !== 1) {
@@ -42,7 +63,7 @@ export const loginFn = createServerFn({ method: "POST" })
     if (!user.name || user.name.trim() === "" || /^(Peserta|REG-)/i.test(user.name.trim())) {
       const masterRow = await db.prepare(`
         SELECT name FROM master_ganisph WHERE LOWER(email) = LOWER(?) LIMIT 1
-      `).get(email);
+      `).get(user.email);
       if (masterRow?.name) {
         await db.prepare("UPDATE users SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(masterRow.name, user.id);
         user.name = masterRow.name;
@@ -123,7 +144,8 @@ export const registerFn = createServerFn({ method: "POST" })
       // master_ganisph optional lookup fallback
     }
 
-    const defaultParticipantNumber = participant_number || masterRow?.registration_number || (isFirstUser ? "SA-001" : `REG-${Date.now().toString().slice(-4)}`);
+    const autoGenCode = isFirstUser ? "SA-001" : await generateRandomRegistrationCode(db);
+    const defaultParticipantNumber = participant_number || masterRow?.registration_number || autoGenCode;
 
     const passHash = hashPassword(password);
     const res = await db.prepare(`

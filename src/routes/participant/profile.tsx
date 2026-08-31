@@ -246,8 +246,8 @@ function ParticipantProfilePage() {
                 PESERTA ASESMEN
               </span>
               {participantNumber && (
-                <span className="font-mono font-bold text-charcoal dark:text-forest-100 bg-gray-100 px-2 py-0.5 rounded text-[11px]">
-                  NIK: {participantNumber}
+                <span className="font-mono font-bold text-charcoal dark:text-forest-100 bg-forest-50 border border-forest-200 px-2 py-0.5 rounded text-[11px] dark:bg-forest-900/60 dark:border-forest-700/50">
+                  NO. REG: {participantNumber}
                 </span>
               )}
             </div>
@@ -263,7 +263,7 @@ function ParticipantProfilePage() {
             Informasi Diri & Identitas Peserta
           </h2>
           <p className="mt-0.5 text-xs text-muted-foreground dark:text-forest-100/70">
-            Perbarui data diri, Nomor KTP / NIK, dan kata sandi akun Anda.
+            Perbarui data diri, Nomor Registrasi Pendaftaran, dan kata sandi akun Anda.
           </p>
         </div>
 
@@ -300,24 +300,23 @@ function ParticipantProfilePage() {
               </div>
             </div>
 
-            {/* Nomor KTP / NIK */}
+            {/* Nomor Registrasi Pendaftaran ASKGANISPH */}
             <div className="sm:col-span-2">
               <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">
-                Nomor KTP / NIK Peserta
+                Nomor Registrasi Pendaftaran ASKGANISPH
               </label>
               <div className="relative mt-1">
-                <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-forest-700 dark:text-forest-400" />
                 <input
                   type="text"
-                  required
-                  placeholder="6371xxxxxxxxxxxx (Nomor KTP / NIK 16 digit)"
+                  disabled
+                  placeholder="REG-AK-XXXXXX (Diterbitkan otomatis oleh sistem)"
                   value={participantNumber}
-                  onChange={(e) => setParticipantNumber(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                  className="w-full rounded-lg border border-forest-200 bg-forest-50/50 py-2 pl-9 pr-3 text-xs font-mono font-extrabold text-forest-900 cursor-not-allowed dark:border-forest-800 dark:bg-charcoal/90 dark:text-forest-300"
                 />
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground dark:text-forest-100/70">
-                Nomor KTP / NIK ini digunakan sebagai identitas resmi peserta pada dokumen sertifikasi asesmen kompetensi Anda.
+                Nomor Registrasi Pendaftaran ini berformat <strong className="font-mono text-forest-900 dark:text-forest-300">REG-AK-XXXXXX</strong>, diterbitkan otomatis setelah akun disetujui Admin, dan digunakan sebagai Username resmi untuk login.
               </p>
             </div>
           </div>
@@ -365,7 +364,7 @@ function ParticipantProfilePage() {
               className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-6 py-2.5 text-xs font-semibold text-white shadow hover:bg-forest-700 disabled:opacity-50 transition-colors dark:bg-forest-700 dark:hover:bg-forest-500"
             >
               <Save className="h-4 w-4" />
-              {saveLoading ? "Menyimpan..." : "Simpan Profil & NIK"}
+              {saveLoading ? "Menyimpan..." : "Simpan Profil"}
             </button>
           </div>
         </form>

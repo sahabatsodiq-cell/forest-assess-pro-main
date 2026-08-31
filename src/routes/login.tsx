@@ -195,16 +195,16 @@ function LoginPage() {
             <form className="space-y-4" onSubmit={handleLogin}>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-charcoal">
-                  Email
+                  Email atau Nomor Registrasi (Username)
                 </label>
                 <div className="relative mt-1">
                   <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
-                    type="email"
+                    type="text"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nama@domain.com"
+                    placeholder="nama@domain.com atau REG-AK-XXXXXX"
                     className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm focus:border-forest-700 focus:outline-none"
                   />
                 </div>

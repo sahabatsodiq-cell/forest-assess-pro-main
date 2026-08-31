@@ -8,7 +8,7 @@ import {
   bulkDeleteQualificationsFn,
 } from "@/lib/services/adminService";
 import { 
-  Plus, Search, Pencil, Power, Trash2, ShieldCheck, AlertTriangle, Loader2,
+  Plus, Pencil, Power, Trash2, AlertTriangle,
   Award, CheckCircle2, XCircle, ListFilter, RefreshCw, Layers
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -16,6 +16,12 @@ import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { PageHeader } from "@/components/ui/page-header";
 import { BadgeStatus } from "@/components/ui/badge-status";
+import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/admin/qualifications")({
   component: AdminQualificationsPage,
@@ -83,11 +89,11 @@ function AdminQualificationsPage() {
 
     try {
       const res = await createQualificationFn({
-        data: { token, code, name, description },
+        data: { token, code: code.trim().toUpperCase(), name, description },
       });
 
       if (res.success) {
-        toast.success(`Kualifikasi ${code.toUpperCase()} berhasil ditambahkan!`);
+        toast.success(`✓ Kualifikasi ${code.toUpperCase()} berhasil ditambahkan.`);
         setCreateOpen(false);
         setCode("");
         setName("");
@@ -131,7 +137,7 @@ function AdminQualificationsPage() {
       });
 
       if (res.success) {
-        toast.success(`Kualifikasi ${editingQual.code} berhasil diperbarui!`);
+        toast.success(`✓ Kualifikasi ${editingQual.code} berhasil diperbarui.`);
         setEditOpen(false);
         setEditingQual(null);
         loadData();
@@ -162,7 +168,7 @@ function AdminQualificationsPage() {
       });
 
       if (res.success) {
-        toast.success(`Status ${q.code} diubah menjadi ${nextStatus === "ACTIVE" ? "Aktif" : "Nonaktif"}.`);
+        toast.success(`✓ Status ${q.code} diubah menjadi ${nextStatus === "ACTIVE" ? "Aktif" : "Nonaktif"}.`);
         loadData();
       }
     } catch (err: any) {
@@ -187,7 +193,7 @@ function AdminQualificationsPage() {
       });
 
       if (res.success) {
-        toast.success(`Kualifikasi ${deletingQual.code} berhasil dihapus.`);
+        toast.success(`✓ Kualifikasi ${deletingQual.code} berhasil dihapus.`);
         setDeleteOpen(false);
         setDeletingQual(null);
         setSelectedIds((prev) => prev.filter((id) => id !== deletingQual.id));
@@ -214,7 +220,7 @@ function AdminQualificationsPage() {
       });
 
       if (res.success) {
-        toast.success(`Berhasil menghapus ${res.count} kualifikasi.`);
+        toast.success(`✓ Berhasil menghapus ${res.count} kualifikasi.`);
         setBulkDeleteOpen(false);
         setSelectedIds([]);
         loadData();
@@ -228,7 +234,7 @@ function AdminQualificationsPage() {
     }
   };
 
-  // Compute Metrics
+  // Compute Metrics from Real Data
   const activeCount = qualifications.filter((q) => (q.status || "ACTIVE") === "ACTIVE").length;
   const inactiveCount = qualifications.length - activeCount;
 
@@ -271,103 +277,103 @@ function AdminQualificationsPage() {
   return (
     <div className="space-y-6">
       
-      {/* Page Header */}
+      {/* Golden Reference Page Header */}
       <PageHeader
-        title="Master Data Kualifikasi GANISPH"
-        description="Kelola daftar resmi 19 skema kualifikasi Tenaga Teknis Kehutanan secara terpusat untuk sertifikasi dan uji kompetensi."
+        title="Kualifikasi GANISPH"
+        description="Kelola dan validasi skema kompetensi Tenaga Teknis Kehutanan dalam satu pusat data."
         icon={Award}
         breadcrumbs={[{ label: "Kualifikasi GANISPH" }]}
         badgeText={`${qualifications.length} Skema`}
         actions={
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={loadData}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal hover:bg-forest-50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-700 transition-colors shadow-xs"
               title="Refresh Data"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">Muat Ulang</span>
-            </button>
+            </Button>
 
             <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
-                <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500 transition-all">
+                <Button variant="default" size="sm" className="btn-executive">
                   <Plus className="h-4 w-4" />
                   <span>Tambah Kualifikasi</span>
-                </button>
+                </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+              <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800 rounded-2xl">
                 <DialogHeader>
                   <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-zinc-100 flex items-center gap-2">
-                    <Award className="h-5 w-5 text-forest-700 dark:text-forest-400" />
+                    <Award className="h-5 w-5 text-forest-900 dark:text-forest-400" />
                     <span>Tambah Kualifikasi Baru</span>
                   </DialogTitle>
                 </DialogHeader>
 
                 {formError && (
-                  <div className="rounded-lg bg-rose-50 p-3 text-xs font-semibold text-rose-700 border border-rose-100 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900">
+                  <div className="rounded-lg bg-rose-50 p-3 text-xs font-semibold text-rose-700 border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900">
                     {formError}
                   </div>
                 )}
 
                 <form onSubmit={handleCreate} className="mt-4 space-y-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-charcoal dark:text-zinc-200">
                       Kode Kualifikasi <span className="text-rose-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <Input
                       required
-                      placeholder="Contoh: KURPET"
+                      placeholder="Contoh: CANHUT, NEHHUT, BINHUT"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                      className="mt-1 font-mono font-bold uppercase"
                     />
-                    <p className="mt-1 text-[11px] text-muted-foreground">Gunakan kode singkatan unik uppercase.</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">Gunakan kode singkatan resmi uppercase.</p>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-charcoal dark:text-zinc-200">
                       Nama Kualifikasi <span className="text-rose-500">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <Input
                       required
                       placeholder="Nama resmi skema kualifikasi..."
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                      className="mt-1"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Deskripsi</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-charcoal dark:text-zinc-200">Deskripsi</label>
                     <textarea
                       rows={3}
                       placeholder="Penjelasan cakupan kompetensi kualifikasi ini..."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                      className="mt-1 w-full rounded-md border border-border bg-slate-50/80 px-3 py-2 text-xs text-charcoal focus:border-forest-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-500/20 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-100"
                     />
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       onClick={() => setCreateOpen(false)}
-                      className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                      className="flex-1"
                     >
                       Batal
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
-                      disabled={formLoading}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
+                      variant="default"
+                      isLoading={formLoading}
+                      className="flex-1 btn-executive"
                     >
-                      {formLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      <span>{formLoading ? "Menyimpan..." : "Simpan Kualifikasi"}</span>
-                    </button>
+                      Simpan Kualifikasi
+                    </Button>
                   </div>
                 </form>
               </DialogContent>
@@ -376,22 +382,22 @@ function AdminQualificationsPage() {
         }
       />
 
-      {/* KPI Stats Summary Cards Grid */}
+      {/* KPI Stats Real-Data Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-white p-4 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
+        <Card className="p-4 flex items-center justify-between shadow-2xs">
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Total Skema</div>
             <div className="mt-1 font-display text-2xl font-black text-forest-900 dark:text-forest-100">
               {qualifications.length}
             </div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground">Kualifikasi Resmi GANISPH</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">Kualifikasi Resmi Terdaftar</div>
           </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-forest-50 text-forest-900 dark:bg-forest-950 dark:text-forest-300">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-forest-50 text-forest-900 dark:bg-forest-950 dark:text-forest-300 shadow-2xs">
             <Layers className="h-5 w-5" />
           </div>
-        </div>
+        </Card>
 
-        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-white p-4 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
+        <Card className="p-4 flex items-center justify-between shadow-2xs">
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status Aktif</div>
             <div className="mt-1 font-display text-2xl font-black text-emerald-700 dark:text-emerald-400">
@@ -401,26 +407,26 @@ function AdminQualificationsPage() {
               {qualifications.length ? Math.round((activeCount / qualifications.length) * 100) : 0}% dari total skema
             </div>
           </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 shadow-2xs">
             <CheckCircle2 className="h-5 w-5" />
           </div>
-        </div>
+        </Card>
 
-        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-white p-4 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
+        <Card className="p-4 flex items-center justify-between shadow-2xs">
           <div>
             <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Nonaktif / Draft</div>
             <div className="mt-1 font-display text-2xl font-black text-amber-700 dark:text-amber-400">
               {inactiveCount}
             </div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground">Tidak Ditampilkan di Ujian</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">Disembunyikan dari Ujian</div>
           </div>
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 shadow-2xs">
             <XCircle className="h-5 w-5" />
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Bulk Action Sticky Toolbar */}
+      {/* Sticky Bulk Action Bar */}
       {selectedIds.length > 0 && (
         <div className="flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50/95 p-3.5 px-4 shadow-md dark:border-rose-900/60 dark:bg-rose-950/60 backdrop-blur-md">
           <div className="flex items-center gap-2.5 text-xs font-semibold text-rose-900 dark:text-rose-200">
@@ -430,43 +436,44 @@ function AdminQualificationsPage() {
             <span>kualifikasi terpilih</span>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setSelectedIds([])}
-              className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10"
             >
               Batalkan
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="destructive"
+              size="sm"
               onClick={() => setBulkDeleteOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Hapus Terpilih ({selectedIds.length})
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Search & Filter Controls Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-between rounded-xl border border-border/60 bg-white p-4 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Cari kode, nama, atau deskripsi kualifikasi..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="w-full rounded-lg border border-border bg-slate-50 py-2 pl-9 pr-3 text-xs focus:border-forest-700 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:bg-zinc-900"
-          />
-        </div>
+      <Card className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+        <SearchInput
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          onClear={() => {
+            setSearch("");
+            setPage(1);
+          }}
+          placeholder="Cari kode, nama kualifikasi..."
+        />
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-slate-50 dark:bg-zinc-800 dark:border-zinc-700 px-2.5 py-1.5 text-xs">
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-slate-50/80 dark:bg-zinc-800/80 dark:border-zinc-700 px-3 py-2 text-xs">
             <ListFilter className="h-3.5 w-3.5 text-muted-foreground" />
             <select
               value={statusFilter}
@@ -482,48 +489,62 @@ function AdminQualificationsPage() {
             </select>
           </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Qualifications Data Table Card */}
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-white shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
+      {/* Qualifications Executive Data Table Card */}
+      <Card className="overflow-hidden shadow-2xs p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-border/60 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-400">
+            <thead className="border-b border-border/60 bg-slate-50/90 text-[11px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-zinc-800/90 dark:border-zinc-700 dark:text-zinc-400">
               <tr>
                 <th scope="col" className="px-4 py-3.5 w-10 text-center">
                   <input
                     type="checkbox"
                     checked={isAllPaginatedSelected}
                     onChange={handleSelectAllPaginated}
-                    className="h-4 w-4 rounded border-gray-300 text-forest-700 focus:ring-forest-500 cursor-pointer"
+                    className="h-4 w-4 rounded border-gray-300 text-forest-900 focus:ring-forest-500 cursor-pointer"
                     title="Pilih Semua di Halaman Ini"
                   />
                 </th>
-                <th scope="col" className="px-6 py-3.5 w-32">KODE</th>
-                <th scope="col" className="px-6 py-3.5">NAMA KUALIFIKASI</th>
+                <th scope="col" className="px-6 py-3.5 w-36">KODE</th>
+                <th scope="col" className="px-6 py-3.5">KUALIFIKASI</th>
                 <th scope="col" className="px-6 py-3.5">DESKRIPSI</th>
                 <th scope="col" className="px-6 py-3.5 w-32 text-center">STATUS</th>
                 <th scope="col" className="px-6 py-3.5 text-center w-36">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40 dark:divide-zinc-800">
+            <tbody className="divide-y divide-border/50 dark:divide-zinc-800">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-xs text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin text-forest-700 dark:text-forest-400" />
-                      <span>Memuat data kualifikasi...</span>
-                    </div>
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-4 text-center"><Skeleton className="h-4 w-4 mx-auto rounded" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-6 w-20 rounded-md" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-48 rounded" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-64 rounded" /></td>
+                    <td className="px-6 py-4 text-center"><Skeleton className="h-5 w-16 mx-auto rounded-full" /></td>
+                    <td className="px-6 py-4 text-center"><Skeleton className="h-7 w-20 mx-auto rounded-md" /></td>
+                  </tr>
+                ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-xs text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Award className="h-8 w-8 text-muted-foreground/40" />
-                      <span className="font-semibold">Tidak ada kualifikasi yang cocok.</span>
-                      <span className="text-[11px]">Coba ubah kata kunci pencarian atau filter status.</span>
-                    </div>
+                  <td colSpan={6} className="py-8 text-center">
+                    <EmptyState
+                      title="Tidak ada hasil"
+                      description="Tidak ditemukan kualifikasi yang sesuai dengan pencarian Anda."
+                      action={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSearch("");
+                            setStatusFilter("ALL");
+                            setPage(1);
+                          }}
+                        >
+                          Reset Pencarian
+                        </Button>
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
@@ -534,8 +555,8 @@ function AdminQualificationsPage() {
                   return (
                     <tr
                       key={q.id}
-                      className={`transition-colors hover:bg-forest-50/30 dark:hover:bg-zinc-800/40 ${
-                        isSelected ? "bg-rose-50/30 dark:bg-rose-950/20" : ""
+                      className={`transition-colors duration-150 hover:bg-forest-50/60 dark:hover:bg-zinc-800/50 ${
+                        isSelected ? "bg-rose-50/40 dark:bg-rose-950/25" : ""
                       }`}
                     >
                       <td className="px-4 py-4 text-center">
@@ -543,24 +564,24 @@ function AdminQualificationsPage() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleSelect(q.id)}
-                          className="h-4 w-4 rounded border-gray-300 text-forest-700 focus:ring-forest-500 cursor-pointer"
+                          className="h-4 w-4 rounded border-gray-300 text-forest-900 focus:ring-forest-500 cursor-pointer"
                         />
                       </td>
 
-                      {/* KODE */}
+                      {/* KODE - Monospace Treatment */}
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center rounded-md bg-forest-900/10 px-2.5 py-1 font-mono font-black text-forest-900 text-xs dark:bg-forest-950 dark:text-forest-300 dark:border dark:border-forest-700/40">
+                        <span className="inline-flex items-center rounded-md bg-forest-100/90 px-2.5 py-1 font-mono font-bold text-forest-900 text-xs dark:bg-forest-950 dark:text-forest-200 border border-forest-700/20">
                           {q.code}
                         </span>
                       </td>
 
-                      {/* NAMA */}
+                      {/* KUALIFIKASI */}
                       <td className="px-6 py-4 font-bold text-charcoal dark:text-zinc-100">
                         {q.name}
                       </td>
 
                       {/* DESKRIPSI */}
-                      <td className="px-6 py-4 text-muted-foreground dark:text-zinc-400 max-w-sm truncate">
+                      <td className="px-6 py-4 text-muted-foreground dark:text-zinc-400 max-w-xs sm:max-w-sm truncate">
                         {q.description || "-"}
                       </td>
 
@@ -571,8 +592,8 @@ function AdminQualificationsPage() {
 
                       {/* AKSI */}
                       <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          {/* Toggle Active Button */}
+                        <div className="flex items-center justify-center gap-1">
+                          {/* Toggle Status */}
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(q)}
@@ -623,56 +644,54 @@ function AdminQualificationsPage() {
           onPageSizeChange={setPageSize}
           itemLabel="kualifikasi"
         />
-      </div>
+      </Card>
 
       {/* EDIT MODAL DIALOG */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800 rounded-2xl">
           <DialogHeader>
             <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-zinc-100 flex items-center gap-2">
-              <Pencil className="h-4 w-4 text-forest-700 dark:text-forest-400" />
+              <Pencil className="h-4 w-4 text-forest-900 dark:text-forest-400" />
               <span>Edit Kualifikasi {editingQual?.code}</span>
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleUpdate} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Kode (Tetap)</label>
-              <input
-                type="text"
+              <label className="block text-xs font-bold uppercase tracking-wider text-charcoal dark:text-zinc-200">Kode (Tetap)</label>
+              <Input
                 disabled
                 value={editingQual?.code || ""}
-                className="mt-1 w-full rounded-lg border border-border bg-slate-100 px-3 py-2 text-xs font-mono font-bold text-muted-foreground dark:bg-zinc-800 dark:border-zinc-700"
+                className="mt-1 font-mono font-bold bg-slate-100 text-muted-foreground dark:bg-zinc-800"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Nama Kualifikasi</label>
-              <input
-                type="text"
+              <label className="block text-xs font-bold uppercase tracking-wider text-charcoal dark:text-zinc-200">Nama Kualifikasi</label>
+              <Input
                 required
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                className="mt-1"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Deskripsi</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-charcoal dark:text-zinc-200">Deskripsi</label>
               <textarea
                 rows={3}
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                className="mt-1 w-full rounded-md border border-border bg-slate-50/80 px-3 py-2 text-xs text-charcoal focus:border-forest-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-forest-500/20 dark:border-zinc-700 dark:bg-zinc-800/80 dark:text-zinc-100"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Status Operasional</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-charcoal dark:text-zinc-200">Status Operasional</label>
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               >
                 <option value="ACTIVE">Aktif (Tersedia)</option>
                 <option value="INACTIVE">Nonaktif (Disembunyikan)</option>
@@ -680,69 +699,79 @@ function AdminQualificationsPage() {
             </div>
 
             <div className="flex gap-2 pt-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setEditOpen(false)}
-                className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                className="flex-1"
               >
                 Batal
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                disabled={editLoading}
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
+                variant="default"
+                isLoading={editLoading}
+                className="flex-1 btn-executive"
               >
-                {editLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                <span>{editLoading ? "Menyimpan..." : "Simpan Perubahan"}</span>
-              </button>
+                Simpan Perubahan
+              </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* DELETE CONFIRMATION DIALOG */}
+      {/* EXPLICIT DELETE CONFIRMATION DIALOG */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800 rounded-2xl">
           <DialogHeader>
             <div className="flex items-center gap-2 text-rose-600 font-bold">
               <AlertTriangle className="h-5 w-5" />
-              <span>Konfirmasi Hapus Kualifikasi</span>
+              <DialogTitle className="text-base font-bold">Hapus Kualifikasi?</DialogTitle>
             </div>
           </DialogHeader>
 
-          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-zinc-300">
-            Apakah Anda yakin ingin menghapus kualifikasi <strong className="font-mono text-charcoal dark:text-zinc-100">{deletingQual?.code} - {deletingQual?.name}</strong>? 
-            Tindakan ini tidak dapat dibatalkan.
-          </p>
+          <div className="mt-2 space-y-2 text-xs leading-relaxed text-charcoal dark:text-zinc-300">
+            <p>
+              Apakah Anda yakin ingin menghapus kualifikasi:
+            </p>
+            <div className="p-3 rounded-lg bg-rose-50/80 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900/60 font-medium text-rose-900 dark:text-rose-200">
+              <span className="font-mono font-bold mr-2">{deletingQual?.code}</span>
+              <span>— {deletingQual?.name}</span>
+            </div>
+            <p className="text-rose-600 dark:text-rose-400 font-semibold text-[11px]">
+              Tindakan ini tidak dapat dibatalkan.
+            </p>
+          </div>
 
           <div className="flex gap-2 pt-4">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => setDeleteOpen(false)}
-              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="flex-1"
             >
               Batal
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="destructive"
+              isLoading={deleteLoading}
               onClick={handleDelete}
-              disabled={deleteLoading}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+              className="flex-1"
             >
-              {deleteLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>{deleteLoading ? "Menghapus..." : "Ya, Hapus"}</span>
-            </button>
+              Hapus
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* BULK DELETE CONFIRMATION DIALOG */}
       <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800 rounded-2xl">
           <DialogHeader>
             <div className="flex items-center gap-2 text-rose-600 font-bold">
               <AlertTriangle className="h-5 w-5" />
-              <span>Konfirmasi Hapus Massal</span>
+              <DialogTitle className="text-base font-bold">Hapus Massal Kualifikasi?</DialogTitle>
             </div>
           </DialogHeader>
 
@@ -752,23 +781,24 @@ function AdminQualificationsPage() {
           </p>
 
           <div className="flex gap-2 pt-4">
-            <button
+            <Button
               type="button"
-              onClick={() => setBulkDeleteOpen(false)}
+              variant="outline"
               disabled={bulkDeleting}
-              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              onClick={() => setBulkDeleteOpen(false)}
+              className="flex-1"
             >
               Batal
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="destructive"
+              isLoading={bulkDeleting}
               onClick={handleBulkDelete}
-              disabled={bulkDeleting}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
+              className="flex-1"
             >
-              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              <span>Hapus {selectedIds.length} Data</span>
-            </button>
+              Hapus {selectedIds.length} Data
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

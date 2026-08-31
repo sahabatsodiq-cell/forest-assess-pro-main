@@ -11,6 +11,8 @@ import { UserCheck, Plus, Search, Edit2, Trash2, Building, Award, Calendar, MapP
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { PageHeader } from "@/components/ui/page-header";
+import { BadgeStatus } from "@/components/ui/badge-status";
 
 export const Route = createFileRoute("/admin/master-ganisph")({
   component: AdminMasterGanisphPage,
@@ -271,27 +273,22 @@ function AdminMasterGanisphPage() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header Bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-black text-charcoal flex items-center gap-2">
-            <UserCheck className="h-6 w-6 text-forest-700" />
-            Master Data GANISPH
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Database Master Data Tenaga Teknis Kehutanan (311+ Terdaftar).
-          </p>
-        </div>
-
-        {/* Create Modal */}
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-forest-700">
-              <Plus className="h-4 w-4" />
-              Tambah Data GANISPH
-            </button>
-          </DialogTrigger>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <PageHeader
+        title="Master Data GANISPH"
+        description="Database terpadu registrasi Tenaga Teknis Pengelolaan Hutan (GANISPH) seluruh Indonesia."
+        icon={UserCheck}
+        breadcrumbs={[{ label: "Master GANISPH" }]}
+        badgeText={`${dataList.length} Personel`}
+        actions={
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500 transition-all">
+                <Plus className="h-4 w-4" />
+                <span>Tambah Personel GANISPH</span>
+              </button>
+            </DialogTrigger>
           <DialogContent className="max-w-xl bg-white p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-base font-bold text-charcoal">
@@ -420,7 +417,8 @@ function AdminMasterGanisphPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+        }
+      />
 
       {/* Edit Modal */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

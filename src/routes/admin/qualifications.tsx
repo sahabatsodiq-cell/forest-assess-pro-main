@@ -7,10 +7,15 @@ import {
   deleteQualificationFn,
   bulkDeleteQualificationsFn,
 } from "@/lib/services/adminService";
-import { Plus, Search, Pencil, Power, Trash2, ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
+import { 
+  Plus, Search, Pencil, Power, Trash2, ShieldCheck, AlertTriangle, Loader2,
+  Award, CheckCircle2, XCircle, ListFilter, RefreshCw, Layers
+} from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { PageHeader } from "@/components/ui/page-header";
+import { BadgeStatus } from "@/components/ui/badge-status";
 
 export const Route = createFileRoute("/admin/qualifications")({
   component: AdminQualificationsPage,
@@ -20,6 +25,7 @@ function AdminQualificationsPage() {
   const [qualifications, setQualifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -53,10 +59,12 @@ function AdminQualificationsPage() {
     const token = localStorage.getItem("askganis_token");
     if (!token) return;
     try {
+      setLoading(true);
       const qData = await getQualificationsFn({ data: { token } });
       setQualifications(Array.isArray(qData) ? qData : []);
     } catch (err) {
       console.error(err);
+      toast.error("Gagal memuat data kualifikasi.");
     } finally {
       setLoading(false);
     }
@@ -220,12 +228,24 @@ function AdminQualificationsPage() {
     }
   };
 
-  const filtered = qualifications.filter(
-    (q) =>
+  // Compute Metrics
+  const activeCount = qualifications.filter((q) => (q.status || "ACTIVE") === "ACTIVE").length;
+  const inactiveCount = qualifications.length - activeCount;
+
+  // Filtering
+  const filtered = qualifications.filter((q) => {
+    const matchesSearch =
       q.code?.toLowerCase().includes(search.toLowerCase()) ||
       q.name?.toLowerCase().includes(search.toLowerCase()) ||
-      q.description?.toLowerCase().includes(search.toLowerCase())
-  );
+      q.description?.toLowerCase().includes(search.toLowerCase());
+
+    const statusMatch =
+      statusFilter === "ALL" ||
+      (statusFilter === "ACTIVE" && (q.status || "ACTIVE") === "ACTIVE") ||
+      (statusFilter === "INACTIVE" && q.status === "INACTIVE");
+
+    return matchesSearch && statusMatch;
+  });
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
@@ -250,94 +270,164 @@ function AdminQualificationsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-black text-charcoal dark:text-forest-100">
-            Master Data Kualifikasi GANISPH
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground dark:text-forest-100/70">
-            Kelola daftar resmi 19 skema kualifikasi Tenaga Teknis Kehutanan secara terpusat.
-          </p>
+      
+      {/* Page Header */}
+      <PageHeader
+        title="Master Data Kualifikasi GANISPH"
+        description="Kelola daftar resmi 19 skema kualifikasi Tenaga Teknis Kehutanan secara terpusat untuk sertifikasi dan uji kompetensi."
+        icon={Award}
+        breadcrumbs={[{ label: "Kualifikasi GANISPH" }]}
+        badgeText={`${qualifications.length} Skema`}
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-charcoal hover:bg-forest-50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-700 transition-colors shadow-xs"
+              title="Refresh Data"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Muat Ulang</span>
+            </button>
+
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger asChild>
+                <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500 transition-all">
+                  <Plus className="h-4 w-4" />
+                  <span>Tambah Kualifikasi</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-zinc-100 flex items-center gap-2">
+                    <Award className="h-5 w-5 text-forest-700 dark:text-forest-400" />
+                    <span>Tambah Kualifikasi Baru</span>
+                  </DialogTitle>
+                </DialogHeader>
+
+                {formError && (
+                  <div className="rounded-lg bg-rose-50 p-3 text-xs font-semibold text-rose-700 border border-rose-100 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900">
+                    {formError}
+                  </div>
+                )}
+
+                <form onSubmit={handleCreate} className="mt-4 space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">
+                      Kode Kualifikasi <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: KURPET"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                    />
+                    <p className="mt-1 text-[11px] text-muted-foreground">Gunakan kode singkatan unik uppercase.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">
+                      Nama Kualifikasi <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nama resmi skema kualifikasi..."
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Deskripsi</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Penjelasan cakupan kompetensi kualifikasi ini..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setCreateOpen(false)}
+                      className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={formLoading}
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
+                    >
+                      {formLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      <span>{formLoading ? "Menyimpan..." : "Simpan Kualifikasi"}</span>
+                    </button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        }
+      />
+
+      {/* KPI Stats Summary Cards Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-white p-4 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Total Skema</div>
+            <div className="mt-1 font-display text-2xl font-black text-forest-900 dark:text-forest-100">
+              {qualifications.length}
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">Kualifikasi Resmi GANISPH</div>
+          </div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-forest-50 text-forest-900 dark:bg-forest-950 dark:text-forest-300">
+            <Layers className="h-5 w-5" />
+          </div>
         </div>
 
-        {/* Add New Qualification Button & Dialog */}
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500">
-              <Plus className="h-4 w-4" />
-              Tambah Kualifikasi
-            </button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
-            <DialogHeader>
-              <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-forest-100">
-                Tambah Kualifikasi Baru
-              </DialogTitle>
-            </DialogHeader>
+        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-white p-4 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status Aktif</div>
+            <div className="mt-1 font-display text-2xl font-black text-emerald-700 dark:text-emerald-400">
+              {activeCount}
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">
+              {qualifications.length ? Math.round((activeCount / qualifications.length) * 100) : 0}% dari total skema
+            </div>
+          </div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+        </div>
 
-            {formError && (
-              <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700 border border-red-100 dark:bg-red-950/50 dark:text-red-300 dark:border-red-900">
-                {formError}
-              </div>
-            )}
-
-            <form onSubmit={handleCreate} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Kode Kualifikasi</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Contoh: KURPET"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Nama Kualifikasi</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Nama resmi kualifikasi..."
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Deskripsi</label>
-                <textarea
-                  rows={3}
-                  placeholder="Penjelasan cakupan kualifikasi..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={formLoading}
-                className="mt-2 w-full rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
-              >
-                {formLoading ? "Menyimpan..." : "Simpan Kualifikasi"}
-              </button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center justify-between rounded-xl border border-border/60 bg-white p-4 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
+          <div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Nonaktif / Draft</div>
+            <div className="mt-1 font-display text-2xl font-black text-amber-700 dark:text-amber-400">
+              {inactiveCount}
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">Tidak Ditampilkan di Ujian</div>
+          </div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+            <XCircle className="h-5 w-5" />
+          </div>
+        </div>
       </div>
 
-      {/* Bulk Action Toolbar Bar */}
+      {/* Bulk Action Sticky Toolbar */}
       {selectedIds.length > 0 && (
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50/90 p-3.5 px-4 shadow-sm dark:border-red-900/50 dark:bg-red-950/40">
-          <div className="flex items-center gap-2.5 text-xs font-semibold text-red-900 dark:text-red-200">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-extrabold text-white">
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50/95 p-3.5 px-4 shadow-md dark:border-rose-900/60 dark:bg-rose-950/60 backdrop-blur-md">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-rose-900 dark:text-rose-200">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-[10px] font-extrabold text-white">
               {selectedIds.length}
             </span>
-            <span>data kualifikasi terpilih</span>
+            <span>kualifikasi terpilih</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -350,7 +440,7 @@ function AdminQualificationsPage() {
             <button
               type="button"
               onClick={() => setBulkDeleteOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Hapus Terpilih ({selectedIds.length})
@@ -359,28 +449,46 @@ function AdminQualificationsPage() {
         </div>
       )}
 
-      {/* Search Input Bar */}
-      <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm dark:bg-charcoal dark:border-charcoal/60">
+      {/* Search & Filter Controls Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center justify-between rounded-xl border border-border/60 bg-white p-4 shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Cari kode atau nama kualifikasi..."
+            placeholder="Cari kode, nama, atau deskripsi kualifikasi..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border border-border bg-white py-1.5 pl-9 pr-3 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+            className="w-full rounded-lg border border-border bg-slate-50 py-2 pl-9 pr-3 text-xs focus:border-forest-700 focus:bg-white focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:bg-zinc-900"
           />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-slate-50 dark:bg-zinc-800 dark:border-zinc-700 px-2.5 py-1.5 text-xs">
+            <ListFilter className="h-3.5 w-3.5 text-muted-foreground" />
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="bg-transparent text-xs font-medium text-charcoal dark:text-zinc-200 focus:outline-none cursor-pointer"
+            >
+              <option value="ALL">Semua Status ({qualifications.length})</option>
+              <option value="ACTIVE">Aktif ({activeCount})</option>
+              <option value="INACTIVE">Nonaktif ({inactiveCount})</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Qualifications Data Table */}
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-white shadow-sm dark:bg-charcoal dark:border-charcoal/60">
+      {/* Qualifications Data Table Card */}
+      <div className="overflow-hidden rounded-xl border border-border/60 bg-white shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-border/50 bg-forest-50/50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-charcoal/80 dark:border-charcoal/60 dark:text-forest-100/70">
+            <thead className="border-b border-border/60 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-zinc-800/80 dark:border-zinc-700 dark:text-zinc-400">
               <tr>
                 <th scope="col" className="px-4 py-3.5 w-10 text-center">
                   <input
@@ -392,32 +500,42 @@ function AdminQualificationsPage() {
                   />
                 </th>
                 <th scope="col" className="px-6 py-3.5 w-32">KODE</th>
-                <th scope="col" className="px-6 py-3.5">NAMA</th>
+                <th scope="col" className="px-6 py-3.5">NAMA KUALIFIKASI</th>
                 <th scope="col" className="px-6 py-3.5">DESKRIPSI</th>
+                <th scope="col" className="px-6 py-3.5 w-32 text-center">STATUS</th>
                 <th scope="col" className="px-6 py-3.5 text-center w-36">AKSI</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40 dark:divide-charcoal/60">
+            <tbody className="divide-y divide-border/40 dark:divide-zinc-800">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
-                    Memuat data kualifikasi...
+                  <td colSpan={6} className="py-12 text-center text-xs text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="h-6 w-6 animate-spin text-forest-700 dark:text-forest-400" />
+                      <span>Memuat data kualifikasi...</span>
+                    </div>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
-                    Tidak ada kualifikasi yang ditemukan.
+                  <td colSpan={6} className="py-12 text-center text-xs text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Award className="h-8 w-8 text-muted-foreground/40" />
+                      <span className="font-semibold">Tidak ada kualifikasi yang cocok.</span>
+                      <span className="text-[11px]">Coba ubah kata kunci pencarian atau filter status.</span>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 paginated.map((q) => {
                   const isSelected = selectedIds.includes(q.id);
+                  const isQualActive = (q.status || "ACTIVE") === "ACTIVE";
+
                   return (
                     <tr
                       key={q.id}
-                      className={`transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40 ${
-                        isSelected ? "bg-red-50/30 dark:bg-red-950/20" : ""
+                      className={`transition-colors hover:bg-forest-50/30 dark:hover:bg-zinc-800/40 ${
+                        isSelected ? "bg-rose-50/30 dark:bg-rose-950/20" : ""
                       }`}
                     >
                       <td className="px-4 py-4 text-center">
@@ -430,29 +548,50 @@ function AdminQualificationsPage() {
                       </td>
 
                       {/* KODE */}
-                      <td className="px-6 py-4 font-mono font-black text-charcoal text-sm dark:text-forest-100">
-                        {q.code}
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center rounded-md bg-forest-900/10 px-2.5 py-1 font-mono font-black text-forest-900 text-xs dark:bg-forest-950 dark:text-forest-300 dark:border dark:border-forest-700/40">
+                          {q.code}
+                        </span>
                       </td>
 
                       {/* NAMA */}
-                      <td className="px-6 py-4 font-bold text-charcoal dark:text-forest-100">
+                      <td className="px-6 py-4 font-bold text-charcoal dark:text-zinc-100">
                         {q.name}
                       </td>
 
                       {/* DESKRIPSI */}
-                      <td className="px-6 py-4 text-muted-foreground dark:text-forest-100/70 max-w-xs truncate">
+                      <td className="px-6 py-4 text-muted-foreground dark:text-zinc-400 max-w-sm truncate">
                         {q.description || "-"}
+                      </td>
+
+                      {/* STATUS BADGE */}
+                      <td className="px-6 py-4 text-center">
+                        <BadgeStatus status={isQualActive ? "ACTIVE" : "INACTIVE"} size="sm" />
                       </td>
 
                       {/* AKSI */}
                       <td className="px-6 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* Toggle Active Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(q)}
+                            title={isQualActive ? "Nonaktifkan Kualifikasi" : "Aktifkan Kualifikasi"}
+                            className={`rounded-lg p-1.5 transition-colors ${
+                              isQualActive
+                                ? "text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/50"
+                                : "text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/50"
+                            }`}
+                          >
+                            <Power className="h-4 w-4" />
+                          </button>
+
                           {/* Edit Button */}
                           <button
                             type="button"
                             onClick={() => openEditModal(q)}
                             title="Edit Kualifikasi"
-                            className="rounded-md p-1.5 text-charcoal hover:bg-forest-50 hover:text-forest-900 transition-colors dark:text-forest-100 dark:hover:bg-charcoal/60"
+                            className="rounded-lg p-1.5 text-charcoal hover:bg-forest-50 hover:text-forest-900 transition-colors dark:text-zinc-300 dark:hover:bg-zinc-800"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -462,7 +601,7 @@ function AdminQualificationsPage() {
                             type="button"
                             onClick={() => openDeleteModal(q)}
                             title="Hapus Kualifikasi"
-                            className="rounded-md p-1.5 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors dark:text-red-400 dark:hover:bg-red-950/40"
+                            className="rounded-lg p-1.5 text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors dark:text-rose-400 dark:hover:bg-rose-950/40"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -475,6 +614,7 @@ function AdminQualificationsPage() {
             </tbody>
           </table>
         </div>
+
         <DataTablePagination
           currentPage={page}
           pageSize={pageSize}
@@ -487,54 +627,55 @@ function AdminQualificationsPage() {
 
       {/* EDIT MODAL DIALOG */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
           <DialogHeader>
-            <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-forest-100">
-              Edit Kualifikasi {editingQual?.code}
+            <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-zinc-100 flex items-center gap-2">
+              <Pencil className="h-4 w-4 text-forest-700 dark:text-forest-400" />
+              <span>Edit Kualifikasi {editingQual?.code}</span>
             </DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleUpdate} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Kode (Tetap)</label>
+              <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Kode (Tetap)</label>
               <input
                 type="text"
                 disabled
                 value={editingQual?.code || ""}
-                className="mt-1 w-full rounded-md border border-border bg-gray-50 px-3 py-1.5 text-xs font-mono font-bold text-muted-foreground dark:bg-charcoal/60 dark:border-charcoal/60"
+                className="mt-1 w-full rounded-lg border border-border bg-slate-100 px-3 py-2 text-xs font-mono font-bold text-muted-foreground dark:bg-zinc-800 dark:border-zinc-700"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Nama Kualifikasi</label>
+              <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Nama Kualifikasi</label>
               <input
                 type="text"
                 required
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Deskripsi</label>
+              <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Deskripsi</label>
               <textarea
                 rows={3}
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
-                className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">Status</label>
+              <label className="block text-xs font-bold uppercase text-charcoal dark:text-zinc-200">Status Operasional</label>
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value)}
-                className="mt-1 w-full rounded-md border border-border bg-white px-3 py-1.5 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
               >
-                <option value="ACTIVE">Aktif</option>
-                <option value="INACTIVE">Nonaktif</option>
+                <option value="ACTIVE">Aktif (Tersedia)</option>
+                <option value="INACTIVE">Nonaktif (Disembunyikan)</option>
               </select>
             </div>
 
@@ -542,16 +683,17 @@ function AdminQualificationsPage() {
               <button
                 type="button"
                 onClick={() => setEditOpen(false)}
-                className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+                className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={editLoading}
-                className="flex-1 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
               >
-                {editLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                {editLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                <span>{editLoading ? "Menyimpan..." : "Simpan Perubahan"}</span>
               </button>
             </div>
           </form>
@@ -560,16 +702,16 @@ function AdminQualificationsPage() {
 
       {/* DELETE CONFIRMATION DIALOG */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-red-600 font-bold">
+            <div className="flex items-center gap-2 text-rose-600 font-bold">
               <AlertTriangle className="h-5 w-5" />
               <span>Konfirmasi Hapus Kualifikasi</span>
             </div>
           </DialogHeader>
 
-          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-forest-100">
-            Apakah Anda yakin ingin menghapus kualifikasi <strong className="font-mono">{deletingQual?.code} - {deletingQual?.name}</strong>? 
+          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-zinc-300">
+            Apakah Anda yakin ingin menghapus kualifikasi <strong className="font-mono text-charcoal dark:text-zinc-100">{deletingQual?.code} - {deletingQual?.name}</strong>? 
             Tindakan ini tidak dapat dibatalkan.
           </p>
 
@@ -577,7 +719,7 @@ function AdminQualificationsPage() {
             <button
               type="button"
               onClick={() => setDeleteOpen(false)}
-              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               Batal
             </button>
@@ -585,9 +727,10 @@ function AdminQualificationsPage() {
               type="button"
               onClick={handleDelete}
               disabled={deleteLoading}
-              className="flex-1 rounded-lg bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
             >
-              {deleteLoading ? "Menghapus..." : "Ya, Hapus"}
+              {deleteLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <span>{deleteLoading ? "Menghapus..." : "Ya, Hapus"}</span>
             </button>
           </div>
         </DialogContent>
@@ -595,16 +738,16 @@ function AdminQualificationsPage() {
 
       {/* BULK DELETE CONFIRMATION DIALOG */}
       <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
-        <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800">
           <DialogHeader>
-            <div className="flex items-center gap-2 text-red-600 font-bold">
+            <div className="flex items-center gap-2 text-rose-600 font-bold">
               <AlertTriangle className="h-5 w-5" />
               <span>Konfirmasi Hapus Massal</span>
             </div>
           </DialogHeader>
 
-          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-forest-100">
-            Apakah Anda yakin ingin menghapus <strong className="text-red-600 font-bold">{selectedIds.length}</strong> kualifikasi terpilih secara permanen?
+          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-zinc-300">
+            Apakah Anda yakin ingin menghapus <strong className="text-rose-600 font-bold">{selectedIds.length}</strong> kualifikasi terpilih secara permanen?
             Tindakan ini tidak dapat dibatalkan.
           </p>
 
@@ -613,7 +756,7 @@ function AdminQualificationsPage() {
               type="button"
               onClick={() => setBulkDeleteOpen(false)}
               disabled={bulkDeleting}
-              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               Batal
             </button>
@@ -621,10 +764,10 @@ function AdminQualificationsPage() {
               type="button"
               onClick={handleBulkDelete}
               disabled={bulkDeleting}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50"
             >
               {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              Hapus {selectedIds.length} Data
+              <span>Hapus {selectedIds.length} Data</span>
             </button>
           </div>
         </DialogContent>

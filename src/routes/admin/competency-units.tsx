@@ -12,6 +12,8 @@ import { Plus, Search, Pencil, Power, Trash2, Filter, AlertTriangle, ListChecks,
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { PageHeader } from "@/components/ui/page-header";
+import { BadgeStatus } from "@/components/ui/badge-status";
 
 export const Route = createFileRoute("/admin/competency-units")({
   component: AdminCompetencyUnitsPage,
@@ -296,26 +298,21 @@ function AdminCompetencyUnitsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-black text-charcoal dark:text-forest-100 flex items-center gap-2">
-            <ListChecks className="h-6 w-6 text-forest-700 dark:text-forest-400" />
-            Master Unit Kompetensi GANISPH
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground dark:text-forest-100/70">
-            Kelola standar unit kompetensi sebagai acuan utama penyusunan Bank Soal dan Asesmen Kompetensi Kehutanan.
-          </p>
-        </div>
-
-        {/* Add New Unit Button & Dialog */}
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500">
-              <Plus className="h-4 w-4" />
-              Tambah Unit Kompetensi
-            </button>
-          </DialogTrigger>
+      {/* Page Header */}
+      <PageHeader
+        title="Unit Kompetensi Kehutanan"
+        description="Kelola standar unit kompetensi, bobot soal, dan alokasi skema kualifikasi Tenaga Teknis Kehutanan."
+        icon={ListChecks}
+        breadcrumbs={[{ label: "Unit Kompetensi" }]}
+        badgeText={`${units.length} Unit`}
+        actions={
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500 transition-all">
+                <Plus className="h-4 w-4" />
+                <span>Tambah Unit Kompetensi</span>
+              </button>
+            </DialogTrigger>
           <DialogContent className="max-w-lg bg-white p-6 dark:bg-charcoal dark:border-charcoal/60 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-forest-100">
@@ -418,7 +415,8 @@ function AdminCompetencyUnitsPage() {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+        }
+      />
 
       {/* Bulk Action Toolbar Bar */}
       {selectedIds.length > 0 && (

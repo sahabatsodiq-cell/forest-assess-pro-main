@@ -4,6 +4,8 @@ import { getQuestionsFn, createQuestionFn, importQuestionsCsvFn, getQualificatio
 import { Database, Plus, Upload, Filter, Search, FileSpreadsheet, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { PageHeader } from "@/components/ui/page-header";
+import { BadgeStatus } from "@/components/ui/badge-status";
 
 export const Route = createFileRoute("/admin/questions")({
   component: AdminQuestionsPage,
@@ -174,23 +176,23 @@ function AdminQuestionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-black text-charcoal">Bank Soal Terstruktur</h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Kelola soal ujian teori berdasarkan kualifikasi, materi, dan matriks tingkat kesulitan.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Import CSV Modal */}
-          <Dialog open={importOpen} onOpenChange={setImportOpen}>
-            <DialogTrigger asChild>
-              <button className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3.5 py-2 text-xs font-semibold text-charcoal hover:bg-forest-50">
-                <FileSpreadsheet className="h-4 w-4 text-forest-700" />
-                Import CSV
-              </button>
-            </DialogTrigger>
+      {/* Page Header */}
+      <PageHeader
+        title="Bank Soal Terstruktur"
+        description="Kelola soal ujian teori berdasarkan skema kualifikasi, bidang materi, dan tingkat kesulitan."
+        icon={Database}
+        breadcrumbs={[{ label: "Bank Soal" }]}
+        badgeText={`${questions.length} Soal`}
+        actions={
+          <div className="flex items-center gap-2">
+            {/* Import CSV Modal */}
+            <Dialog open={importOpen} onOpenChange={setImportOpen}>
+              <DialogTrigger asChild>
+                <button className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3.5 py-2 text-xs font-semibold text-charcoal hover:bg-forest-50 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-700 transition-colors shadow-xs">
+                  <FileSpreadsheet className="h-4 w-4 text-forest-700 dark:text-forest-400" />
+                  <span>Import CSV</span>
+                </button>
+              </DialogTrigger>
             <DialogContent className="max-w-xl bg-white p-6">
               <DialogHeader>
                 <DialogTitle className="font-display text-base font-bold text-charcoal">
@@ -421,7 +423,8 @@ function AdminQuestionsPage() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/50 bg-white p-4">

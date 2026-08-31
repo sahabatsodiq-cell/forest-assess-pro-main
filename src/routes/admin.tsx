@@ -125,17 +125,19 @@ function AdminLayout() {
       >
         {/* Brand Logo Header */}
         <div className="flex h-16 items-center justify-between border-b border-border/40 px-4">
-          <Link to="/admin" className="flex items-center gap-2.5 overflow-hidden">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-forest-900 text-white shadow-md dark:bg-forest-700">
-              <TreePine className="h-5 w-5 text-forest-100" />
-            </div>
+          <Link to="/admin" className="flex items-center gap-2.5 overflow-hidden group">
+            <img
+              src="/assets/logo-askganisph.png"
+              alt="Logo AskGanisPH"
+              className="h-9 w-auto object-contain shrink-0 transition-transform group-hover:scale-105"
+            />
             {!collapsed && (
               <div className="flex flex-col truncate">
-                <span className="font-display text-base font-black tracking-tight text-forest-900 dark:text-forest-100">
-                  FOREST ASSESS
+                <span className="font-display text-sm font-extrabold tracking-tight text-forest-900 dark:text-forest-100">
+                  ASKGANISPH
                 </span>
-                <span className="text-[10px] font-bold tracking-widest uppercase text-earth-500 dark:text-earth-400 -mt-0.5">
-                  Pro Admin Platform
+                <span className="text-[9px] font-bold tracking-widest uppercase text-earth-500 dark:text-earth-400 -mt-0.5">
+                  Asesmen Kehutanan
                 </span>
               </div>
             )}
@@ -215,15 +217,19 @@ function AdminLayout() {
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px] bg-white dark:bg-zinc-900 p-4 border-r dark:border-zinc-800">
-                <div className="mb-6 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-forest-900 text-white">
-                    <TreePine className="h-4 w-4" />
-                  </div>
+                <div className="mb-6 flex items-center gap-2.5">
+                  <img
+                    src="/assets/logo-askganisph.png"
+                    alt="Logo AskGanisPH"
+                    className="h-9 w-auto object-contain shrink-0"
+                  />
                   <div>
-                    <div className="font-display text-base font-black text-forest-900 dark:text-forest-100">
-                      FOREST ASSESS PRO
+                    <div className="font-display text-sm font-extrabold text-forest-900 dark:text-forest-100">
+                      ASKGANISPH PRO
                     </div>
-                    <div className="text-[10px] font-semibold text-muted-foreground">Admin Portal</div>
+                    <div className="text-[9px] font-bold text-earth-500 dark:text-earth-400 uppercase tracking-wider">
+                      Asesmen Kehutanan
+                    </div>
                   </div>
                 </div>
 

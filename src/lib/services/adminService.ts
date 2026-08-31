@@ -1260,3 +1260,83 @@ export const deleteAttemptFn = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+// ------------------------------------------------------------------
+// BULK DELETE SERVER FUNCTIONS
+// ------------------------------------------------------------------
+export const bulkDeleteQualificationsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; ids: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    if (!Array.isArray(data.ids) || data.ids.length === 0) {
+      return { success: false, error: "Tidak ada ID yang dipilih." };
+    }
+    const db = await getDb();
+    for (const id of data.ids) {
+      await db.prepare("DELETE FROM qualifications WHERE id = ?").run(id);
+      await logAudit(session.userId, "BULK_DELETE_QUALIFICATION", "qualifications", id);
+    }
+    return { success: true, count: data.ids.length };
+  });
+
+export const bulkDeleteCompetencyUnitsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; ids: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    if (!Array.isArray(data.ids) || data.ids.length === 0) {
+      return { success: false, error: "Tidak ada ID yang dipilih." };
+    }
+    const db = await getDb();
+    for (const id of data.ids) {
+      await db.prepare("DELETE FROM qualification_competency_units WHERE competency_unit_id = ?").run(id);
+      await db.prepare("DELETE FROM competency_units WHERE id = ?").run(id);
+      await logAudit(session.userId, "BULK_DELETE_COMPETENCY_UNIT", "competency_units", id);
+    }
+    return { success: true, count: data.ids.length };
+  });
+
+export const bulkDeleteMasterGanisphFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; ids: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    if (!Array.isArray(data.ids) || data.ids.length === 0) {
+      return { success: false, error: "Tidak ada ID yang dipilih." };
+    }
+    const db = await getDb();
+    for (const id of data.ids) {
+      await db.prepare("DELETE FROM master_ganisph WHERE id = ?").run(id);
+      await logAudit(session.userId, "BULK_DELETE_MASTER_GANISPH", "master_ganisph", id);
+    }
+    return { success: true, count: data.ids.length };
+  });
+
+export const bulkDeleteEnrollmentsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; ids: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    if (!Array.isArray(data.ids) || data.ids.length === 0) {
+      return { success: false, error: "Tidak ada ID yang dipilih." };
+    }
+    const db = await getDb();
+    for (const id of data.ids) {
+      await db.prepare("DELETE FROM exam_enrollments WHERE id = ?").run(id);
+      await logAudit(session.userId, "BULK_DELETE_ENROLLMENT", "exam_enrollments", id);
+    }
+    return { success: true, count: data.ids.length };
+  });
+
+export const bulkDeleteAttemptsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; ids: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifySuperAdminSession(data.token);
+    if (!Array.isArray(data.ids) || data.ids.length === 0) {
+      return { success: false, error: "Tidak ada ID yang dipilih." };
+    }
+    const db = await getDb();
+    for (const id of data.ids) {
+      await db.prepare("DELETE FROM exam_attempts WHERE id = ?").run(id);
+      await logAudit(session.userId, "BULK_DELETE_EXAM_ATTEMPT", "exam_attempts", id);
+    }
+    return { success: true, count: data.ids.length };
+  });
+
+

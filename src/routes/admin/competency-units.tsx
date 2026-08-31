@@ -5,9 +5,10 @@ import {
   createCompetencyUnitFn,
   updateCompetencyUnitFn,
   deleteCompetencyUnitFn,
+  bulkDeleteCompetencyUnitsFn,
   getQualificationsFn,
 } from "@/lib/services/adminService";
-import { Plus, Search, Pencil, Power, Trash2, Filter, AlertTriangle, ListChecks } from "lucide-react";
+import { Plus, Search, Pencil, Power, Trash2, Filter, AlertTriangle, ListChecks, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
@@ -24,6 +25,11 @@ function AdminCompetencyUnitsPage() {
   const [selectedQualId, setSelectedQualId] = useState<string>("ALL");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // Create Modal State
   const [createOpen, setCreateOpen] = useState(false);
@@ -213,6 +219,7 @@ function AdminCompetencyUnitsPage() {
         toast.success(`Unit Kompetensi ${deletingUnit.code} berhasil dihapus.`);
         setDeleteOpen(false);
         setDeletingUnit(null);
+        setSelectedIds((prev) => prev.filter((id) => id !== deletingUnit.id));
         loadData();
       } else {
         toast.error(res.error || "Gagal menghapus unit kompetensi.");
@@ -221,6 +228,32 @@ function AdminCompetencyUnitsPage() {
       toast.error(err.message || "Terjadi kesalahan.");
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  // 5. Bulk Delete Handler
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkDeleting(true);
+    const token = localStorage.getItem("askganis_token") || "";
+
+    try {
+      const res = await bulkDeleteCompetencyUnitsFn({
+        data: { token, ids: selectedIds },
+      });
+
+      if (res.success) {
+        toast.success(`Berhasil menghapus ${res.count} unit kompetensi.`);
+        setBulkDeleteOpen(false);
+        setSelectedIds([]);
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menghapus unit kompetensi terpilih.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat hapus massal.");
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -241,6 +274,25 @@ function AdminCompetencyUnitsPage() {
   );
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  const isAllPaginatedSelected =
+    paginated.length > 0 && paginated.every((u) => selectedIds.includes(u.id));
+
+  const handleSelectAllPaginated = () => {
+    if (isAllPaginatedSelected) {
+      const pageIds = paginated.map((u) => u.id);
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    } else {
+      const pageIds = paginated.map((u) => u.id);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const handleToggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -368,6 +420,35 @@ function AdminCompetencyUnitsPage() {
         </Dialog>
       </div>
 
+      {/* Bulk Action Toolbar Bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50/90 p-3.5 px-4 shadow-sm dark:border-red-900/50 dark:bg-red-950/40">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-red-900 dark:text-red-200">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-extrabold text-white">
+              {selectedIds.length}
+            </span>
+            <span>unit kompetensi terpilih</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              Batalkan
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Hapus Terpilih ({selectedIds.length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm dark:bg-charcoal dark:border-charcoal/60">
         {/* Search */}
@@ -406,6 +487,15 @@ function AdminCompetencyUnitsPage() {
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border/50 bg-forest-50/50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-charcoal/80 dark:border-charcoal/60 dark:text-forest-100/70">
               <tr>
+                <th scope="col" className="px-4 py-3.5 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isAllPaginatedSelected}
+                    onChange={handleSelectAllPaginated}
+                    className="h-4 w-4 rounded border-gray-300 text-forest-700 focus:ring-forest-500 cursor-pointer"
+                    title="Pilih Semua di Halaman Ini"
+                  />
+                </th>
                 <th scope="col" className="px-5 py-3.5 w-40">KODE UNIT</th>
                 <th scope="col" className="px-5 py-3.5">JUDUL UNIT KOMPETENSI</th>
                 <th scope="col" className="px-4 py-3.5 w-32 text-center">KODE MATERI</th>
@@ -416,57 +506,73 @@ function AdminCompetencyUnitsPage() {
             <tbody className="divide-y divide-border/40 dark:divide-charcoal/60">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={6} className="py-10 text-center text-xs text-muted-foreground">
                     Memuat unit kompetensi...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={6} className="py-10 text-center text-xs text-muted-foreground">
                     Tidak ada unit kompetensi ditemukan.
                   </td>
                 </tr>
               ) : (
-                paginated.map((u) => (
-                  <tr key={u.id} className="transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40">
-                    {/* KODE UNIT */}
-                    <td className="px-5 py-4 font-mono font-black text-charcoal text-xs dark:text-forest-100">
-                      {u.code}
-                    </td>
+                paginated.map((u) => {
+                  const isSelected = selectedIds.includes(u.id);
+                  return (
+                    <tr
+                      key={u.id}
+                      className={`transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40 ${
+                        isSelected ? "bg-red-50/30 dark:bg-red-950/20" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(u.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-forest-700 focus:ring-forest-500 cursor-pointer"
+                        />
+                      </td>
 
-                    {/* JUDUL UNIT KOMPETENSI */}
-                    <td className="px-5 py-4 font-bold text-charcoal dark:text-forest-100 max-w-sm">
-                      {u.title}
-                    </td>
+                      {/* KODE UNIT */}
+                      <td className="px-5 py-4 font-mono font-black text-charcoal text-xs dark:text-forest-100">
+                        {u.code}
+                      </td>
 
-                    {/* KODE MATERI */}
-                    <td className="px-4 py-4 text-center">
-                      {u.subject_code ? (
-                        <span className="inline-block rounded-md bg-amber-50 px-2 py-1 text-[11px] font-mono font-black text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
-                          {u.subject_code}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 italic text-[11px]">-</span>
-                      )}
-                    </td>
+                      {/* JUDUL UNIT KOMPETENSI */}
+                      <td className="px-5 py-4 font-bold text-charcoal dark:text-forest-100 max-w-sm">
+                        {u.title}
+                      </td>
 
-                    {/* KUALIFIKASI TERHUBUNG */}
-                    <td className="px-5 py-4">
-                      {u.qualification_codes ? (
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {u.qualification_codes.split(", ").map((qc: string) => (
-                            <span
-                              key={qc}
-                              className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-extrabold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50"
-                            >
-                              {qc}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 italic text-[11px]">Belum terhubung</span>
-                      )}
-                    </td>
+                      {/* KODE MATERI */}
+                      <td className="px-4 py-4 text-center">
+                        {u.subject_code ? (
+                          <span className="inline-block rounded-md bg-amber-50 px-2 py-1 text-[11px] font-mono font-black text-amber-900 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800">
+                            {u.subject_code}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic text-[11px]">-</span>
+                        )}
+                      </td>
+
+                      {/* KUALIFIKASI TERHUBUNG */}
+                      <td className="px-5 py-4">
+                        {u.qualification_codes ? (
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {u.qualification_codes.split(", ").map((qc: string) => (
+                              <span
+                                key={qc}
+                                className="rounded bg-forest-50 px-2 py-0.5 text-[10px] font-extrabold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50"
+                              >
+                                {qc}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic text-[11px]">Belum terhubung</span>
+                        )}
+                      </td>
 
                     {/* AKSI */}
                     <td className="px-5 py-4 text-center">
@@ -507,7 +613,8 @@ function AdminCompetencyUnitsPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                );
+              })
               )}
             </tbody>
           </table>
@@ -668,6 +775,43 @@ function AdminCompetencyUnitsPage() {
               className="flex-1 rounded-lg bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
             >
               {deleteLoading ? "Menghapus..." : "Ya, Hapus"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* BULK DELETE CONFIRMATION DIALOG */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-red-600 font-bold">
+              <AlertTriangle className="h-5 w-5" />
+              <span>Konfirmasi Hapus Massal</span>
+            </div>
+          </DialogHeader>
+
+          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-forest-100">
+            Apakah Anda yakin ingin menghapus <strong className="text-red-600 font-bold">{selectedIds.length}</strong> unit kompetensi terpilih secara permanen?
+            Tindakan ini tidak dapat dibatalkan.
+          </p>
+
+          <div className="flex gap-2 pt-4">
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(false)}
+              disabled={bulkDeleting}
+              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Hapus {selectedIds.length} Data
             </button>
           </div>
         </DialogContent>

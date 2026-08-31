@@ -4,13 +4,14 @@ import {
   getEnrollmentsFn,
   enrollParticipantFn,
   deleteEnrollmentFn,
+  bulkDeleteEnrollmentsFn,
   getExamsFn,
   getUsersFn,
   getExamRegistrationRequestsFn,
   approveExamRequestFn,
   rejectExamRequestFn,
 } from "@/lib/services/adminService";
-import { UserCheck, Plus, Trash2, Search, Inbox, Check, X, Clock, Loader2 } from "lucide-react";
+import { UserCheck, Plus, Trash2, Search, Inbox, Check, X, Clock, Loader2, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { toast } from "sonner";
@@ -30,6 +31,11 @@ function AdminEnrollmentsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // Form State
   const [examId, setExamId] = useState<number | "">("");
@@ -104,9 +110,35 @@ function AdminEnrollmentsPage() {
     try {
       await deleteEnrollmentFn({ data: { token, id } });
       toast.success("Pendaftaran dihapus.");
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
       loadData();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkDeleting(true);
+    const token = localStorage.getItem("askganis_token") || "";
+
+    try {
+      const res = await bulkDeleteEnrollmentsFn({
+        data: { token, ids: selectedIds },
+      });
+
+      if (res.success) {
+        toast.success(`Berhasil menghapus ${res.count} pendaftaran.`);
+        setBulkDeleteOpen(false);
+        setSelectedIds([]);
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menghapus pendaftaran terpilih.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat hapus massal.");
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -175,6 +207,28 @@ function AdminEnrollmentsPage() {
 
   const currentList = activeTab === "enrolled" ? filteredEnrollments : filteredRequests;
   const paginated = currentList.slice((page - 1) * pageSize, page * pageSize);
+
+  const isAllPaginatedSelected =
+    activeTab === "enrolled" &&
+    paginated.length > 0 &&
+    paginated.every((item) => selectedIds.includes(item.id));
+
+  const handleSelectAllPaginated = () => {
+    if (activeTab !== "enrolled") return;
+    if (isAllPaginatedSelected) {
+      const pageIds = paginated.map((item) => item.id);
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    } else {
+      const pageIds = paginated.map((item) => item.id);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const handleToggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -253,10 +307,39 @@ function AdminEnrollmentsPage() {
         </Dialog>
       </div>
 
+      {/* Bulk Action Toolbar Bar */}
+      {activeTab === "enrolled" && selectedIds.length > 0 && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50/90 p-3.5 px-4 shadow-sm">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-red-900">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-extrabold text-white">
+              {selectedIds.length}
+            </span>
+            <span>pendaftaran terpilih</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-black/5"
+            >
+              Batalkan
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Hapus Terpilih ({selectedIds.length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-2 border-b border-border/60">
         <button
-          onClick={() => { setActiveTab("enrolled"); setPage(1); }}
+          onClick={() => { setActiveTab("enrolled"); setPage(1); setSelectedIds([]); }}
           className={`flex items-center gap-2 pb-3 px-1 border-b-2 text-xs font-bold transition-all ${
             activeTab === "enrolled"
               ? "border-forest-900 text-forest-900"
@@ -267,7 +350,7 @@ function AdminEnrollmentsPage() {
           Pendaftaran Terdaftar ({enrollments.length})
         </button>
         <button
-          onClick={() => { setActiveTab("requests"); setPage(1); }}
+          onClick={() => { setActiveTab("requests"); setPage(1); setSelectedIds([]); }}
           className={`flex items-center gap-2 pb-3 px-1 border-b-2 text-xs font-bold transition-all ${
             activeTab === "requests"
               ? "border-forest-900 text-forest-900"
@@ -315,6 +398,15 @@ function AdminEnrollmentsPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <th className="px-4 py-3.5 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isAllPaginatedSelected}
+                        onChange={handleSelectAllPaginated}
+                        className="h-4 w-4 rounded border-gray-300 text-forest-700 focus:ring-forest-500 cursor-pointer"
+                        title="Pilih Semua di Halaman Ini"
+                      />
+                    </th>
                     <th className="px-6 py-3.5">Nama Peserta</th>
                     <th className="px-4 py-3.5">No. Registrasi / Email</th>
                     <th className="px-4 py-3.5">Paket Ujian</th>
@@ -325,35 +417,51 @@ function AdminEnrollmentsPage() {
                 <tbody className="divide-y divide-border/20 text-xs">
                   {filteredEnrollments.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
                         Belum ada pendaftaran peserta.
                       </td>
                     </tr>
                   ) : (
-                    paginated.map((e) => (
-                      <tr key={e.id} className="hover:bg-forest-50/10 transition-colors">
-                        <td className="px-6 py-3.5 font-bold text-charcoal">{e.user_name}</td>
-                        <td className="px-4 py-3.5 font-mono text-muted-foreground">
-                          {e.participant_number || e.user_email}
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <div className="font-semibold text-charcoal">{e.exam_name}</div>
-                          <div className="text-[10px] text-forest-700 font-mono">{e.exam_code}</div>
-                        </td>
-                        <td className="px-4 py-3.5 text-muted-foreground">
-                          {new Date(e.enrolled_at).toLocaleDateString("id-ID")}
-                        </td>
-                        <td className="px-6 py-3.5 text-right">
-                          <button
-                            onClick={() => handleDelete(e.id)}
-                            className="rounded p-1.5 text-red-600 hover:bg-red-50 hover:text-red-800 transition-colors"
-                            title="Hapus pendaftaran"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                    paginated.map((e) => {
+                      const isSelected = selectedIds.includes(e.id);
+                      return (
+                        <tr
+                          key={e.id}
+                          className={`hover:bg-forest-50/10 transition-colors ${
+                            isSelected ? "bg-red-50/30" : ""
+                          }`}
+                        >
+                          <td className="px-4 py-3.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelect(e.id)}
+                              className="h-4 w-4 rounded border-gray-300 text-forest-700 focus:ring-forest-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="px-6 py-3.5 font-bold text-charcoal">{e.user_name}</td>
+                          <td className="px-4 py-3.5 font-mono text-muted-foreground">
+                            {e.participant_number || e.user_email}
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="font-semibold text-charcoal">{e.exam_name}</div>
+                            <div className="text-[10px] text-forest-700 font-mono">{e.exam_code}</div>
+                          </td>
+                          <td className="px-4 py-3.5 text-muted-foreground">
+                            {new Date(e.enrolled_at).toLocaleDateString("id-ID")}
+                          </td>
+                          <td className="px-6 py-3.5 text-right">
+                            <button
+                              onClick={() => handleDelete(e.id)}
+                              className="rounded p-1.5 text-red-600 hover:bg-red-50 hover:text-red-800 transition-colors"
+                              title="Hapus pendaftaran"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -478,6 +586,43 @@ function AdminEnrollmentsPage() {
           </>
         )}
       </div>
+
+      {/* BULK DELETE CONFIRMATION DIALOG */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-red-600 font-bold">
+              <AlertTriangle className="h-5 w-5" />
+              <span>Konfirmasi Hapus Massal</span>
+            </div>
+          </DialogHeader>
+
+          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-forest-100">
+            Apakah Anda yakin ingin menghapus <strong className="text-red-600 font-bold">{selectedIds.length}</strong> pendaftaran peserta terpilih secara permanen?
+            Tindakan ini tidak dapat dibatalkan.
+          </p>
+
+          <div className="flex gap-2 pt-4">
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(false)}
+              disabled={bulkDeleting}
+              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Hapus {selectedIds.length} Data
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

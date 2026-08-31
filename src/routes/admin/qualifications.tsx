@@ -5,8 +5,9 @@ import {
   createQualificationFn,
   updateQualificationFn,
   deleteQualificationFn,
+  bulkDeleteQualificationsFn,
 } from "@/lib/services/adminService";
-import { Plus, Search, Pencil, Power, Trash2, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Plus, Search, Pencil, Power, Trash2, ShieldCheck, AlertTriangle, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
@@ -21,6 +22,11 @@ function AdminQualificationsPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // Create Modal State
   const [createOpen, setCreateOpen] = useState(false);
@@ -176,6 +182,7 @@ function AdminQualificationsPage() {
         toast.success(`Kualifikasi ${deletingQual.code} berhasil dihapus.`);
         setDeleteOpen(false);
         setDeletingQual(null);
+        setSelectedIds((prev) => prev.filter((id) => id !== deletingQual.id));
         loadData();
       } else {
         toast.error(res.error || "Gagal menghapus kualifikasi.");
@@ -187,6 +194,32 @@ function AdminQualificationsPage() {
     }
   };
 
+  // 5. Bulk Delete Handler
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkDeleting(true);
+    const token = localStorage.getItem("askganis_token") || "";
+
+    try {
+      const res = await bulkDeleteQualificationsFn({
+        data: { token, ids: selectedIds },
+      });
+
+      if (res.success) {
+        toast.success(`Berhasil menghapus ${res.count} kualifikasi.`);
+        setBulkDeleteOpen(false);
+        setSelectedIds([]);
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menghapus kualifikasi terpilih.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat hapus massal.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   const filtered = qualifications.filter(
     (q) =>
       q.code?.toLowerCase().includes(search.toLowerCase()) ||
@@ -195,6 +228,25 @@ function AdminQualificationsPage() {
   );
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  const isAllPaginatedSelected =
+    paginated.length > 0 && paginated.every((q) => selectedIds.includes(q.id));
+
+  const handleSelectAllPaginated = () => {
+    if (isAllPaginatedSelected) {
+      const pageIds = paginated.map((q) => q.id);
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    } else {
+      const pageIds = paginated.map((q) => q.id);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const handleToggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -278,6 +330,35 @@ function AdminQualificationsPage() {
         </Dialog>
       </div>
 
+      {/* Bulk Action Toolbar Bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50/90 p-3.5 px-4 shadow-sm dark:border-red-900/50 dark:bg-red-950/40">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-red-900 dark:text-red-200">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-extrabold text-white">
+              {selectedIds.length}
+            </span>
+            <span>data kualifikasi terpilih</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              Batalkan
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-700 transition-colors"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Hapus Terpilih ({selectedIds.length})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Search Input Bar */}
       <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm dark:bg-charcoal dark:border-charcoal/60">
         <div className="relative flex-1">
@@ -301,6 +382,15 @@ function AdminQualificationsPage() {
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border/50 bg-forest-50/50 text-[11px] font-bold uppercase tracking-wider text-muted-foreground dark:bg-charcoal/80 dark:border-charcoal/60 dark:text-forest-100/70">
               <tr>
+                <th scope="col" className="px-4 py-3.5 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={isAllPaginatedSelected}
+                    onChange={handleSelectAllPaginated}
+                    className="h-4 w-4 rounded border-gray-300 text-forest-700 focus:ring-forest-500 cursor-pointer"
+                    title="Pilih Semua di Halaman Ini"
+                  />
+                </th>
                 <th scope="col" className="px-6 py-3.5 w-32">KODE</th>
                 <th scope="col" className="px-6 py-3.5">NAMA</th>
                 <th scope="col" className="px-6 py-3.5">DESKRIPSI</th>
@@ -310,60 +400,77 @@ function AdminQualificationsPage() {
             <tbody className="divide-y divide-border/40 dark:divide-charcoal/60">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
                     Memuat data kualifikasi...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-10 text-center text-xs text-muted-foreground">
+                  <td colSpan={5} className="py-10 text-center text-xs text-muted-foreground">
                     Tidak ada kualifikasi yang ditemukan.
                   </td>
                 </tr>
               ) : (
-                paginated.map((q) => (
-                  <tr key={q.id} className="transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40">
-                    {/* KODE */}
-                    <td className="px-6 py-4 font-mono font-black text-charcoal text-sm dark:text-forest-100">
-                      {q.code}
-                    </td>
+                paginated.map((q) => {
+                  const isSelected = selectedIds.includes(q.id);
+                  return (
+                    <tr
+                      key={q.id}
+                      className={`transition-colors hover:bg-forest-50/30 dark:hover:bg-charcoal/40 ${
+                        isSelected ? "bg-red-50/30 dark:bg-red-950/20" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(q.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-forest-700 focus:ring-forest-500 cursor-pointer"
+                        />
+                      </td>
 
-                    {/* NAMA */}
-                    <td className="px-6 py-4 font-bold text-charcoal dark:text-forest-100">
-                      {q.name}
-                    </td>
+                      {/* KODE */}
+                      <td className="px-6 py-4 font-mono font-black text-charcoal text-sm dark:text-forest-100">
+                        {q.code}
+                      </td>
 
-                    {/* DESKRIPSI */}
-                    <td className="px-6 py-4 text-muted-foreground dark:text-forest-100/70 max-w-xs truncate">
-                      {q.description || "-"}
-                    </td>
+                      {/* NAMA */}
+                      <td className="px-6 py-4 font-bold text-charcoal dark:text-forest-100">
+                        {q.name}
+                      </td>
 
-                    {/* AKSI */}
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        {/* Edit Button */}
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(q)}
-                          title="Edit Kualifikasi"
-                          className="rounded-md p-1.5 text-charcoal hover:bg-forest-50 hover:text-forest-900 transition-colors dark:text-forest-100 dark:hover:bg-charcoal/60"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
+                      {/* DESKRIPSI */}
+                      <td className="px-6 py-4 text-muted-foreground dark:text-forest-100/70 max-w-xs truncate">
+                        {q.description || "-"}
+                      </td>
 
-                        {/* Delete Button */}
-                        <button
-                          type="button"
-                          onClick={() => openDeleteModal(q)}
-                          title="Hapus Kualifikasi"
-                          className="rounded-md p-1.5 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors dark:text-red-400 dark:hover:bg-red-950/40"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      {/* AKSI */}
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          {/* Edit Button */}
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(q)}
+                            title="Edit Kualifikasi"
+                            className="rounded-md p-1.5 text-charcoal hover:bg-forest-50 hover:text-forest-900 transition-colors dark:text-forest-100 dark:hover:bg-charcoal/60"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            onClick={() => openDeleteModal(q)}
+                            title="Hapus Kualifikasi"
+                            className="rounded-md p-1.5 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors dark:text-red-400 dark:hover:bg-red-950/40"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -481,6 +588,43 @@ function AdminQualificationsPage() {
               className="flex-1 rounded-lg bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
             >
               {deleteLoading ? "Menghapus..." : "Ya, Hapus"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* BULK DELETE CONFIRMATION DIALOG */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-red-600 font-bold">
+              <AlertTriangle className="h-5 w-5" />
+              <span>Konfirmasi Hapus Massal</span>
+            </div>
+          </DialogHeader>
+
+          <p className="mt-2 text-xs leading-relaxed text-charcoal dark:text-forest-100">
+            Apakah Anda yakin ingin menghapus <strong className="text-red-600 font-bold">{selectedIds.length}</strong> kualifikasi terpilih secara permanen?
+            Tindakan ini tidak dapat dibatalkan.
+          </p>
+
+          <div className="flex gap-2 pt-4">
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(false)}
+              disabled={bulkDeleting}
+              className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 py-2 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              Hapus {selectedIds.length} Data
             </button>
           </div>
         </DialogContent>

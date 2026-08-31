@@ -91,13 +91,17 @@ function ParticipantLayout() {
       {/* Desktop Sidebar */}
       <aside className="hidden w-64 flex-col border-r border-forest-900/10 bg-[#0D2818] text-white md:flex">
         <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-forest-700 text-white font-black text-lg">
-            A
-          </div>
-          <div>
-            <div className="font-display text-sm font-black tracking-wide text-white">ASKGANISPH</div>
-            <div className="text-[10px] uppercase font-bold text-emerald-400">Portal Peserta</div>
-          </div>
+          <Link to="/participant/exams" className="flex items-center gap-2.5 overflow-hidden group">
+            <img
+              src="/assets/logo-askganisph.png"
+              alt="Logo AskGanisPH"
+              className="h-9 w-auto object-contain shrink-0 transition-transform duration-200 group-hover:scale-105"
+            />
+            <div>
+              <div className="font-display text-sm font-black tracking-wide text-white">ASKGANISPH</div>
+              <div className="text-[10px] uppercase font-bold text-emerald-400">Portal Peserta</div>
+            </div>
+          </Link>
         </div>
 
         <nav className="flex-1 space-y-6 overflow-y-auto px-4 py-6">
@@ -137,9 +141,16 @@ function ParticipantLayout() {
                 </button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[260px] bg-[#0D2818] text-white p-4">
-                <div className="mb-6 flex items-center gap-3 font-display text-lg font-black text-white">
-                  <Award className="h-6 w-6 text-emerald-400" />
-                  ASKGANISPH
+                <div className="mb-6 flex items-center gap-3">
+                  <img
+                    src="/assets/logo-askganisph.png"
+                    alt="Logo AskGanisPH"
+                    className="h-8 w-auto object-contain shrink-0"
+                  />
+                  <div>
+                    <div className="font-display text-sm font-black tracking-wide text-white">ASKGANISPH</div>
+                    <div className="text-[10px] uppercase font-bold text-emerald-400">Portal Peserta</div>
+                  </div>
                 </div>
                 <nav className="space-y-6">
                   {navGroups.map((group, gIdx) => (

@@ -3,6 +3,13 @@ import { useEffect, useState } from "react";
 import { getAuditLogsFn } from "@/lib/services/adminService";
 import { History, ShieldAlert, Search } from "lucide-react";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { PageHeader } from "@/components/ui/page-header";
+import { BadgeStatus } from "@/components/ui/badge-status";
+import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/admin/audit-logs")({
   component: AdminAuditLogsPage,

@@ -13,6 +13,12 @@ import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { PageHeader } from "@/components/ui/page-header";
 import { BadgeStatus } from "@/components/ui/badge-status";
+import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/admin/master-ganisph")({
   component: AdminMasterGanisphPage,

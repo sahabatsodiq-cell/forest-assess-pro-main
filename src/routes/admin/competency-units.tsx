@@ -8,12 +8,18 @@ import {
   bulkDeleteCompetencyUnitsFn,
   getQualificationsFn,
 } from "@/lib/services/adminService";
-import { Plus, Search, Pencil, Power, Trash2, Filter, AlertTriangle, ListChecks, Loader2 } from "lucide-react";
+import { Plus, Search, Pencil, Power, Trash2, Filter, AlertTriangle, ListChecks, Loader2, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { PageHeader } from "@/components/ui/page-header";
 import { BadgeStatus } from "@/components/ui/badge-status";
+import { Button } from "@/components/ui/button";
+import { SearchInput } from "@/components/ui/search-input";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export const Route = createFileRoute("/admin/competency-units")({
   component: AdminCompetencyUnitsPage,
@@ -308,12 +314,12 @@ function AdminCompetencyUnitsPage() {
         actions={
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500 transition-all">
+              <Button variant="default" size="sm" className="btn-executive">
                 <Plus className="h-4 w-4" />
                 <span>Tambah Unit Kompetensi</span>
-              </button>
+              </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-lg bg-white p-6 dark:bg-charcoal dark:border-charcoal/60 max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg bg-white p-6 dark:bg-zinc-900 dark:border-zinc-800 rounded-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-forest-100">
                 Tambah Unit Kompetensi Baru

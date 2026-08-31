@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { loginFn, registerFn, checkFirstUserFn, requestPasswordResetFn } from "@/lib/services/auth";
-import { ArrowRight, Lock, Mail, ShieldCheck, User, Sparkles, KeyRound } from "lucide-react";
+import { ArrowRight, Lock, Mail, User, Sparkles, KeyRound } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -125,11 +125,6 @@ function LoginPage() {
     } finally {
       setForgotLoading(false);
     }
-  };
-
-  const fillDemoAccount = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
   };
 
   return (
@@ -318,39 +313,6 @@ function LoginPage() {
                 <ArrowRight className="h-4 w-4" />
               </button>
             </form>
-          )}
-
-          {/* Quick Demo Test Accounts Box */}
-          {mode === "login" && (
-            <div className="mt-8 border-t border-border/40 pt-5">
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-forest-900 mb-2">
-                <ShieldCheck className="h-4 w-4" />
-                <span>Akun Demo / Development (Seed Credentials)</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-[10px]">
-                <button
-                  type="button"
-                  onClick={() => fillDemoAccount("superadmin@askganisph.id", "SuperAdmin123!")}
-                  className="rounded border border-forest-100 bg-forest-50 p-2 text-center font-bold text-forest-900 hover:bg-forest-100"
-                >
-                  Super Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fillDemoAccount("admin@askganisph.id", "Admin123!")}
-                  className="rounded border border-forest-100 bg-forest-50 p-2 text-center font-bold text-forest-900 hover:bg-forest-100"
-                >
-                  Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => fillDemoAccount("peserta@askganisph.id", "Peserta123!")}
-                  className="rounded border border-forest-100 bg-forest-50 p-2 text-center font-bold text-forest-900 hover:bg-forest-100"
-                >
-                  Peserta
-                </button>
-              </div>
-            </div>
           )}
 
         </div>

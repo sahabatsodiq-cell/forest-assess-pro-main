@@ -217,7 +217,7 @@ export async function getLandingPreviewDataRaw(): Promise<LandingPreviewData> {
 
   const hasil = (attempts || []).map((a: any) => {
     const totalQ = (a.correct_count || 0) + (a.incorrect_count || 0) + (a.unanswered_count || 0);
-    const isPassed = a.score >= (a.passing_grade || 70);
+    const isPassed = a.score >= (a.passing_grade || 61);
 
     return {
       id: a.id,

@@ -77,6 +77,9 @@ export const getAdminStatsFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
 
+    // Ensure legacy/unspecified passing grades are synced to 61 (PAHAM threshold)
+    await db.prepare("UPDATE exam_packages SET passing_grade = 61 WHERE passing_grade = 70 OR passing_grade IS NULL").run().catch(() => {});
+
     const totalUsers = (await db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'PESERTA'").get())?.count || 0;
     const totalQuals = (await db.prepare("SELECT COUNT(*) as count FROM qualifications WHERE status = 'ACTIVE'").get())?.count || 0;
     const totalQuestions = (await db.prepare("SELECT COUNT(*) as count FROM questions WHERE status = 'ACTIVE'").get())?.count || 0;
@@ -84,6 +87,9 @@ export const getAdminStatsFn = createServerFn({ method: "POST" })
     const activeExams = (await db.prepare("SELECT COUNT(*) as count FROM exam_packages WHERE status = 'PUBLISHED' OR status = 'ACTIVE'").get())?.count || 0;
     const totalAttempts = (await db.prepare("SELECT COUNT(*) as count FROM exam_attempts WHERE status IN ('SUBMITTED', 'AUTO_SUBMITTED')").get())?.count || 0;
     const passedAttempts = (await db.prepare("SELECT COUNT(*) as count FROM exam_attempts a JOIN exam_packages p ON a.exam_id = p.id WHERE a.status IN ('SUBMITTED', 'AUTO_SUBMITTED') AND a.score >= p.passing_grade").get())?.count || 0;
+    
+    const passingGradeRes = await db.prepare("SELECT AVG(passing_grade) as avg_grade FROM exam_packages WHERE status IN ('PUBLISHED', 'ACTIVE')").get();
+    const passingGrade = passingGradeRes?.avg_grade ? Math.round(Number(passingGradeRes.avg_grade)) : 61;
 
     return {
       totalUsers,
@@ -93,6 +99,7 @@ export const getAdminStatsFn = createServerFn({ method: "POST" })
       activeExams,
       totalAttempts,
       passedAttempts,
+      passingGrade,
     };
   });
 

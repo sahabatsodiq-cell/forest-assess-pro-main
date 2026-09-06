@@ -199,7 +199,9 @@ function AdminDashboardIndex() {
 
           <div className="mt-4 pt-4 border-t border-border/50 dark:border-zinc-800 flex items-center justify-between text-xs">
             <span className="text-muted-foreground">Batas Kelulusan:</span>
-            <span className="font-bold text-charcoal dark:text-zinc-200">Passing Grade 70.0</span>
+            <span className="font-bold text-charcoal dark:text-zinc-200">
+              Passing Grade {(stats?.passingGrade ?? 61).toFixed(1)}
+            </span>
           </div>
         </Card>
 

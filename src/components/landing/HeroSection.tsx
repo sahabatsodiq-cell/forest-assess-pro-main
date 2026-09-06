@@ -94,7 +94,7 @@ function ExamMockup() {
           <span>50 Soal</span>
           <span>60 Menit</span>
           <span className="font-semibold text-forest-900">
-            Passing Grade: 70
+            Passing Grade: 61
           </span>
         </div>
 

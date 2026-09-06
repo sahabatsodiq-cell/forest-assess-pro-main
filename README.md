@@ -670,7 +670,7 @@ Large floating product interface:
 
 60 Menit
 
-Passing Grade 70
+Passing Grade 61
 
  
 

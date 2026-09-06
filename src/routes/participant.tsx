@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   Award,
+  Coffee,
 } from "lucide-react";
 import { logoutFn } from "@/lib/services/auth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -37,6 +38,7 @@ const navGroups = [
     title: "AKUN",
     items: [
       { label: "Profil", to: "/participant/profile", icon: User },
+      { label: "Traktiran Saya", to: "/participant/donations", icon: Coffee },
     ],
   },
 ];

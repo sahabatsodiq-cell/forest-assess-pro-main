@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
-import { logAudit } from "../auth";
+import { logAudit, verifySessionToken, hasPermission } from "../auth";
 import { sendCoffeeDonationReceiptEmail } from "./emailService";
 
 const donationSchema = z.object({
@@ -38,6 +38,24 @@ async function ensureCoffeeDonationsTable(db: any) {
   } catch (err) {
     // SQLite fallback or ignore if exists
   }
+}
+
+function verifyAdminSession(token?: string) {
+  let activeToken = token;
+  if (!activeToken && typeof window === "undefined") {
+    try {
+      const { getCookie } = require("@tanstack/react-start/server");
+      activeToken = getCookie("session_token");
+    } catch {
+      // Ignore if not in server context
+    }
+  }
+  if (!activeToken) throw new Error("Unauthorized");
+  const session = verifySessionToken(activeToken);
+  if (!session || !hasPermission(session.role, "user.view")) {
+    throw new Error("Forbidden: Admin access required");
+  }
+  return session;
 }
 
 /**
@@ -227,5 +245,96 @@ export const confirmCoffeeDonationPaymentFn = createServerFn({ method: "POST" })
       donationId: donation.id,
       status: "PAID",
       donation: { ...donation, status: "PAID", paid_at: paidAt },
+    };
+  });
+
+/**
+ * Admin: Get all coffee donations with filtering & statistics
+ */
+export const getAdminDonationsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; search?: string; status?: string }) => data)
+  .handler(async ({ data }) => {
+    verifyAdminSession(data.token);
+    const db = await getDb();
+    await ensureCoffeeDonationsTable(db);
+
+    let query = "SELECT * FROM coffee_donations WHERE 1=1";
+    const params: any[] = [];
+
+    if (data.status && data.status !== "ALL") {
+      query += " AND status = ?";
+      params.push(data.status);
+    }
+
+    if (data.search && data.search.trim() !== "") {
+      const q = `%${data.search.trim()}%`;
+      query += " AND (donor_name LIKE ? OR donor_email LIKE ? OR donor_phone LIKE ? OR mayar_transaction_id LIKE ?)";
+      params.push(q, q, q, q);
+    }
+
+    query += " ORDER BY id DESC";
+
+    const rows = await db.prepare(query).all(...params);
+    const donations = Array.isArray(rows) ? rows : [];
+
+    // Calculate aggregated statistics
+    const allRows = await db.prepare("SELECT amount, status FROM coffee_donations").all();
+    const list = Array.isArray(allRows) ? allRows : [];
+
+    const totalDonations = list.length;
+    const totalAmount = list.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+    const paidDonations = list.filter((r: any) => r.status === "PAID").length;
+    const paidAmount = list.filter((r: any) => r.status === "PAID").reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+    const pendingDonations = list.filter((r: any) => r.status !== "PAID").length;
+    const pendingAmount = list.filter((r: any) => r.status !== "PAID").reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+
+    return {
+      donations,
+      stats: {
+        totalDonations,
+        totalAmount,
+        paidDonations,
+        paidAmount,
+        pendingDonations,
+        pendingAmount,
+      },
+    };
+  });
+
+/**
+ * Participant: Get coffee donations by logged in user or email
+ */
+export const getUserDonationsFn = createServerFn({ method: "POST" })
+  .validator((data: { userId?: number; email?: string }) => data)
+  .handler(async ({ data }) => {
+    const db = await getDb();
+    await ensureCoffeeDonationsTable(db);
+
+    let rows: any[] = [];
+    if (data.userId) {
+      rows = await db.prepare(
+        "SELECT * FROM coffee_donations WHERE user_id = ? OR donor_email = (SELECT email FROM users WHERE id = ?) ORDER BY id DESC"
+      ).all(data.userId, data.userId);
+    } else if (data.email) {
+      rows = await db.prepare(
+        "SELECT * FROM coffee_donations WHERE donor_email = ? ORDER BY id DESC"
+      ).all(data.email);
+    }
+
+    const donations = Array.isArray(rows) ? rows : [];
+
+    const totalDonations = donations.length;
+    const paidDonations = donations.filter((r: any) => r.status === "PAID").length;
+    const totalAmount = donations.filter((r: any) => r.status === "PAID").reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+    const pendingDonations = donations.filter((r: any) => r.status !== "PAID").length;
+
+    return {
+      donations,
+      stats: {
+        totalDonations,
+        paidDonations,
+        totalAmount,
+        pendingDonations,
+      },
     };
   });

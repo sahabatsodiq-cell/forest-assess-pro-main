@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { 
   LayoutDashboard, Users, Award, ListChecks, BookOpen, Database, 
   Package, UserCheck, BarChart3, History, LogOut, Menu,
-  ChevronLeft, ChevronRight, Search, ShieldCheck, User, Settings, UserCircle
+  ChevronLeft, ChevronRight, Search, ShieldCheck, User, Settings, UserCircle, Coffee
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { 
@@ -59,6 +59,7 @@ const adminNavGroups: NavGroup[] = [
   {
     title: "SISTEM",
     items: [
+      { label: "Kelola Traktiran", to: "/admin/donations", icon: Coffee },
       { label: "Manajemen Pengguna", to: "/admin/users", icon: Users },
       { label: "Audit Log", to: "/admin/audit-logs", icon: History },
     ],

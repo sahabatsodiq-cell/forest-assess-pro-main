@@ -17,6 +17,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
 import { Route as AdminBlueprintsRouteImport } from './routes/admin/blueprints'
 import { Route as AdminCompetencyUnitsRouteImport } from './routes/admin/competency-units'
+import { Route as AdminDonationsRouteImport } from './routes/admin/donations'
 import { Route as AdminEnrollmentsRouteImport } from './routes/admin/enrollments'
 import { Route as AdminExamsRouteImport } from './routes/admin/exams'
 import { Route as AdminMasterGanisphRouteImport } from './routes/admin/master-ganisph'
@@ -27,6 +28,7 @@ import { Route as AdminSubjectsRouteImport } from './routes/admin/subjects'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as ExamAttemptIdRouteImport } from './routes/exam/$attemptId'
 import { Route as ParticipantIndexRouteImport } from './routes/participant/index'
+import { Route as ParticipantDonationsRouteImport } from './routes/participant/donations'
 import { Route as ParticipantExamsRouteImport } from './routes/participant/exams'
 import { Route as ParticipantProfileRouteImport } from './routes/participant/profile'
 import { Route as ParticipantResultsRouteImport } from './routes/participant/results'
@@ -70,6 +72,11 @@ const AdminBlueprintsRoute = AdminBlueprintsRouteImport.update({
 const AdminCompetencyUnitsRoute = AdminCompetencyUnitsRouteImport.update({
   id: '/competency-units',
   path: '/competency-units',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDonationsRoute = AdminDonationsRouteImport.update({
+  id: '/donations',
+  path: '/donations',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminEnrollmentsRoute = AdminEnrollmentsRouteImport.update({
@@ -122,6 +129,11 @@ const ParticipantIndexRoute = ParticipantIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ParticipantRoute,
 } as any)
+const ParticipantDonationsRoute = ParticipantDonationsRouteImport.update({
+  id: '/donations',
+  path: '/donations',
+  getParentRoute: () => ParticipantRoute,
+} as any)
 const ParticipantExamsRoute = ParticipantExamsRouteImport.update({
   id: '/exams',
   path: '/exams',
@@ -151,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/blueprints': typeof AdminBlueprintsRoute
   '/admin/competency-units': typeof AdminCompetencyUnitsRoute
+  '/admin/donations': typeof AdminDonationsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/master-ganisph': typeof AdminMasterGanisphRoute
@@ -160,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/participant/donations': typeof ParticipantDonationsRoute
   '/participant/exams': typeof ParticipantExamsRoute
   '/participant/profile': typeof ParticipantProfileRoute
   '/participant/results': typeof ParticipantResultsRoute
@@ -173,6 +187,7 @@ export interface FileRoutesByTo {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/blueprints': typeof AdminBlueprintsRoute
   '/admin/competency-units': typeof AdminCompetencyUnitsRoute
+  '/admin/donations': typeof AdminDonationsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/master-ganisph': typeof AdminMasterGanisphRoute
@@ -182,6 +197,7 @@ export interface FileRoutesByTo {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/participant/donations': typeof ParticipantDonationsRoute
   '/participant/exams': typeof ParticipantExamsRoute
   '/participant/profile': typeof ParticipantProfileRoute
   '/participant/results': typeof ParticipantResultsRoute
@@ -198,6 +214,7 @@ export interface FileRoutesById {
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/blueprints': typeof AdminBlueprintsRoute
   '/admin/competency-units': typeof AdminCompetencyUnitsRoute
+  '/admin/donations': typeof AdminDonationsRoute
   '/admin/enrollments': typeof AdminEnrollmentsRoute
   '/admin/exams': typeof AdminExamsRoute
   '/admin/master-ganisph': typeof AdminMasterGanisphRoute
@@ -207,6 +224,7 @@ export interface FileRoutesById {
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
+  '/participant/donations': typeof ParticipantDonationsRoute
   '/participant/exams': typeof ParticipantExamsRoute
   '/participant/profile': typeof ParticipantProfileRoute
   '/participant/results': typeof ParticipantResultsRoute
@@ -224,6 +242,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/blueprints'
     | '/admin/competency-units'
+    | '/admin/donations'
     | '/admin/enrollments'
     | '/admin/exams'
     | '/admin/master-ganisph'
@@ -233,6 +252,7 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/users'
     | '/exam/$attemptId'
+    | '/participant/donations'
     | '/participant/exams'
     | '/participant/profile'
     | '/participant/results'
@@ -246,6 +266,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/blueprints'
     | '/admin/competency-units'
+    | '/admin/donations'
     | '/admin/enrollments'
     | '/admin/exams'
     | '/admin/master-ganisph'
@@ -255,6 +276,7 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/users'
     | '/exam/$attemptId'
+    | '/participant/donations'
     | '/participant/exams'
     | '/participant/profile'
     | '/participant/results'
@@ -270,6 +292,7 @@ export interface FileRouteTypes {
     | '/admin/audit-logs'
     | '/admin/blueprints'
     | '/admin/competency-units'
+    | '/admin/donations'
     | '/admin/enrollments'
     | '/admin/exams'
     | '/admin/master-ganisph'
@@ -279,6 +302,7 @@ export interface FileRouteTypes {
     | '/admin/subjects'
     | '/admin/users'
     | '/exam/$attemptId'
+    | '/participant/donations'
     | '/participant/exams'
     | '/participant/profile'
     | '/participant/results'
@@ -354,6 +378,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCompetencyUnitsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/donations': {
+      id: '/admin/donations'
+      path: '/donations'
+      fullPath: '/admin/donations'
+      preLoaderRoute: typeof AdminDonationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/enrollments': {
       id: '/admin/enrollments'
       path: '/enrollments'
@@ -424,6 +455,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ParticipantIndexRouteImport
       parentRoute: typeof ParticipantRoute
     }
+    '/participant/donations': {
+      id: '/participant/donations'
+      path: '/donations'
+      fullPath: '/participant/donations'
+      preLoaderRoute: typeof ParticipantDonationsRouteImport
+      parentRoute: typeof ParticipantRoute
+    }
     '/participant/exams': {
       id: '/participant/exams'
       path: '/exams'
@@ -459,6 +497,7 @@ interface AdminRouteChildren {
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminBlueprintsRoute: typeof AdminBlueprintsRoute
   AdminCompetencyUnitsRoute: typeof AdminCompetencyUnitsRoute
+  AdminDonationsRoute: typeof AdminDonationsRoute
   AdminEnrollmentsRoute: typeof AdminEnrollmentsRoute
   AdminExamsRoute: typeof AdminExamsRoute
   AdminMasterGanisphRoute: typeof AdminMasterGanisphRoute
@@ -474,6 +513,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminBlueprintsRoute: AdminBlueprintsRoute,
   AdminCompetencyUnitsRoute: AdminCompetencyUnitsRoute,
+  AdminDonationsRoute: AdminDonationsRoute,
   AdminEnrollmentsRoute: AdminEnrollmentsRoute,
   AdminExamsRoute: AdminExamsRoute,
   AdminMasterGanisphRoute: AdminMasterGanisphRoute,
@@ -488,6 +528,7 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface ParticipantRouteChildren {
+  ParticipantDonationsRoute: typeof ParticipantDonationsRoute
   ParticipantExamsRoute: typeof ParticipantExamsRoute
   ParticipantProfileRoute: typeof ParticipantProfileRoute
   ParticipantResultsRoute: typeof ParticipantResultsRoute
@@ -495,6 +536,7 @@ interface ParticipantRouteChildren {
 }
 
 const ParticipantRouteChildren: ParticipantRouteChildren = {
+  ParticipantDonationsRoute: ParticipantDonationsRoute,
   ParticipantExamsRoute: ParticipantExamsRoute,
   ParticipantProfileRoute: ParticipantProfileRoute,
   ParticipantResultsRoute: ParticipantResultsRoute,

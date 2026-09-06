@@ -6,6 +6,11 @@ import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  server: {
+    watch: {
+      ignored: ["**/.output/**", "**/.tanstack/**", "**/db.sqlite*", "**/.nitro/**"],
+    },
+  },
   plugins: [
     tanstackStart({
       server: { entry: "server" },

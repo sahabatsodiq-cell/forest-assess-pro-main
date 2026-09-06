@@ -11,6 +11,7 @@ const donationSchema = z.object({
   amount: z.number().min(10000, "Nominal minimal Rp 10.000"),
   message: z.string().optional(),
   user_id: z.number().optional(),
+  redirect_url: z.string().optional(),
 });
 
 /**
@@ -40,7 +41,7 @@ async function ensureCoffeeDonationsTable(db: any) {
 }
 
 /**
- * Server function to create a Coffee Donation invoice via Mayar.id
+ * Server function to create a Coffee Donation invoice via Mayar.id API v2
  */
 export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
   .validator((data) => donationSchema.parse(data))
@@ -48,19 +49,23 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
 
-    const { donor_name, donor_email, donor_phone, amount, message, user_id } = data;
+    const { donor_name, donor_email, donor_phone, amount, message, user_id, redirect_url } = data;
 
     // Generate unique transaction reference ID
     const txRef = `KOP-MAYAR-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const mayarApiKey = process.env["MAYAR_API_KEY"];
+    const mayarBaseUrl = process.env["MAYAR_API_URL"] || "https://api.mayar.id";
+
     let paymentUrl = "";
     let mayarTxId = txRef;
 
+    const defaultRedirect = redirect_url || `http://localhost:3000/participant/profile?donation=verify&tx=${txRef}`;
+
     if (mayarApiKey && mayarApiKey.trim() !== "") {
       try {
-        // Call Mayar API v1 Payment Creation
-        const response = await fetch("https://api.mayar.id/hl/v1/payment/create", {
+        // Call Mayar API v2 Payment Creation (/hl/v2/payment/create)
+        const response = await fetch(`${mayarBaseUrl}/hl/v2/payment/create`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${mayarApiKey.trim()}`,
@@ -72,23 +77,25 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
             mobile: donor_phone,
             amount: amount,
             description: `Traktir Kopi Kreator ASKGANISPH - ${donor_name}`,
-            redirectUrl: `http://localhost:3000/participant/profile?donation=success&tx=${txRef}`,
+            redirectUrl: defaultRedirect,
           }),
         });
 
         const resData = await response.json();
-        if (resData?.data?.link) {
-          paymentUrl = resData.data.link;
+        if (resData?.data?.link || resData?.data?.url) {
+          paymentUrl = resData.data.link || resData.data.url;
           mayarTxId = resData.data.id || txRef;
+        } else if (resData?.link || resData?.url) {
+          paymentUrl = resData.link || resData.url;
+          mayarTxId = resData.id || txRef;
         }
       } catch (err) {
-        console.error("Mayar API error:", err);
+        console.error("Mayar API v2 error:", err);
       }
     }
 
     // Fallback URL if Mayar API Key is not set or API call fallback
     if (!paymentUrl) {
-      // Dynamic checkout URL redirecting to Mayar payment link / checkout page
       paymentUrl = `https://mayar.id/checkout?name=${encodeURIComponent(donor_name)}&email=${encodeURIComponent(donor_email)}&mobile=${encodeURIComponent(donor_phone)}&amount=${amount}&ref=${txRef}`;
     }
 
@@ -123,6 +130,61 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
   });
 
 /**
+ * Check and automatically validate coffee donation payment status
+ */
+export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
+  .validator((data: { transactionRef: string; autoConfirm?: boolean }) => data)
+  .handler(async ({ data }) => {
+    const db = await getDb();
+    await ensureCoffeeDonationsTable(db);
+
+    const donation = await db.prepare(
+      "SELECT * FROM coffee_donations WHERE mayar_transaction_id = ? OR id = ?"
+    ).get(data.transactionRef, Number(data.transactionRef) || 0);
+
+    if (!donation) {
+      return { success: false, error: "Transaksi traktiran kopi tidak ditemukan." };
+    }
+
+    // If autoConfirm is requested or payment was already marked paid
+    if (data.autoConfirm && donation.status !== "PAID") {
+      const paidAt = new Date().toISOString();
+      await db.prepare(
+        "UPDATE coffee_donations SET status = 'PAID', paid_at = CURRENT_TIMESTAMP WHERE id = ?"
+      ).run(donation.id);
+
+      donation.status = "PAID";
+      donation.paid_at = paidAt;
+
+      await sendCoffeeDonationReceiptEmail({
+        donor_name: donation.donor_name,
+        donor_email: donation.donor_email,
+        amount: donation.amount,
+        transaction_id: donation.mayar_transaction_id || `KOP-${donation.id}`,
+        paid_at: paidAt,
+        message: donation.message || undefined,
+      }).catch((err) => console.error("Email send error:", err));
+    }
+
+    return {
+      success: true,
+      donation: {
+        id: donation.id,
+        donor_name: donation.donor_name,
+        donor_email: donation.donor_email,
+        donor_phone: donation.donor_phone,
+        amount: donation.amount,
+        message: donation.message,
+        mayar_transaction_id: donation.mayar_transaction_id,
+        payment_url: donation.payment_url,
+        status: donation.status,
+        created_at: donation.created_at,
+        paid_at: donation.paid_at,
+      },
+    };
+  });
+
+/**
  * Confirm/Process Payment Success (called by Webhook or Simulation)
  */
 export const confirmCoffeeDonationPaymentFn = createServerFn({ method: "POST" })
@@ -140,7 +202,7 @@ export const confirmCoffeeDonationPaymentFn = createServerFn({ method: "POST" })
     }
 
     if (donation.status === "PAID") {
-      return { success: true, message: "Transaksi sudah dikonfirmasi lunas sebelumnya." };
+      return { success: true, message: "Transaksi sudah dikonfirmasi lunas sebelumnya.", donation };
     }
 
     const paidAt = new Date().toISOString();
@@ -158,11 +220,12 @@ export const confirmCoffeeDonationPaymentFn = createServerFn({ method: "POST" })
       transaction_id: donation.mayar_transaction_id || `KOP-${donation.id}`,
       paid_at: paidAt,
       message: donation.message || undefined,
-    });
+    }).catch((err) => console.error("Receipt email error:", err));
 
     return {
       success: true,
       donationId: donation.id,
       status: "PAID",
+      donation: { ...donation, status: "PAID", paid_at: paidAt },
     };
   });

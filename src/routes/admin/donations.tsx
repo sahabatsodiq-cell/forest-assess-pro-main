@@ -31,10 +31,11 @@ function AdminDonationsPage() {
     const token = localStorage.getItem("askganis_token") || "";
 
     try {
+      const searchTrimmed = search.trim();
       const res = await getAdminDonationsFn({
         data: {
           token,
-          search: search.trim() || undefined,
+          ...(searchTrimmed ? { search: searchTrimmed } : {}),
           status: statusFilter,
         },
       });

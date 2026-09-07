@@ -87,6 +87,78 @@ async function checkAndUpdateExpiredDonations(db: any) {
 }
 
 /**
+ * Automatically repair old dummy broken payment URLs (e.g. containing checkout?)
+ */
+async function fixBrokenPaymentUrls(db: any) {
+  const mayarApiKey = process.env["MAYAR_API_KEY"];
+  if (!mayarApiKey || !mayarApiKey.trim()) return;
+
+  try {
+    const brokenRows = await db.prepare(
+      "SELECT * FROM coffee_donations WHERE (payment_url LIKE '%checkout?%' OR payment_url LIKE '%mayar.id/checkout%' OR payment_url IS NULL OR payment_url = '') AND status NOT IN ('PAID', 'EXPIRED', 'CANCELLED')"
+    ).all();
+
+    const rows = Array.isArray(brokenRows) ? brokenRows : [];
+    const mayarBaseUrl = process.env["MAYAR_API_URL"] || "https://api.mayar.id";
+
+    for (const d of rows) {
+      try {
+        const txRef = d.mayar_transaction_id || `KOP-MAYAR-${Date.now()}`;
+        const defaultRedirect = `http://localhost:3000/participant/donations?donation=verify&tx=${txRef}`;
+        const expiredAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+        const response = await fetch(`${mayarBaseUrl}/hl/v2/invoices/create`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${mayarApiKey.trim()}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: d.donor_name,
+            email: d.donor_email,
+            mobile: d.donor_phone,
+            amount: d.amount,
+            description: `Traktir Kopi Kreator ASKGANISPH - ${d.donor_name}`,
+            redirectUrl: defaultRedirect,
+            expiredAt: expiredAt,
+            items: [
+              {
+                description: `Traktir Kopi Kreator ASKGANISPH - ${d.donor_name}`,
+                quantity: 1,
+                rate: d.amount,
+                amount: d.amount,
+              },
+            ],
+          }),
+        });
+
+        const resData = await response.json();
+        let newUrl = "";
+        let newTxId = d.mayar_transaction_id;
+
+        if (resData?.data?.link || resData?.data?.url || resData?.data?.paymentUrl) {
+          newUrl = resData.data.link || resData.data.url || resData.data.paymentUrl;
+          newTxId = resData.data.id || resData.data.transactionId || txRef;
+        } else if (resData?.link || resData?.url || resData?.paymentUrl) {
+          newUrl = resData.link || resData.url || resData.paymentUrl;
+          newTxId = resData.id || resData.transactionId || txRef;
+        }
+
+        if (newUrl) {
+          await db.prepare(
+            "UPDATE coffee_donations SET payment_url = ?, mayar_transaction_id = ? WHERE id = ?"
+          ).run(newUrl, newTxId, d.id);
+        }
+      } catch (e) {
+        console.error("Error fixing broken payment URL for donation ID", d.id, e);
+      }
+    }
+  } catch (err) {
+    console.error("fixBrokenPaymentUrls error:", err);
+  }
+}
+
+/**
  * Cek status pembayaran riil langsung ke Mayar API v2
  */
 export async function verifyPaymentWithMayarApi(mayarTxId: string): Promise<boolean> {
@@ -98,7 +170,7 @@ export async function verifyPaymentWithMayarApi(mayarTxId: string): Promise<bool
   }
 
   try {
-    const res = await fetch(`${mayarBaseUrl}/hl/v2/payment/${mayarTxId}`, {
+    const res = await fetch(`${mayarBaseUrl}/hl/v2/invoices/${encodeURIComponent(mayarTxId)}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${mayarApiKey.trim()}`,
@@ -108,8 +180,8 @@ export async function verifyPaymentWithMayarApi(mayarTxId: string): Promise<bool
 
     if (!res.ok) return false;
     const resData = await res.json();
-    const status = (resData?.data?.status || resData?.status || "").toUpperCase();
-    return status === "PAID" || status === "SUCCESS" || status === "SETTLEMENT";
+    const status = (resData?.data?.status || resData?.status || "").toLowerCase();
+    return status === "paid" || status === "success" || status === "settlement";
   } catch (err) {
     console.error("Error querying Mayar API v2 payment status:", err);
     return false;
@@ -143,8 +215,8 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
 
     if (mayarApiKey && mayarApiKey.trim() !== "") {
       try {
-        // Call Mayar API v2 Invoice Creation (/hl/v2/invoice/create) with 1 hour expiration
-        const response = await fetch(`${mayarBaseUrl}/hl/v2/invoice/create`, {
+        // Call Mayar API v2 Invoice Creation (/hl/v2/invoices/create) with 1 hour expiration
+        const response = await fetch(`${mayarBaseUrl}/hl/v2/invoices/create`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${mayarApiKey.trim()}`,
@@ -170,11 +242,11 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
         });
 
         const resData = await response.json();
-        if (resData?.data?.link || resData?.data?.url) {
-          paymentUrl = resData.data.link || resData.data.url;
+        if (resData?.data?.link || resData?.data?.url || resData?.data?.paymentUrl) {
+          paymentUrl = resData.data.link || resData.data.url || resData.data.paymentUrl;
           mayarTxId = resData.data.id || resData.data.transactionId || txRef;
-        } else if (resData?.link || resData?.url) {
-          paymentUrl = resData.link || resData.url;
+        } else if (resData?.link || resData?.url || resData?.paymentUrl) {
+          paymentUrl = resData.link || resData.url || resData.paymentUrl;
           mayarTxId = resData.id || resData.transactionId || txRef;
         } else {
           console.error("Mayar API v2 error response:", resData);
@@ -442,6 +514,7 @@ export const getAdminDonationsFn = createServerFn({ method: "POST" })
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
     await checkAndUpdateExpiredDonations(db);
+    await fixBrokenPaymentUrls(db);
 
     let query = "SELECT * FROM coffee_donations WHERE 1=1";
     const params: any[] = [];
@@ -495,6 +568,7 @@ export const getUserDonationsFn = createServerFn({ method: "POST" })
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
     await checkAndUpdateExpiredDonations(db);
+    await fixBrokenPaymentUrls(db);
 
     let rows: any[] = [];
 

@@ -2,12 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { 
   Coffee, Search, RefreshCw, CheckCircle2, Clock, 
-  ExternalLink, Mail, MessageSquare, DollarSign, Filter, Sparkles 
+  ExternalLink, Mail, MessageSquare, DollarSign, Filter, Sparkles, MessageCircle 
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAdminDonationsFn, confirmCoffeeDonationPaymentFn } from "@/lib/services/mayarService";
+import { generateInvoiceWhatsappUrl, generateReceiptWhatsappUrl } from "@/lib/services/whatsappService";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -373,6 +374,39 @@ function AdminDonationsPage() {
                 >
                   <ExternalLink className="h-4 w-4" />
                   <span>Buka Halaman Pembayaran Mayar.id</span>
+                </a>
+              )}
+
+              {selectedDonation.donor_phone && (
+                <a
+                  href={
+                    selectedDonation.status === "PAID"
+                      ? generateReceiptWhatsappUrl({
+                          donor_name: selectedDonation.donor_name,
+                          donor_phone: selectedDonation.donor_phone,
+                          amount: selectedDonation.amount,
+                          transaction_id: selectedDonation.mayar_transaction_id,
+                          paid_at: selectedDonation.paid_at || new Date().toISOString(),
+                          message: selectedDonation.message,
+                        })
+                      : generateInvoiceWhatsappUrl({
+                          donor_name: selectedDonation.donor_name,
+                          donor_phone: selectedDonation.donor_phone,
+                          amount: selectedDonation.amount,
+                          payment_url: selectedDonation.payment_url || "#",
+                          transaction_id: selectedDonation.mayar_transaction_id,
+                        })
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition-all cursor-pointer shadow-xs"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>
+                    {selectedDonation.status === "PAID"
+                      ? "Kirim Bukti Pembayaran via WA Donatur"
+                      : "Kirim Tagihan Pembayaran via WA Donatur"}
+                  </span>
                 </a>
               )}
             </div>

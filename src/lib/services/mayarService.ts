@@ -3,12 +3,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
 import { logAudit, verifySessionToken, hasPermission } from "../auth";
 import { sendCoffeeDonationReceiptEmail } from "./emailService";
+import { sendCoffeeDonationWhatsAppReceipt } from "./whatsappService";
 
 const donationSchema = z.object({
   donor_name: z.string().trim().min(1, "Nama wajib diisi"),
   donor_email: z.string().trim().email("Format email tidak valid"),
   donor_phone: z.string().trim().min(8, "Nomor WhatsApp/HP minimal 8 digit"),
-  amount: z.number().min(1000, "Nominal minimal Rp 1.000"),
+  amount: z.number().min(10000, "Nominal minimal Rp 10.000"),
   message: z.string().optional(),
   user_id: z.number().optional(),
   redirect_url: z.string().optional(),
@@ -91,6 +92,17 @@ async function syncAndVerifyMayarDonations(db: any) {
             paid_at: paidAt,
             message: r.message || undefined,
           }).catch((err) => console.error("Sync email send error:", err));
+
+          if (r.donor_phone) {
+            await sendCoffeeDonationWhatsAppReceipt({
+              donor_name: r.donor_name,
+              donor_phone: r.donor_phone,
+              amount: r.amount,
+              transaction_id: r.mayar_transaction_id || `KOP-${r.id}`,
+              paid_at: paidAt,
+              message: r.message || undefined,
+            }).catch((err) => console.error("Sync WA send error:", err));
+          }
 
           continue; // Successfully updated to PAID
         }
@@ -397,6 +409,17 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
         paid_at: paidAt,
         message: donation.message || undefined,
       }).catch((err) => console.error("Email send error:", err));
+
+      if (donation.donor_phone) {
+        await sendCoffeeDonationWhatsAppReceipt({
+          donor_name: donation.donor_name,
+          donor_phone: donation.donor_phone,
+          amount: donation.amount,
+          transaction_id: donation.mayar_transaction_id || `KOP-${donation.id}`,
+          paid_at: paidAt,
+          message: donation.message || undefined,
+        }).catch((err) => console.error("WA send error:", err));
+      }
     }
 
     return {
@@ -465,6 +488,17 @@ export const confirmCoffeeDonationPaymentFn = createServerFn({ method: "POST" })
       message: donation.message || undefined,
     }).catch((err) => console.error("Receipt email error:", err));
 
+    if (donation.donor_phone) {
+      await sendCoffeeDonationWhatsAppReceipt({
+        donor_name: donation.donor_name,
+        donor_phone: donation.donor_phone,
+        amount: donation.amount,
+        transaction_id: donation.mayar_transaction_id || `KOP-${donation.id}`,
+        paid_at: paidAt,
+        message: donation.message || undefined,
+      }).catch((err) => console.error("Receipt WA error:", err));
+    }
+
     return {
       success: true,
       donationId: donation.id,
@@ -520,6 +554,17 @@ export const processMayarWebhookFn = createServerFn({ method: "POST" })
       paid_at: paidAt,
       message: donation.message || undefined,
     }).catch((err) => console.error("Webhook receipt email error:", err));
+
+    if (donation.donor_phone) {
+      await sendCoffeeDonationWhatsAppReceipt({
+        donor_name: donation.donor_name,
+        donor_phone: donation.donor_phone,
+        amount: donation.amount,
+        transaction_id: donation.mayar_transaction_id || `KOP-${donation.id}`,
+        paid_at: paidAt,
+        message: donation.message || undefined,
+      }).catch((err) => console.error("Webhook WA receipt error:", err));
+    }
 
     return {
       success: true,

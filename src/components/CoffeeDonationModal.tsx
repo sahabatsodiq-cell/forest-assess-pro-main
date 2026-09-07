@@ -9,6 +9,7 @@ import {
   checkCoffeeDonationStatusFn, 
   confirmCoffeeDonationPaymentFn 
 } from "@/lib/services/mayarService";
+import { generateInvoiceWhatsappUrl, generateReceiptWhatsappUrl } from "@/lib/services/whatsappService";
 import { toast } from "sonner";
 
 interface CoffeeDonationModalProps {
@@ -18,7 +19,7 @@ interface CoffeeDonationModalProps {
 
 export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir Kopi" }: CoffeeDonationModalProps) {
   const [open, setOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState<number>(1000);
+  const [selectedAmount, setSelectedAmount] = useState<number>(10000);
   const [customAmountStr, setCustomAmountStr] = useState<string>("");
 
   const [donorName, setDonorName] = useState("");
@@ -90,7 +91,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
   }, []);
 
   // Compute active nominal amount
-  const activeAmount = customAmountStr ? Math.max(1000, Number(customAmountStr) || 0) : selectedAmount;
+  const activeAmount = customAmountStr ? Math.max(10000, Number(customAmountStr) || 0) : selectedAmount;
 
   const handleSelectPreset = (val: number) => {
     setSelectedAmount(val);
@@ -137,8 +138,8 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
       return;
     }
 
-    if (activeAmount < 1000) {
-      toast.error("Nominal traktiran minimal Rp 1.000!");
+    if (activeAmount < 10000) {
+      toast.error("Nominal traktiran minimal Rp 10.000!");
       return;
     }
 
@@ -298,8 +299,27 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
 
             <div className="rounded-xl bg-emerald-50/80 p-3 text-[11px] text-emerald-900 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/50 text-left flex items-start gap-2">
               <Sparkles className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
-              <span>Struk pembayaran resmi (e-receipt) telah otomatis dikirimkan ke email Anda.</span>
+              <span>Struk pembayaran resmi (e-receipt) telah otomatis dikirimkan ke Email & WhatsApp Anda.</span>
             </div>
+
+            {activeDonation && (
+              <a
+                href={generateReceiptWhatsappUrl({
+                  donor_name: activeDonation.donor_name || donorName,
+                  donor_phone: activeDonation.donor_phone || donorPhone,
+                  amount: activeDonation.amount || activeAmount,
+                  transaction_id: activeDonation.mayar_transaction_id,
+                  paid_at: activeDonation.paid_at || new Date().toISOString(),
+                  message: activeDonation.message || message,
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-md hover:bg-emerald-700 transition-all cursor-pointer"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>Kirim Bukti Pembayaran via WhatsApp</span>
+              </a>
+            )}
 
             <button
               type="button"
@@ -379,15 +399,33 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
               ) : (
                 <>
                   {activeDonation?.payment_url && (
-                    <a
-                      href={activeDonation.payment_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0D4B34] px-4 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      <span>Bayar Ulang via Mayar.id</span>
-                    </a>
+                    <>
+                      <a
+                        href={activeDonation.payment_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0D4B34] px-4 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span>Bayar Ulang via Mayar.id</span>
+                      </a>
+
+                      <a
+                        href={generateInvoiceWhatsappUrl({
+                          donor_name: activeDonation.donor_name || donorName,
+                          donor_phone: activeDonation.donor_phone || donorPhone,
+                          amount: activeDonation.amount || activeAmount,
+                          payment_url: activeDonation.payment_url,
+                          transaction_id: activeDonation.mayar_transaction_id,
+                        })}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-md hover:bg-emerald-700 transition-all cursor-pointer"
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                        <span>Kirim Tagihan via WhatsApp</span>
+                      </a>
+                    </>
                   )}
 
                   <button
@@ -451,7 +489,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                   Pilih Nominal Traktiran
                 </label>
                 <div className="grid grid-cols-2 gap-2.5">
-                  {[1000, 2000, 50000, 100000].map((amt) => {
+                  {[10000, 25000, 50000, 100000].map((amt) => {
                     const isSelected = !customAmountStr && selectedAmount === amt;
                     return (
                       <button
@@ -474,9 +512,9 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                 <div className="mt-2.5">
                   <input
                     type="number"
-                    min={1000}
+                    min={10000}
                     step={5000}
-                    placeholder="Nominal Lainnya (Min. 1.000)"
+                    placeholder="Nominal Lainnya (Min. 10.000)"
                     value={customAmountStr}
                     onChange={(e) => handleCustomChange(e.target.value)}
                     className="w-full rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-bold focus:border-[#0D4B34] focus:outline-none dark:bg-charcoal/80 dark:border-charcoal/60 dark:text-forest-100"

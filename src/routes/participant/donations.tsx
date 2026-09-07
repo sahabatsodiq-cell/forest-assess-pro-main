@@ -2,12 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { 
   Coffee, CheckCircle2, Clock, ExternalLink, RefreshCw, 
-  Heart, Sparkles, ShieldCheck 
+  Heart, Sparkles, ShieldCheck, MessageCircle 
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CoffeeDonationModal } from "@/components/CoffeeDonationModal";
 import { getUserDonationsFn, confirmCoffeeDonationPaymentFn, checkCoffeeDonationStatusFn } from "@/lib/services/mayarService";
+import { generateInvoiceWhatsappUrl, generateReceiptWhatsappUrl } from "@/lib/services/whatsappService";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/participant/donations")({
@@ -305,15 +306,35 @@ function ParticipantDonationsPage() {
                   ) : item.status !== "PAID" ? (
                     <>
                       {item.payment_url && (
-                        <a
-                          href={item.payment_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-xl bg-[#0D4B34] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                          <span>Bayar Sekarang</span>
-                        </a>
+                        <>
+                          <a
+                            href={item.payment_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0D4B34] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            <span>Bayar Sekarang</span>
+                          </a>
+
+                          {item.donor_phone && (
+                            <a
+                              href={generateInvoiceWhatsappUrl({
+                                donor_name: item.donor_name,
+                                donor_phone: item.donor_phone,
+                                amount: item.amount,
+                                payment_url: item.payment_url,
+                                transaction_id: item.mayar_transaction_id,
+                              })}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              <span>Kirim Tagihan WA</span>
+                            </a>
+                          )}
+                        </>
                       )}
                       <button
                         onClick={() => handleSimulatePayment(item.mayar_transaction_id)}
@@ -325,10 +346,30 @@ function ParticipantDonationsPage() {
                       </button>
                     </>
                   ) : (
-                    <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                      <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
-                      Struk dikirim ke email
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                        Struk Email & WA
+                      </span>
+                      {item.donor_phone && (
+                        <a
+                          href={generateReceiptWhatsappUrl({
+                            donor_name: item.donor_name,
+                            donor_phone: item.donor_phone,
+                            amount: item.amount,
+                            transaction_id: item.mayar_transaction_id,
+                            paid_at: item.paid_at || new Date().toISOString(),
+                            message: item.message,
+                          })}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          <span>Kirim Struk WA</span>
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

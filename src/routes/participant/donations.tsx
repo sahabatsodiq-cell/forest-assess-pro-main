@@ -7,7 +7,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CoffeeDonationModal } from "@/components/CoffeeDonationModal";
-import { getUserDonationsFn, confirmCoffeeDonationPaymentFn } from "@/lib/services/mayarService";
+import { getUserDonationsFn, confirmCoffeeDonationPaymentFn, checkCoffeeDonationStatusFn } from "@/lib/services/mayarService";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/participant/donations")({
@@ -19,6 +19,10 @@ function ParticipantDonationsPage() {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [verificationBanner, setVerificationBanner] = useState<{
+    type: "PAID" | "UNPAID";
+    donation: any;
+  } | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -47,6 +51,34 @@ function ParticipantDonationsPage() {
 
   useEffect(() => {
     loadData();
+
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const donationParam = urlParams.get("donation");
+      const txRef = urlParams.get("tx");
+
+      if (txRef || donationParam) {
+        const refToVerify = txRef;
+        if (refToVerify) {
+          checkCoffeeDonationStatusFn({
+            data: { transactionRef: refToVerify },
+          })
+            .then((res) => {
+              if (res.success && res.donation) {
+                if (res.donation.status === "PAID") {
+                  setVerificationBanner({ type: "PAID", donation: res.donation });
+                  toast.success("Pembayaran terkonfirmasi LUNAS!");
+                } else {
+                  setVerificationBanner({ type: "UNPAID", donation: res.donation });
+                  toast.info("Status pembayaran: BELUM DIBAYAR");
+                }
+                loadData();
+              }
+            })
+            .catch((err) => console.error("Auto verify error:", err));
+        }
+      }
+    }
   }, []);
 
   const handleSimulatePayment = async (txRef: string) => {
@@ -72,6 +104,59 @@ function ParticipantDonationsPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       
+      {/* Verification Status Banner if returning from Mayar */}
+      {verificationBanner && (
+        <div
+          className={`rounded-2xl p-4 border text-xs shadow-md transition-all ${
+            verificationBanner.type === "PAID"
+              ? "bg-emerald-50 border-emerald-300 text-emerald-950 dark:bg-emerald-950/40 dark:border-emerald-700/60 dark:text-emerald-200"
+              : "bg-amber-50 border-amber-300 text-amber-950 dark:bg-amber-950/40 dark:border-amber-700/60 dark:text-amber-200"
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              {verificationBanner.type === "PAID" ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+              ) : (
+                <Clock className="h-5 w-5 text-amber-600 shrink-0 mt-0.5 animate-pulse" />
+              )}
+              <div>
+                <div className="font-bold text-sm">
+                  {verificationBanner.type === "PAID"
+                    ? "Pembayaran Berhasil! (STATUS: LUNAS)"
+                    : "Status Pembayaran: BELUM DIBAYAR"}
+                </div>
+                <p className="text-[11px] opacity-90 mt-0.5">
+                  {verificationBanner.type === "PAID"
+                    ? `Terima kasih! Traktiran kopi ID ${verificationBanner.donation.mayar_transaction_id} telah lunas.`
+                    : `Transaksi ID ${verificationBanner.donation.mayar_transaction_id} belum diselesaikan. Anda dapat melakukan bayar ulang.`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {verificationBanner.type === "UNPAID" && verificationBanner.donation.payment_url && (
+                <a
+                  href={verificationBanner.donation.payment_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#0D4B34] px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-[#083625] transition-all"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Bayar Ulang via Mayar.id</span>
+                </a>
+              )}
+              <button
+                onClick={() => setVerificationBanner(null)}
+                className="text-xs underline opacity-70 hover:opacity-100 p-1"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-900 via-forest-900 to-emerald-950 p-6 text-white shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

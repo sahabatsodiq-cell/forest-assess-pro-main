@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { 
   Coffee, Heart, Send, CheckCircle2, ShieldCheck, Sparkles, 
   AlertCircle, ExternalLink, Clock, RefreshCw, ArrowLeft, X 
@@ -18,7 +18,7 @@ interface CoffeeDonationModalProps {
 
 export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir Kopi" }: CoffeeDonationModalProps) {
   const [open, setOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState<number>(2000);
+  const [selectedAmount, setSelectedAmount] = useState<number>(10000);
   const [customAmountStr, setCustomAmountStr] = useState<string>("");
 
   const [donorName, setDonorName] = useState("");
@@ -57,34 +57,35 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
     const donationParam = urlParams.get("donation");
     const txRef = urlParams.get("tx");
 
-    if (txRef && donationParam) {
-      setOpen(true);
-      setVerifying(true);
+    if (txRef || donationParam) {
+      const refToVerify = txRef;
+      if (refToVerify) {
+        setOpen(true);
+        setVerifying(true);
 
-      checkCoffeeDonationStatusFn({
-        data: {
-          transactionRef: txRef,
-        },
-      })
-        .then((res) => {
-          if (res.success && res.donation) {
-            setActiveDonation(res.donation);
-            if (res.donation.status === "PAID") {
-              setViewState("success");
+        checkCoffeeDonationStatusFn({
+          data: { transactionRef: refToVerify },
+        })
+          .then((res) => {
+            if (res.success && res.donation) {
+              setActiveDonation(res.donation);
+              if (res.donation.status === "PAID") {
+                setViewState("success");
+              } else {
+                setViewState("unpaid");
+              }
             } else {
               setViewState("unpaid");
             }
-          } else {
+          })
+          .catch((err) => {
+            console.error("Donation check error:", err);
             setViewState("unpaid");
-          }
-        })
-        .catch((err) => {
-          console.error("Donation check error:", err);
-          setViewState("unpaid");
-        })
-        .finally(() => {
-          setVerifying(false);
-        });
+          })
+          .finally(() => {
+            setVerifying(false);
+          });
+      }
     }
   }, []);
 
@@ -100,6 +101,35 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
     setCustomAmountStr(valStr);
   };
 
+  const handleCheckStatusManual = async () => {
+    if (!activeDonation?.mayar_transaction_id) return;
+    setVerifying(true);
+    try {
+      const res = await checkCoffeeDonationStatusFn({
+        data: {
+          transactionRef: activeDonation.mayar_transaction_id,
+        },
+      });
+
+      if (res.success && res.donation) {
+        setActiveDonation(res.donation);
+        if (res.donation.status === "PAID") {
+          toast.success("Pembayaran terverifikasi LUNAS!");
+          setViewState("success");
+        } else {
+          toast.info("Status pembayaran masih BELUM DIBAYAR.");
+          setViewState("unpaid");
+        }
+      } else {
+        toast.error("Gagal memeriksa status pembayaran.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat mengecek status.");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!donorName.trim() || !donorEmail.trim() || !donorPhone.trim()) {
@@ -108,7 +138,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
     }
 
     if (activeAmount < 1000) {
-      toast.error("Nominal traktiran minimal Rp 10.000!");
+      toast.error("Nominal traktiran minimal Rp 1.000!");
       return;
     }
 
@@ -116,8 +146,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
 
     try {
       const currentOrigin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
-      const currentPath = typeof window !== "undefined" ? window.location.pathname : "/participant/profile";
-      const redirectUrl = `${currentOrigin}${currentPath}?donation=verify`;
+      const redirectUrl = `${currentOrigin}/participant/donations?donation=verify`;
 
       const res = await createCoffeeDonationInvoiceFn({
         data: {
@@ -229,7 +258,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
           </div>
         ) : viewState === "success" ? (
           /* ==================================================================== */
-          /* SUCCESS VIEW */
+          /* SUCCESS VIEW (PAID) */
           /* ==================================================================== */
           <div className="space-y-4 py-2 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 mx-auto shadow-md">
@@ -241,7 +270,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                 STATUS: LUNAS / PAID
               </span>
               <h3 className="font-display text-lg font-black text-charcoal dark:text-forest-100 mt-2">
-                Terima Kasih atas Traktirannya! â˜•
+                Terima Kasih atas Traktirannya! ☕
               </h3>
               <p className="text-xs text-muted-foreground mt-1 dark:text-forest-100/70">
                 Dukunganmu sangat berharga untuk pengembang platform ASKGANISPH.
@@ -279,10 +308,15 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
             >
               Selesai & Kembali
             </button>
+
+            <div className="mt-2 text-center text-[11px] text-muted-foreground dark:text-forest-100/60 flex items-center justify-center gap-1.5 pt-2 border-t border-border/50 dark:border-charcoal/60">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Pembayaran aman dengan <strong>Mayar.id</strong></span>
+            </div>
           </div>
         ) : viewState === "unpaid" ? (
           /* ==================================================================== */
-          /* UNPAID / PENDING VIEW */
+          /* UNPAID / PENDING / FAILED VIEW */
           /* ==================================================================== */
           <div className="space-y-4 py-2">
             <div className="text-center space-y-2">
@@ -295,10 +329,10 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                   STATUS PEMBAYARAN: BELUM DIBAYAR
                 </span>
                 <h3 className="font-display text-base font-black text-charcoal dark:text-forest-100 mt-2">
-                  Menunggu Pembayaran Traktir Kopi
+                  Menunggu / Gagal Pembayaran Traktir Kopi
                 </h3>
                 <p className="text-xs text-muted-foreground dark:text-forest-100/70">
-                  Tagihan traktiran Anda telah dibuat. Silakan selesaikan pembayaran via Mayar.id.
+                  Tagihan traktiran Anda belum diselesaikan. Anda dapat mencoba bayar lagi sekarang.
                 </p>
               </div>
             </div>
@@ -327,9 +361,19 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0D4B34] px-4 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  <span>Bayar Sekarang via Mayar.id</span>
+                  <span>Bayar Ulang via Mayar.id</span>
                 </a>
               )}
+
+              <button
+                type="button"
+                onClick={handleCheckStatusManual}
+                disabled={verifying}
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-white py-2 text-xs font-bold text-charcoal hover:bg-forest-50 transition-all dark:bg-charcoal/80 dark:text-forest-100 dark:border-charcoal/60 cursor-pointer"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 text-emerald-600 ${verifying ? "animate-spin" : ""}`} />
+                <span>Cek Ulang Status Pembayaran</span>
+              </button>
 
               {import.meta.env.DEV && (
                 <button
@@ -360,7 +404,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
           </div>
         ) : (
           /* ==================================================================== */
-          /* FORM VIEW */
+          /* FORM CHECKOUT VIEW */
           /* ==================================================================== */
           <>
             <DialogHeader className="text-left space-y-1">
@@ -380,7 +424,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                   Pilih Nominal Traktiran
                 </label>
                 <div className="grid grid-cols-2 gap-2.5">
-                  {[1000, 2000, 50000, 100000].map((amt) => {
+                  {[10000, 25000, 50000, 100000].map((amt) => {
                     const isSelected = !customAmountStr && selectedAmount === amt;
                     return (
                       <button
@@ -471,7 +515,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                 </div>
               </div>
 
-              {/* Dynamic Action Button */}
+              {/* Dynamic Action Button & Trust Badge */}
               <div className="pt-2">
                 <button
                   type="submit"
@@ -494,6 +538,3 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
     </Dialog>
   );
 }
-
-
-

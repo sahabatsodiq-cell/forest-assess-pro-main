@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
 import { logAudit, verifySessionToken, hasPermission } from "../auth";
@@ -136,15 +136,19 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
         } else if (resData?.link || resData?.url) {
           paymentUrl = resData.link || resData.url;
           mayarTxId = resData.id || txRef;
+        } else {
+          console.error("Mayar API v2 error response:", resData);
+          throw new Error(resData?.messages || resData?.message || "Gagal membuat payment link di Mayar.id");
         }
-      } catch (err) {
-        console.error("Mayar API v2 error:", err);
+      } catch (err: any) {
+        console.error("Mayar API v2 fetch error:", err);
+        throw new Error(err.message || "Gagal menghubungi API Mayar.id");
       }
-    }
-
-    // Fallback URL if Mayar API Key is not set or API call fallback
-    if (!paymentUrl) {
-      paymentUrl = `https://mayar.id/checkout?name=${encodeURIComponent(donor_name)}&email=${encodeURIComponent(donor_email)}&mobile=${encodeURIComponent(donor_phone)}&amount=${amount}&ref=${txRef}`;
+    } else {
+      // Jika MAYAR_API_KEY belum dikonfigurasi di .env
+      throw new Error(
+        "MAYAR_API_KEY belum dikonfigurasi di file .env. Silakan masukkan MAYAR_API_KEY resmi dari https://web.mayar.id (Integrasi -> API Key)."
+      );
     }
 
     // Save transaction record to DB

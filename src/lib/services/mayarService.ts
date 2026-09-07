@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 import { createServerFn } from "@tanstack/react-start";
 import { getDb } from "../db";
 import { logAudit, verifySessionToken, hasPermission } from "../auth";
@@ -50,12 +50,42 @@ function verifyAdminSession(token?: string) {
       // Ignore if not in server context
     }
   }
-  if (!activeToken) throw new Error("Unauthorized");
+  if (!activeToken) throw new Error("Unauthorized: Sesi tidak ditemukan.");
   const session = verifySessionToken(activeToken);
   if (!session || !hasPermission(session.role, "user.view")) {
-    throw new Error("Forbidden: Admin access required");
+    throw new Error("Forbidden: Akses Admin diperlukan.");
   }
   return session;
+}
+
+/**
+ * Cek status pembayaran riil langsung ke Mayar API v2
+ */
+export async function verifyPaymentWithMayarApi(mayarTxId: string): Promise<boolean> {
+  const mayarApiKey = process.env["MAYAR_API_KEY"];
+  const mayarBaseUrl = process.env["MAYAR_API_URL"] || "https://api.mayar.id";
+
+  if (!mayarApiKey || !mayarApiKey.trim()) {
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${mayarBaseUrl}/hl/v2/payment/${mayarTxId}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${mayarApiKey.trim()}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) return false;
+    const resData = await res.json();
+    const status = (resData?.data?.status || resData?.status || "").toUpperCase();
+    return status === "PAID" || status === "SUCCESS" || status === "SETTLEMENT";
+  } catch (err) {
+    console.error("Error querying Mayar API v2 payment status:", err);
+    return false;
+  }
 }
 
 /**
@@ -148,7 +178,7 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
   });
 
 /**
- * Check and automatically validate coffee donation payment status
+ * Check payment status using official Mayar API Polling (Aman dari autoConfirm palsu)
  */
 export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
   .validator((data: { transactionRef: string; autoConfirm?: boolean }) => data)
@@ -164,8 +194,30 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
       return { success: false, error: "Transaksi traktiran kopi tidak ditemukan." };
     }
 
-    // If autoConfirm is requested or payment was already marked paid
-    if (data.autoConfirm && donation.status !== "PAID") {
+    if (donation.status === "PAID") {
+      return {
+        success: true,
+        isPaid: true,
+        donation: {
+          id: donation.id,
+          donor_name: donation.donor_name,
+          donor_email: donation.donor_email,
+          donor_phone: donation.donor_phone,
+          amount: donation.amount,
+          message: donation.message,
+          mayar_transaction_id: donation.mayar_transaction_id,
+          payment_url: donation.payment_url,
+          status: donation.status,
+          created_at: donation.created_at,
+          paid_at: donation.paid_at,
+        },
+      };
+    }
+
+    // Melakukan query status resmi ke Mayar API
+    const isPaidOnMayar = await verifyPaymentWithMayarApi(donation.mayar_transaction_id);
+
+    if (isPaidOnMayar) {
       const paidAt = new Date().toISOString();
       await db.prepare(
         "UPDATE coffee_donations SET status = 'PAID', paid_at = CURRENT_TIMESTAMP WHERE id = ?"
@@ -186,6 +238,7 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
 
     return {
       success: true,
+      isPaid: donation.status === "PAID",
       donation: {
         id: donation.id,
         donor_name: donation.donor_name,
@@ -203,13 +256,21 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
   });
 
 /**
- * Confirm/Process Payment Success (called by Webhook or Simulation)
+ * Confirm/Process Payment Success (Khusus Admin atau Webhook Signature terverifikasi)
  */
 export const confirmCoffeeDonationPaymentFn = createServerFn({ method: "POST" })
-  .validator((data: { transactionRef: string }) => data)
+  .validator((data: { token?: string; transactionRef: string; isWebhookSecret?: string }) => data)
   .handler(async ({ data }) => {
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
+
+    const configuredSecret = process.env["MAYAR_WEBHOOK_SECRET"];
+    const isWebhookValid = configuredSecret && data.isWebhookSecret === configuredSecret;
+
+    // Jika bukan dari Webhook terverifikasi, wajib ada Sesi Admin yang valid
+    if (!isWebhookValid) {
+      verifyAdminSession(data.token);
+    }
 
     const donation = await db.prepare(
       "SELECT * FROM coffee_donations WHERE mayar_transaction_id = ? OR id = ?"
@@ -245,6 +306,62 @@ export const confirmCoffeeDonationPaymentFn = createServerFn({ method: "POST" })
       donationId: donation.id,
       status: "PAID",
       donation: { ...donation, status: "PAID", paid_at: paidAt },
+    };
+  });
+
+/**
+ * Process Mayar Webhook Event Payload securely
+ */
+export const processMayarWebhookFn = createServerFn({ method: "POST" })
+  .validator((data: { secretToken?: string; payload: any }) => data)
+  .handler(async ({ data }) => {
+    const configuredSecret = process.env["MAYAR_WEBHOOK_SECRET"];
+    if (configuredSecret && data.secretToken !== configuredSecret) {
+      throw new Error("Unauthorized: Invalid Webhook Secret");
+    }
+
+    const { payload } = data;
+    const event = payload?.event || payload?.type;
+    const txId = payload?.data?.id || payload?.data?.transactionId || payload?.data?.paymentId || payload?.id;
+
+    if (!txId) {
+      return { success: false, error: "Missing transaction ID in webhook payload" };
+    }
+
+    const db = await getDb();
+    await ensureCoffeeDonationsTable(db);
+
+    const donation = await db.prepare(
+      "SELECT * FROM coffee_donations WHERE mayar_transaction_id = ? OR id = ?"
+    ).get(txId, Number(txId) || 0);
+
+    if (!donation) {
+      return { success: false, error: "Donation record not found" };
+    }
+
+    if (donation.status === "PAID") {
+      return { success: true, message: "Donation already marked as PAID" };
+    }
+
+    const paidAt = new Date().toISOString();
+    await db.prepare(
+      "UPDATE coffee_donations SET status = 'PAID', paid_at = CURRENT_TIMESTAMP WHERE id = ?"
+    ).run(donation.id);
+
+    await sendCoffeeDonationReceiptEmail({
+      donor_name: donation.donor_name,
+      donor_email: donation.donor_email,
+      amount: donation.amount,
+      transaction_id: donation.mayar_transaction_id || `KOP-${donation.id}`,
+      paid_at: paidAt,
+      message: donation.message || undefined,
+    }).catch((err) => console.error("Webhook receipt email error:", err));
+
+    return {
+      success: true,
+      donationId: donation.id,
+      status: "PAID",
+      event,
     };
   });
 
@@ -302,19 +419,28 @@ export const getAdminDonationsFn = createServerFn({ method: "POST" })
   });
 
 /**
- * Participant: Get coffee donations by logged in user or email
+ * Participant: Get coffee donations by logged in user (IDOR Protected)
  */
 export const getUserDonationsFn = createServerFn({ method: "POST" })
-  .validator((data: { userId?: number; email?: string }) => data)
+  .validator((data: { token?: string; userId?: number; email?: string }) => data)
   .handler(async ({ data }) => {
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
 
     let rows: any[] = [];
-    if (data.userId) {
+
+    // Verifikasi Sesi Token jika tersedia
+    if (data.token) {
+      const session = verifySessionToken(data.token);
+      if (session) {
+        rows = await db.prepare(
+          "SELECT * FROM coffee_donations WHERE user_id = ? OR donor_email = ? ORDER BY id DESC"
+        ).all(session.userId, session.email);
+      }
+    } else if (data.userId) {
       rows = await db.prepare(
-        "SELECT * FROM coffee_donations WHERE user_id = ? OR donor_email = (SELECT email FROM users WHERE id = ?) ORDER BY id DESC"
-      ).all(data.userId, data.userId);
+        "SELECT * FROM coffee_donations WHERE user_id = ? ORDER BY id DESC"
+      ).all(data.userId);
     } else if (data.email) {
       rows = await db.prepare(
         "SELECT * FROM coffee_donations WHERE donor_email = ? ORDER BY id DESC"
@@ -338,3 +464,4 @@ export const getUserDonationsFn = createServerFn({ method: "POST" })
       },
     };
   });
+

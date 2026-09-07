@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { 
   Coffee, Heart, Send, CheckCircle2, ShieldCheck, Sparkles, 
   AlertCircle, ExternalLink, Clock, RefreshCw, ArrowLeft, X 
@@ -61,12 +61,9 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
       setOpen(true);
       setVerifying(true);
 
-      const autoConfirm = donationParam === "success";
-
       checkCoffeeDonationStatusFn({
         data: {
           transactionRef: txRef,
-          autoConfirm,
         },
       })
         .then((res) => {
@@ -244,7 +241,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                 STATUS: LUNAS / PAID
               </span>
               <h3 className="font-display text-lg font-black text-charcoal dark:text-forest-100 mt-2">
-                Terima Kasih atas Traktirannya! ☕
+                Terima Kasih atas Traktirannya! â˜•
               </h3>
               <p className="text-xs text-muted-foreground mt-1 dark:text-forest-100/70">
                 Dukunganmu sangat berharga untuk pengembang platform ASKGANISPH.
@@ -334,15 +331,17 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                 </a>
               )}
 
-              <button
-                type="button"
-                onClick={handleSimulateSuccess}
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-white py-2 text-xs font-bold text-emerald-900 hover:bg-emerald-50 transition-all dark:bg-charcoal dark:text-emerald-300 dark:border-emerald-700/60 cursor-pointer"
-              >
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                <span>Simulasi Konfirmasi Lunas</span>
-              </button>
+              {import.meta.env.DEV && (
+                <button
+                  type="button"
+                  onClick={handleSimulateSuccess}
+                  disabled={loading}
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50/80 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition-all dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700/60 cursor-pointer"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5 text-amber-600" />
+                  <span>[DEV ONLY] Simulasi Konfirmasi Lunas</span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -495,3 +494,5 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
     </Dialog>
   );
 }
+
+

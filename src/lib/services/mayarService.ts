@@ -112,8 +112,8 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
 
     if (mayarApiKey && mayarApiKey.trim() !== "") {
       try {
-        // Call Mayar API v2 Payment Creation (/hl/v2/payment/create)
-        const response = await fetch(`${mayarBaseUrl}/hl/v2/payment/create`, {
+        // Call Mayar API v2 Invoice Creation (/hl/v2/invoice/create)
+        const response = await fetch(`${mayarBaseUrl}/hl/v2/invoice/create`, {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${mayarApiKey.trim()}`,
@@ -126,19 +126,27 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
             amount: amount,
             description: `Traktir Kopi Kreator ASKGANISPH - ${donor_name}`,
             redirectUrl: defaultRedirect,
+            items: [
+              {
+                description: `Traktir Kopi Kreator ASKGANISPH - ${donor_name}`,
+                quantity: 1,
+                rate: amount,
+                amount: amount,
+              },
+            ],
           }),
         });
 
         const resData = await response.json();
         if (resData?.data?.link || resData?.data?.url) {
           paymentUrl = resData.data.link || resData.data.url;
-          mayarTxId = resData.data.id || txRef;
+          mayarTxId = resData.data.id || resData.data.transactionId || txRef;
         } else if (resData?.link || resData?.url) {
           paymentUrl = resData.link || resData.url;
-          mayarTxId = resData.id || txRef;
+          mayarTxId = resData.id || resData.transactionId || txRef;
         } else {
           console.error("Mayar API v2 error response:", resData);
-          throw new Error(resData?.messages || resData?.message || "Gagal membuat payment link di Mayar.id");
+          throw new Error(resData?.messages || resData?.message || "Gagal membuat penagihan Mayar.id");
         }
       } catch (err: any) {
         console.error("Mayar API v2 fetch error:", err);

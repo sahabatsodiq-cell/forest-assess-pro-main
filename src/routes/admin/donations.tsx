@@ -212,6 +212,7 @@ function AdminDonationsPage() {
               <option value="ALL">Semua Status</option>
               <option value="PAID">PAID (Lunas)</option>
               <option value="PENDING">PENDING (Belum Dibayar)</option>
+              <option value="EXPIRED">EXPIRED (Dibatalkan)</option>
             </select>
           </div>
         </form>
@@ -268,6 +269,11 @@ function AdminDonationsPage() {
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/50">
                           <CheckCircle2 className="h-3 w-3" />
                           LUNAS
+                        </span>
+                      ) : item.status === "EXPIRED" || item.status === "CANCELLED" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[10px] font-black text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-700/50">
+                          <Clock className="h-3 w-3" />
+                          DIBATALKAN (EXPIRED)
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-black text-amber-700 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/50">

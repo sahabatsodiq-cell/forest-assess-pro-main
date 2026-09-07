@@ -59,20 +59,45 @@ function verifyAdminSession(token?: string) {
 }
 
 /**
- * Automatically mark donations older than 1 hour as EXPIRED if not yet paid
+ * Automatically synchronize real Mayar API payment statuses and update DB records.
+ * First queries Mayar API to verify if payment was completed. If not paid and > 1 hour old, marks as EXPIRED.
  */
-async function checkAndUpdateExpiredDonations(db: any) {
+async function syncAndVerifyMayarDonations(db: any) {
   try {
-    const pendingRows = await db.prepare(
-      "SELECT id, created_at FROM coffee_donations WHERE status NOT IN ('PAID', 'EXPIRED', 'CANCELLED')"
+    const nonPaidRows = await db.prepare(
+      "SELECT * FROM coffee_donations WHERE status != 'PAID'"
     ).all();
 
-    const rows = Array.isArray(pendingRows) ? pendingRows : [];
+    const rows = Array.isArray(nonPaidRows) ? nonPaidRows : [];
     const now = Date.now();
     const ONE_HOUR_MS = 60 * 60 * 1000;
 
     for (const r of rows) {
-      if (r.created_at) {
+      // 1. If valid Mayar transaction ID is present, query Mayar API for real-time status
+      if (r.mayar_transaction_id && !r.mayar_transaction_id.startsWith("KOP-MAYAR-")) {
+        const isPaid = await verifyPaymentWithMayarApi(r.mayar_transaction_id);
+
+        if (isPaid) {
+          const paidAt = new Date().toISOString();
+          await db.prepare(
+            "UPDATE coffee_donations SET status = 'PAID', paid_at = CURRENT_TIMESTAMP WHERE id = ?"
+          ).run(r.id);
+
+          await sendCoffeeDonationReceiptEmail({
+            donor_name: r.donor_name,
+            donor_email: r.donor_email,
+            amount: r.amount,
+            transaction_id: r.mayar_transaction_id || `KOP-${r.id}`,
+            paid_at: paidAt,
+            message: r.message || undefined,
+          }).catch((err) => console.error("Sync email send error:", err));
+
+          continue; // Successfully updated to PAID
+        }
+      }
+
+      // 2. If not paid on Mayar, check if creation time is older than 1 hour
+      if (r.created_at && r.status !== "EXPIRED") {
         const createdTime = new Date(r.created_at).getTime();
         if (!isNaN(createdTime) && (now - createdTime) > ONE_HOUR_MS) {
           await db.prepare(
@@ -82,7 +107,7 @@ async function checkAndUpdateExpiredDonations(db: any) {
       }
     }
   } catch (err) {
-    console.error("Expiration check error:", err);
+    console.error("syncAndVerifyMayarDonations error:", err);
   }
 }
 
@@ -301,7 +326,7 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
-    await checkAndUpdateExpiredDonations(db);
+    await syncAndVerifyMayarDonations(db);
 
     const donation = await db.prepare(
       "SELECT * FROM coffee_donations WHERE mayar_transaction_id = ? OR id = ?"
@@ -513,7 +538,7 @@ export const getAdminDonationsFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
-    await checkAndUpdateExpiredDonations(db);
+    await syncAndVerifyMayarDonations(db);
     await fixBrokenPaymentUrls(db);
 
     let query = "SELECT * FROM coffee_donations WHERE 1=1";
@@ -543,8 +568,8 @@ export const getAdminDonationsFn = createServerFn({ method: "POST" })
     const totalAmount = list.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
     const paidDonations = list.filter((r: any) => r.status === "PAID").length;
     const paidAmount = list.filter((r: any) => r.status === "PAID").reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
-    const pendingDonations = list.filter((r: any) => r.status !== "PAID").length;
-    const pendingAmount = list.filter((r: any) => r.status !== "PAID").reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+    const pendingDonations = list.filter((r: any) => r.status === "PENDING" || r.status === "UNPAID").length;
+    const pendingAmount = list.filter((r: any) => r.status === "PENDING" || r.status === "UNPAID").reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
 
     return {
       donations,
@@ -567,7 +592,7 @@ export const getUserDonationsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
-    await checkAndUpdateExpiredDonations(db);
+    await syncAndVerifyMayarDonations(db);
     await fixBrokenPaymentUrls(db);
 
     let rows: any[] = [];
@@ -595,7 +620,7 @@ export const getUserDonationsFn = createServerFn({ method: "POST" })
     const totalDonations = donations.length;
     const paidDonations = donations.filter((r: any) => r.status === "PAID").length;
     const totalAmount = donations.filter((r: any) => r.status === "PAID").reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
-    const pendingDonations = donations.filter((r: any) => r.status !== "PAID").length;
+    const pendingDonations = donations.filter((r: any) => r.status === "PENDING" || r.status === "UNPAID").length;
 
     return {
       donations,

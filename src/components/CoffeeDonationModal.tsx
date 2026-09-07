@@ -18,7 +18,7 @@ interface CoffeeDonationModalProps {
 
 export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir Kopi" }: CoffeeDonationModalProps) {
   const [open, setOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState<number>(25000);
+  const [selectedAmount, setSelectedAmount] = useState<number>(2000);
   const [customAmountStr, setCustomAmountStr] = useState<string>("");
 
   const [donorName, setDonorName] = useState("");
@@ -89,7 +89,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
   }, []);
 
   // Compute active nominal amount
-  const activeAmount = customAmountStr ? Math.max(10000, Number(customAmountStr) || 0) : selectedAmount;
+  const activeAmount = customAmountStr ? Math.max(1000, Number(customAmountStr) || 0) : selectedAmount;
 
   const handleSelectPreset = (val: number) => {
     setSelectedAmount(val);
@@ -107,7 +107,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
       return;
     }
 
-    if (activeAmount < 10000) {
+    if (activeAmount < 1000) {
       toast.error("Nominal traktiran minimal Rp 10.000!");
       return;
     }
@@ -380,7 +380,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                   Pilih Nominal Traktiran
                 </label>
                 <div className="grid grid-cols-2 gap-2.5">
-                  {[10000, 25000, 50000, 100000].map((amt) => {
+                  {[1000, 2000, 50000, 100000].map((amt) => {
                     const isSelected = !customAmountStr && selectedAmount === amt;
                     return (
                       <button
@@ -403,9 +403,9 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                 <div className="mt-2.5">
                   <input
                     type="number"
-                    min={10000}
+                    min={1000}
                     step={5000}
-                    placeholder="Nominal Lainnya (Min. 10.000)"
+                    placeholder="Nominal Lainnya (Min. 1.000)"
                     value={customAmountStr}
                     onChange={(e) => handleCustomChange(e.target.value)}
                     className="w-full rounded-xl border border-border bg-white px-3.5 py-2.5 text-xs font-bold focus:border-[#0D4B34] focus:outline-none dark:bg-charcoal/80 dark:border-charcoal/60 dark:text-forest-100"
@@ -475,7 +475,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading || activeAmount < 10000}
+                  disabled={loading || activeAmount < 1000}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0D4B34] px-5 py-3 text-xs font-extrabold text-white shadow-lg hover:bg-[#083625] transition-all disabled:opacity-50 cursor-pointer"
                 >
                   <Coffee className="h-4 w-4" />
@@ -494,5 +494,6 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
     </Dialog>
   );
 }
+
 
 

@@ -8,7 +8,7 @@ const donationSchema = z.object({
   donor_name: z.string().trim().min(1, "Nama wajib diisi"),
   donor_email: z.string().trim().email("Format email tidak valid"),
   donor_phone: z.string().trim().min(8, "Nomor WhatsApp/HP minimal 8 digit"),
-  amount: z.number().min(10000, "Nominal minimal Rp 10.000"),
+  amount: z.number().min(1000, "Nominal minimal Rp 1.000"),
   message: z.string().optional(),
   user_id: z.number().optional(),
   redirect_url: z.string().optional(),
@@ -464,4 +464,5 @@ export const getUserDonationsFn = createServerFn({ method: "POST" })
       },
     };
   });
+
 

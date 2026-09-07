@@ -275,10 +275,15 @@ function ParticipantDonationsPage() {
                         <CheckCircle2 className="h-3 w-3" />
                         LUNAS
                       </span>
+                    ) : item.status === "EXPIRED" || item.status === "CANCELLED" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[10px] font-black text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-700/50">
+                        <Clock className="h-3 w-3" />
+                        DIBATALKAN (WAKTU HABIS 1 JAM)
+                      </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-black text-amber-700 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/50">
                         <Clock className="h-3 w-3" />
-                        BELUM DIBAYAR
+                        BELUM DIBAYAR (MAKS 1 JAM)
                       </span>
                     )}
                   </div>
@@ -293,7 +298,11 @@ function ParticipantDonationsPage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  {item.status !== "PAID" ? (
+                  {item.status === "EXPIRED" || item.status === "CANCELLED" ? (
+                    <span className="text-[11px] font-bold text-red-600 dark:text-red-400">
+                      Waktu Habis & Dibatalkan
+                    </span>
+                  ) : item.status !== "PAID" ? (
                     <>
                       {item.payment_url && (
                         <a

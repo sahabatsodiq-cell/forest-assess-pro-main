@@ -59,6 +59,34 @@ function verifyAdminSession(token?: string) {
 }
 
 /**
+ * Automatically mark donations older than 1 hour as EXPIRED if not yet paid
+ */
+async function checkAndUpdateExpiredDonations(db: any) {
+  try {
+    const pendingRows = await db.prepare(
+      "SELECT id, created_at FROM coffee_donations WHERE status NOT IN ('PAID', 'EXPIRED', 'CANCELLED')"
+    ).all();
+
+    const rows = Array.isArray(pendingRows) ? pendingRows : [];
+    const now = Date.now();
+    const ONE_HOUR_MS = 60 * 60 * 1000;
+
+    for (const r of rows) {
+      if (r.created_at) {
+        const createdTime = new Date(r.created_at).getTime();
+        if (!isNaN(createdTime) && (now - createdTime) > ONE_HOUR_MS) {
+          await db.prepare(
+            "UPDATE coffee_donations SET status = 'EXPIRED' WHERE id = ?"
+          ).run(r.id);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Expiration check error:", err);
+  }
+}
+
+/**
  * Cek status pembayaran riil langsung ke Mayar API v2
  */
 export async function verifyPaymentWithMayarApi(mayarTxId: string): Promise<boolean> {
@@ -110,9 +138,12 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
 
     const defaultRedirect = redirect_url || `http://localhost:3000/participant/profile?donation=verify&tx=${txRef}`;
 
+    // Calculate 1 hour expiration timestamp
+    const expiredAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
     if (mayarApiKey && mayarApiKey.trim() !== "") {
       try {
-        // Call Mayar API v2 Invoice Creation (/hl/v2/invoice/create)
+        // Call Mayar API v2 Invoice Creation (/hl/v2/invoice/create) with 1 hour expiration
         const response = await fetch(`${mayarBaseUrl}/hl/v2/invoice/create`, {
           method: "POST",
           headers: {
@@ -126,6 +157,7 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
             amount: amount,
             description: `Traktir Kopi Kreator ASKGANISPH - ${donor_name}`,
             redirectUrl: defaultRedirect,
+            expiredAt: expiredAt,
             items: [
               {
                 description: `Traktir Kopi Kreator ASKGANISPH - ${donor_name}`,
@@ -197,6 +229,7 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
+    await checkAndUpdateExpiredDonations(db);
 
     const donation = await db.prepare(
       "SELECT * FROM coffee_donations WHERE mayar_transaction_id = ? OR id = ?"
@@ -210,6 +243,27 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
       return {
         success: true,
         isPaid: true,
+        donation: {
+          id: donation.id,
+          donor_name: donation.donor_name,
+          donor_email: donation.donor_email,
+          donor_phone: donation.donor_phone,
+          amount: donation.amount,
+          message: donation.message,
+          mayar_transaction_id: donation.mayar_transaction_id,
+          payment_url: donation.payment_url,
+          status: donation.status,
+          created_at: donation.created_at,
+          paid_at: donation.paid_at,
+        },
+      };
+    }
+
+    if (donation.status === "EXPIRED" || donation.status === "CANCELLED") {
+      return {
+        success: true,
+        isPaid: false,
+        isExpired: true,
         donation: {
           id: donation.id,
           donor_name: donation.donor_name,
@@ -251,6 +305,7 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
     return {
       success: true,
       isPaid: donation.status === "PAID",
+      isExpired: donation.status === "EXPIRED" || donation.status === "CANCELLED",
       donation: {
         id: donation.id,
         donor_name: donation.donor_name,
@@ -386,6 +441,7 @@ export const getAdminDonationsFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
+    await checkAndUpdateExpiredDonations(db);
 
     let query = "SELECT * FROM coffee_donations WHERE 1=1";
     const params: any[] = [];
@@ -438,6 +494,7 @@ export const getUserDonationsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await getDb();
     await ensureCoffeeDonationsTable(db);
+    await checkAndUpdateExpiredDonations(db);
 
     let rows: any[] = [];
 

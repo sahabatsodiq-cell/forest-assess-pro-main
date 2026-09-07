@@ -18,7 +18,7 @@ interface CoffeeDonationModalProps {
 
 export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir Kopi" }: CoffeeDonationModalProps) {
   const [open, setOpen] = useState(false);
-  const [selectedAmount, setSelectedAmount] = useState<number>(10000);
+  const [selectedAmount, setSelectedAmount] = useState<number>(1000);
   const [customAmountStr, setCustomAmountStr] = useState<string>("");
 
   const [donorName, setDonorName] = useState("");
@@ -320,19 +320,33 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
           /* ==================================================================== */
           <div className="space-y-4 py-2">
             <div className="text-center space-y-2">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 mx-auto shadow-md">
-                <Clock className="h-7 w-7 animate-pulse" />
+              <div className={`flex h-14 w-14 items-center justify-center rounded-full mx-auto shadow-md ${
+                activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                  ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                  : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+              }`}>
+                <Clock className={`h-7 w-7 ${activeDonation?.status === "EXPIRED" ? "" : "animate-pulse"}`} />
               </div>
 
               <div>
-                <span className="inline-block rounded-full bg-amber-100 px-3.5 py-1 text-[11px] font-black text-amber-800 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/50">
-                  STATUS PEMBAYARAN: BELUM DIBAYAR
+                <span className={`inline-block rounded-full px-3.5 py-1 text-[11px] font-black border ${
+                  activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                    ? "bg-red-100 text-red-800 border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-700/50"
+                    : "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/50"
+                }`}>
+                  {activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                    ? "STATUS: DIBATALKAN (WAKTU HABIS)"
+                    : "STATUS PEMBAYARAN: BELUM DIBAYAR (MAKS 1 JAM)"}
                 </span>
                 <h3 className="font-display text-base font-black text-charcoal dark:text-forest-100 mt-2">
-                  Menunggu / Gagal Pembayaran Traktir Kopi
+                  {activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                    ? "Waktu Pembayaran Telah Habis"
+                    : "Menunggu / Gagal Pembayaran Traktir Kopi"}
                 </h3>
                 <p className="text-xs text-muted-foreground dark:text-forest-100/70">
-                  Tagihan traktiran Anda belum diselesaikan. Anda dapat mencoba bayar lagi sekarang.
+                  {activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                    ? "Batas waktu pembayaran (maksimal 1 jam) telah terlewati. Traktiran ini telah dibatalkan secara otomatis."
+                    : "Tagihan traktiran Anda belum diselesaikan. Batas pembayaran maksimal 1 jam."}
                 </p>
               </div>
             </div>
@@ -353,21 +367,32 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
             )}
 
             <div className="space-y-2 pt-1">
-              {activeDonation?.payment_url && (
-                <a
-                  href={activeDonation.payment_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              {activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED" ? (
+                <button
+                  type="button"
+                  onClick={() => setViewState("form")}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0D4B34] px-4 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
                 >
-                  <ExternalLink className="h-4 w-4" />
-                  <span>Bayar Ulang via Mayar.id</span>
-                </a>
-              )}
+                  <Coffee className="h-4 w-4" />
+                  <span>Buat Traktiran Baru ☕</span>
+                </button>
+              ) : (
+                <>
+                  {activeDonation?.payment_url && (
+                    <a
+                      href={activeDonation.payment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0D4B34] px-4 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span>Bayar Ulang via Mayar.id</span>
+                    </a>
+                  )}
 
-              <button
-                type="button"
-                onClick={handleCheckStatusManual}
+                  <button
+                    type="button"
+                    onClick={handleCheckStatusManual}
                 disabled={verifying}
                 className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-white py-2 text-xs font-bold text-charcoal hover:bg-forest-50 transition-all dark:bg-charcoal/80 dark:text-forest-100 dark:border-charcoal/60 cursor-pointer"
               >
@@ -387,14 +412,16 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={() => setViewState("form")}
-                className="w-full inline-flex items-center justify-center gap-1 py-2 text-xs font-bold text-muted-foreground hover:text-charcoal transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                <span>Kembali ke Form Traktiran</span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewState("form")}
+                    className="w-full inline-flex items-center justify-center gap-1 py-2 text-xs font-bold text-muted-foreground hover:text-charcoal transition-colors cursor-pointer"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    <span>Kembali ke Form Traktiran</span>
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="mt-3 text-center text-[11px] text-muted-foreground dark:text-forest-100/60 flex items-center justify-center gap-1.5 pt-2 border-t border-border/50 dark:border-charcoal/60">
@@ -424,7 +451,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                   Pilih Nominal Traktiran
                 </label>
                 <div className="grid grid-cols-2 gap-2.5">
-                  {[10000, 25000, 50000, 100000].map((amt) => {
+                  {[1000, 2000, 50000, 100000].map((amt) => {
                     const isSelected = !customAmountStr && selectedAmount === amt;
                     return (
                       <button

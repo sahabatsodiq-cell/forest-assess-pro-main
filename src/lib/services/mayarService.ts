@@ -33,11 +33,19 @@ async function ensureCoffeeDonationsTable(db: any) {
         payment_url TEXT,
         status VARCHAR(50) DEFAULT 'PENDING',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        paid_at TIMESTAMP
+        paid_at TIMESTAMP,
+        expired_at TIMESTAMP
       )
     `).run();
   } catch (err) {
     // SQLite fallback or ignore if exists
+  }
+
+  // Migration: add expired_at column if table already existed without it
+  try {
+    await db.prepare(`ALTER TABLE coffee_donations ADD COLUMN IF NOT EXISTS expired_at TIMESTAMP`).run();
+  } catch (err) {
+    // Column may already exist — safe to ignore
   }
 }
 
@@ -66,7 +74,7 @@ function verifyAdminSession(token?: string) {
 async function syncAndVerifyMayarDonations(db: any) {
   try {
     const nonPaidRows = await db.prepare(
-      "SELECT * FROM coffee_donations WHERE status != 'PAID'"
+      "SELECT * FROM coffee_donations WHERE status NOT IN ('PAID', 'EXPIRED', 'CANCELLED')"
     ).all();
 
     const rows = Array.isArray(nonPaidRows) ? nonPaidRows : [];
@@ -108,14 +116,20 @@ async function syncAndVerifyMayarDonations(db: any) {
         }
       }
 
-      // 2. If not paid on Mayar, check if creation time is older than 1 hour
-      if (r.created_at && r.status !== "EXPIRED") {
-        const createdTime = new Date(r.created_at).getTime();
-        if (!isNaN(createdTime) && (now - createdTime) > ONE_HOUR_MS) {
-          await db.prepare(
-            "UPDATE coffee_donations SET status = 'EXPIRED' WHERE id = ?"
-          ).run(r.id);
-        }
+      // 2. Determine expiry time: prefer stored expired_at, fallback to created_at + 1 hour
+      let expiryTime: number | null = null;
+
+      if (r.expired_at) {
+        expiryTime = new Date(r.expired_at).getTime();
+      } else if (r.created_at) {
+        expiryTime = new Date(r.created_at).getTime() + ONE_HOUR_MS;
+      }
+
+      // 3. Only mark EXPIRED when the actual expiry time has truly passed
+      if (expiryTime && !isNaN(expiryTime) && now > expiryTime) {
+        await db.prepare(
+          "UPDATE coffee_donations SET status = 'EXPIRED' WHERE id = ?"
+        ).run(r.id);
       }
     }
   } catch (err) {
@@ -247,8 +261,9 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
 
     const defaultRedirect = redirect_url || `http://localhost:3000/participant/profile?donation=verify&tx=${txRef}`;
 
-    // Calculate 1 hour expiration timestamp
-    const expiredAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    // Calculate 1 hour expiration timestamp from NOW
+    const expiredAtDate = new Date(Date.now() + 60 * 60 * 1000);
+    const expiredAt = expiredAtDate.toISOString();
 
     if (mayarApiKey && mayarApiKey.trim() !== "") {
       try {
@@ -302,8 +317,8 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
 
     // Save transaction record to DB
     const res = await db.prepare(`
-      INSERT INTO coffee_donations (user_id, donor_name, donor_email, donor_phone, amount, message, mayar_transaction_id, payment_url, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')
+      INSERT INTO coffee_donations (user_id, donor_name, donor_email, donor_phone, amount, message, mayar_transaction_id, payment_url, status, expired_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?)
       RETURNING id
     `).run(
       user_id || null,
@@ -313,7 +328,8 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
       amount,
       message || null,
       mayarTxId,
-      paymentUrl
+      paymentUrl,
+      expiredAtDate.toISOString()
     );
 
     const donationId = Number((res as any).lastInsertRowid || 0);
@@ -327,6 +343,7 @@ export const createCoffeeDonationInvoiceFn = createServerFn({ method: "POST" })
       donationId,
       transactionRef: mayarTxId,
       paymentUrl,
+      expiredAt: expiredAtDate.toISOString(),
     };
   });
 
@@ -364,6 +381,7 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
           status: donation.status,
           created_at: donation.created_at,
           paid_at: donation.paid_at,
+          expired_at: donation.expired_at,
         },
       };
     }
@@ -385,6 +403,7 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
           status: donation.status,
           created_at: donation.created_at,
           paid_at: donation.paid_at,
+          expired_at: donation.expired_at,
         },
       };
     }
@@ -438,6 +457,7 @@ export const checkCoffeeDonationStatusFn = createServerFn({ method: "POST" })
         status: donation.status,
         created_at: donation.created_at,
         paid_at: donation.paid_at,
+        expired_at: donation.expired_at,
       },
     };
   });

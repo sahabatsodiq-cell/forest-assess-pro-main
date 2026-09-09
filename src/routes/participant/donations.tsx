@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { 
   Coffee, CheckCircle2, Clock, ExternalLink, RefreshCw, 
-  Heart, Sparkles, ShieldCheck, MessageCircle 
+  Heart, Sparkles, ShieldCheck, MessageCircle, XCircle, Timer 
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,11 +15,62 @@ export const Route = createFileRoute("/participant/donations")({
   component: ParticipantDonationsPage,
 });
 
+// ─── Helper: compute real-time display status ───────────────────────────────
+// Determines the *visual* status of a donation based on DB status + time.
+// Returns: "PAID" | "PENDING" | "EXPIRED"
+function getDonationDisplayStatus(item: any): "PAID" | "PENDING" | "EXPIRED" {
+  if (item.status === "PAID") return "PAID";
+
+  // If DB already flagged as EXPIRED/CANCELLED, trust it
+  if (item.status === "EXPIRED" || item.status === "CANCELLED") return "EXPIRED";
+
+  // For PENDING/UNPAID: check actual expiry time
+  const now = Date.now();
+  let expiryTime: number | null = null;
+
+  if (item.expired_at) {
+    expiryTime = new Date(item.expired_at).getTime();
+  } else if (item.created_at) {
+    // Fallback: created_at + 1 hour
+    expiryTime = new Date(item.created_at).getTime() + 60 * 60 * 1000;
+  }
+
+  if (expiryTime && !isNaN(expiryTime) && now > expiryTime) {
+    return "EXPIRED";
+  }
+
+  return "PENDING";
+}
+
+// ─── Helper: human-readable remaining time ──────────────────────────────────
+function getRemainingTimeLabel(item: any): string | null {
+  const now = Date.now();
+  let expiryTime: number | null = null;
+
+  if (item.expired_at) {
+    expiryTime = new Date(item.expired_at).getTime();
+  } else if (item.created_at) {
+    expiryTime = new Date(item.created_at).getTime() + 60 * 60 * 1000;
+  }
+
+  if (!expiryTime || isNaN(expiryTime)) return null;
+
+  const remaining = expiryTime - now;
+  if (remaining <= 0) return null;
+
+  const minutes = Math.floor(remaining / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+
+  if (minutes > 0) return `${minutes} mnt ${seconds} dtk`;
+  return `${seconds} dtk`;
+}
+
 function ParticipantDonationsPage() {
   const [donations, setDonations] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [, setTick] = useState(0); // force re-render for countdown timer
   const [verificationBanner, setVerificationBanner] = useState<{
     type: "PAID" | "UNPAID";
     donation: any;
@@ -49,6 +100,18 @@ function ParticipantDonationsPage() {
       setLoading(false);
     }
   };
+
+  // Tick every 30s to update countdown timers on pending donations
+  useEffect(() => {
+    const hasPending = donations.some((d) => getDonationDisplayStatus(d) === "PENDING");
+    if (!hasPending) return;
+
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 30_000);
+
+    return () => clearInterval(interval);
+  }, [donations]);
 
   useEffect(() => {
     loadData();
@@ -261,119 +324,135 @@ function ParticipantDonationsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {donations.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-white hover:border-emerald-300 transition-all dark:bg-charcoal/80 dark:border-charcoal/60 gap-3"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-display text-sm font-black text-emerald-700 dark:text-emerald-400">
-                      Rp {Number(item.amount || 0).toLocaleString("id-ID")}
-                    </span>
-                    {item.status === "PAID" ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/50">
-                        <CheckCircle2 className="h-3 w-3" />
-                        LUNAS
+            {donations.map((item) => {
+              const displayStatus = getDonationDisplayStatus(item);
+              const remainingTime = getRemainingTimeLabel(item);
+
+              return (
+                <div
+                  key={item.id}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border bg-white hover:border-emerald-300 transition-all dark:bg-charcoal/80 dark:border-charcoal/60 gap-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-display text-sm font-black text-emerald-700 dark:text-emerald-400">
+                        Rp {Number(item.amount || 0).toLocaleString("id-ID")}
                       </span>
-                    ) : item.status === "EXPIRED" || item.status === "CANCELLED" ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[10px] font-black text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-700/50">
-                        <Clock className="h-3 w-3" />
-                        DIBATALKAN (WAKTU HABIS 1 JAM)
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-black text-amber-700 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/50">
-                        <Clock className="h-3 w-3" />
-                        BELUM DIBAYAR (MAKS 1 JAM)
-                      </span>
+
+                      {/* ── Status Badge ── */}
+                      {displayStatus === "PAID" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-700/50">
+                          <CheckCircle2 className="h-3 w-3" />
+                          LUNAS
+                        </span>
+                      ) : displayStatus === "EXPIRED" ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-0.5 text-[10px] font-black text-red-700 border border-red-200 dark:bg-red-950/60 dark:text-red-300 dark:border-red-700/50">
+                          <XCircle className="h-3 w-3" />
+                          DIBATALKAN (WAKTU HABIS)
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-black text-amber-700 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/50">
+                          <Clock className="h-3 w-3 animate-pulse" />
+                          BELUM DIBAYAR
+                        </span>
+                      )}
+
+                      {/* ── Countdown Timer (only for PENDING) ── */}
+                      {displayStatus === "PENDING" && remainingTime && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700/50">
+                          <Timer className="h-3 w-3" />
+                          Sisa: {remainingTime}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground font-mono">
+                      ID Ref: {item.mayar_transaction_id} • Donatur: {item.donor_name} ({item.donor_email})
+                    </div>
+                    {item.message && (
+                      <div className="text-[11px] italic text-charcoal/80 dark:text-forest-100/80">
+                        "{item.message}"
+                      </div>
                     )}
                   </div>
-                  <div className="text-[11px] text-muted-foreground font-mono">
-                    ID Ref: {item.mayar_transaction_id} • Donatur: {item.donor_name} ({item.donor_email})
-                  </div>
-                  {item.message && (
-                    <div className="text-[11px] italic text-charcoal/80 dark:text-forest-100/80">
-                      "{item.message}"
-                    </div>
-                  )}
-                </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  {item.status === "EXPIRED" || item.status === "CANCELLED" ? (
-                    <span className="text-[11px] font-bold text-red-600 dark:text-red-400">
-                      Waktu Habis & Dibatalkan
-                    </span>
-                  ) : item.status !== "PAID" ? (
-                    <>
-                      {item.payment_url && (
-                        <>
-                          <a
-                            href={item.payment_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0D4B34] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                            <span>Bayar Sekarang</span>
-                          </a>
-
-                          {item.donor_phone && (
+                  {/* ── Action Column ── */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    {displayStatus === "EXPIRED" ? (
+                      <span className="text-[11px] font-bold text-red-600 dark:text-red-400">
+                        Waktu Habis & Dibatalkan
+                      </span>
+                    ) : displayStatus === "PENDING" ? (
+                      <>
+                        {item.payment_url && (
+                          <>
                             <a
-                              href={generateInvoiceWhatsappUrl({
-                                donor_name: item.donor_name,
-                                donor_phone: item.donor_phone,
-                                amount: item.amount,
-                                payment_url: item.payment_url,
-                                transaction_id: item.mayar_transaction_id,
-                              })}
+                              href={item.payment_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1.5 rounded-xl bg-[#0D4B34] px-4 py-2 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
                             >
-                              <MessageCircle className="h-3.5 w-3.5" />
-                              <span>Kirim Tagihan WA</span>
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              <span>Bayar Sekarang</span>
                             </a>
-                          )}
-                        </>
-                      )}
-                      <button
-                        onClick={() => handleSimulatePayment(item.mayar_transaction_id)}
-                        disabled={actionLoading}
-                        className="inline-flex items-center gap-1 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-900 hover:bg-emerald-100 transition-all dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700/50 cursor-pointer"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                        <span>Simulasi Konfirmasi</span>
-                      </button>
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
-                        Struk Email & WA
-                      </span>
-                      {item.donor_phone && (
-                        <a
-                          href={generateReceiptWhatsappUrl({
-                            donor_name: item.donor_name,
-                            donor_phone: item.donor_phone,
-                            amount: item.amount,
-                            transaction_id: item.mayar_transaction_id,
-                            paid_at: item.paid_at || new Date().toISOString(),
-                            message: item.message,
-                          })}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer"
+
+                            {item.donor_phone && (
+                              <a
+                                href={generateInvoiceWhatsappUrl({
+                                  donor_name: item.donor_name,
+                                  donor_phone: item.donor_phone,
+                                  amount: item.amount,
+                                  payment_url: item.payment_url,
+                                  transaction_id: item.mayar_transaction_id,
+                                })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                                <span>Kirim Tagihan WA</span>
+                              </a>
+                            )}
+                          </>
+                        )}
+                        <button
+                          onClick={() => handleSimulatePayment(item.mayar_transaction_id)}
+                          disabled={actionLoading}
+                          className="inline-flex items-center gap-1 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-900 hover:bg-emerald-100 transition-all dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700/50 cursor-pointer"
                         >
-                          <MessageCircle className="h-3.5 w-3.5" />
-                          <span>Kirim Struk WA</span>
-                        </a>
-                      )}
-                    </div>
-                  )}
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          <span>Simulasi Konfirmasi</span>
+                        </button>
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1">
+                          <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+                          Struk Email & WA
+                        </span>
+                        {item.donor_phone && (
+                          <a
+                            href={generateReceiptWhatsappUrl({
+                              donor_name: item.donor_name,
+                              donor_phone: item.donor_phone,
+                              amount: item.amount,
+                              transaction_id: item.mayar_transaction_id,
+                              paid_at: item.paid_at || new Date().toISOString(),
+                              message: item.message,
+                            })}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition-all cursor-pointer"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            <span>Kirim Struk WA</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>

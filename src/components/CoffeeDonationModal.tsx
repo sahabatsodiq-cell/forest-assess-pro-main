@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   Coffee, Heart, Send, CheckCircle2, ShieldCheck, Sparkles, 
-  AlertCircle, ExternalLink, Clock, RefreshCw, ArrowLeft, X 
+  AlertCircle, ExternalLink, Clock, RefreshCw, ArrowLeft, X, XCircle, Timer 
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
@@ -17,6 +17,46 @@ interface CoffeeDonationModalProps {
   triggerLabel?: string;
 }
 
+// ─── Helper: compute real-time display status for modal ─────────────────────
+function getModalDisplayStatus(donation: any): "PAID" | "PENDING" | "EXPIRED" {
+  if (!donation) return "PENDING";
+  if (donation.status === "PAID") return "PAID";
+  if (donation.status === "EXPIRED" || donation.status === "CANCELLED") return "EXPIRED";
+
+  const now = Date.now();
+  let expiryTime: number | null = null;
+
+  if (donation.expired_at) {
+    expiryTime = new Date(donation.expired_at).getTime();
+  } else if (donation.created_at) {
+    expiryTime = new Date(donation.created_at).getTime() + 60 * 60 * 1000;
+  }
+
+  if (expiryTime && !isNaN(expiryTime) && now > expiryTime) return "EXPIRED";
+  return "PENDING";
+}
+
+function getModalRemainingTime(donation: any): string | null {
+  if (!donation) return null;
+  const now = Date.now();
+  let expiryTime: number | null = null;
+
+  if (donation.expired_at) {
+    expiryTime = new Date(donation.expired_at).getTime();
+  } else if (donation.created_at) {
+    expiryTime = new Date(donation.created_at).getTime() + 60 * 60 * 1000;
+  }
+
+  if (!expiryTime || isNaN(expiryTime)) return null;
+  const remaining = expiryTime - now;
+  if (remaining <= 0) return null;
+
+  const minutes = Math.floor(remaining / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+  if (minutes > 0) return `${minutes} mnt ${seconds} dtk`;
+  return `${seconds} dtk`;
+}
+
 export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir Kopi" }: CoffeeDonationModalProps) {
   const [open, setOpen] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number>(10000);
@@ -30,6 +70,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
 
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [, setTick] = useState(0); // force re-render for countdown
 
   // Status view state: 'form' | 'success' | 'unpaid'
   const [viewState, setViewState] = useState<"form" | "success" | "unpaid">("form");
@@ -49,6 +90,16 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
       // Ignore fallback
     }
   }, [open]);
+
+  // Tick every 30s to update countdown timer for pending donations
+  useEffect(() => {
+    if (viewState !== "unpaid" || !activeDonation) return;
+    const status = getModalDisplayStatus(activeDonation);
+    if (status !== "PENDING") return;
+
+    const interval = setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => clearInterval(interval);
+  }, [viewState, activeDonation]);
 
   // Check URL query parameters for donation transaction status redirect
   useEffect(() => {
@@ -172,6 +223,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
           donor_name: donorName.trim(),
           donor_email: donorEmail.trim(),
           status: "PENDING",
+          expired_at: res.expiredAt || new Date(Date.now() + 60 * 60 * 1000).toISOString(),
         });
 
         // Open payment link in new window/tab
@@ -338,35 +390,54 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
           /* ==================================================================== */
           /* UNPAID / PENDING / FAILED VIEW */
           /* ==================================================================== */
+          (() => {
+            const modalStatus = getModalDisplayStatus(activeDonation);
+            const modalRemaining = getModalRemainingTime(activeDonation);
+            const isExpired = modalStatus === "EXPIRED";
+
+            return (
           <div className="space-y-4 py-2">
             <div className="text-center space-y-2">
               <div className={`flex h-14 w-14 items-center justify-center rounded-full mx-auto shadow-md ${
-                activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                isExpired
                   ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
                   : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
               }`}>
-                <Clock className={`h-7 w-7 ${activeDonation?.status === "EXPIRED" ? "" : "animate-pulse"}`} />
+                {isExpired ? (
+                  <XCircle className="h-7 w-7" />
+                ) : (
+                  <Clock className="h-7 w-7 animate-pulse" />
+                )}
               </div>
 
               <div>
                 <span className={`inline-block rounded-full px-3.5 py-1 text-[11px] font-black border ${
-                  activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                  isExpired
                     ? "bg-red-100 text-red-800 border-red-300 dark:bg-red-950/60 dark:text-red-300 dark:border-red-700/50"
                     : "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/50"
                 }`}>
-                  {activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                  {isExpired
                     ? "STATUS: DIBATALKAN (WAKTU HABIS)"
-                    : "STATUS PEMBAYARAN: BELUM DIBAYAR (MAKS 1 JAM)"}
+                    : "STATUS: BELUM DIBAYAR"}
                 </span>
+
+                {/* Countdown timer for pending */}
+                {!isExpired && modalRemaining && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700/50 ml-2">
+                    <Timer className="h-3 w-3" />
+                    Sisa: {modalRemaining}
+                  </span>
+                )}
+
                 <h3 className="font-display text-base font-black text-charcoal dark:text-forest-100 mt-2">
-                  {activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                  {isExpired
                     ? "Waktu Pembayaran Telah Habis"
-                    : "Menunggu / Gagal Pembayaran Traktir Kopi"}
+                    : "Menunggu Pembayaran Traktir Kopi"}
                 </h3>
                 <p className="text-xs text-muted-foreground dark:text-forest-100/70">
-                  {activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED"
+                  {isExpired
                     ? "Batas waktu pembayaran (maksimal 1 jam) telah terlewati. Traktiran ini telah dibatalkan secara otomatis."
-                    : "Tagihan traktiran Anda belum diselesaikan. Batas pembayaran maksimal 1 jam."}
+                    : "Tagihan traktiran Anda belum diselesaikan. Silakan selesaikan pembayaran sebelum batas waktu habis."}
                 </p>
               </div>
             </div>
@@ -387,7 +458,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
             )}
 
             <div className="space-y-2 pt-1">
-              {activeDonation?.status === "EXPIRED" || activeDonation?.status === "CANCELLED" ? (
+              {isExpired ? (
                 <button
                   type="button"
                   onClick={() => setViewState("form")}
@@ -407,7 +478,7 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
                         className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#0D4B34] px-4 py-3 text-xs font-extrabold text-white shadow-md hover:bg-[#083625] transition-all cursor-pointer"
                       >
                         <ExternalLink className="h-4 w-4" />
-                        <span>Bayar Ulang via Mayar.id</span>
+                        <span>Bayar Sekarang via Mayar.id</span>
                       </a>
 
                       <a
@@ -467,6 +538,8 @@ export function CoffeeDonationModal({ triggerClassName, triggerLabel = "Traktir 
               <span>Pembayaran aman dengan <strong>Mayar.id</strong></span>
             </div>
           </div>
+            );
+          })()
         ) : (
           /* ==================================================================== */
           /* FORM CHECKOUT VIEW */

@@ -26,6 +26,7 @@ import { Route as AdminQuestionsRouteImport } from './routes/admin/questions'
 import { Route as AdminResultsRouteImport } from './routes/admin/results'
 import { Route as AdminSubjectsRouteImport } from './routes/admin/subjects'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as ApiMayarWebhookRouteImport } from './routes/api/mayar-webhook'
 import { Route as ExamAttemptIdRouteImport } from './routes/exam/$attemptId'
 import { Route as ParticipantIndexRouteImport } from './routes/participant/index'
 import { Route as ParticipantDonationsRouteImport } from './routes/participant/donations'
@@ -119,6 +120,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiMayarWebhookRoute = ApiMayarWebhookRouteImport.update({
+  id: '/api/mayar-webhook',
+  path: '/api/mayar-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExamAttemptIdRoute = ExamAttemptIdRouteImport.update({
   id: '/exam/$attemptId',
   path: '/exam/$attemptId',
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/admin/results': typeof AdminResultsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/api/mayar-webhook': typeof ApiMayarWebhookRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/participant/donations': typeof ParticipantDonationsRoute
   '/participant/exams': typeof ParticipantExamsRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/admin/results': typeof AdminResultsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/api/mayar-webhook': typeof ApiMayarWebhookRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/participant/donations': typeof ParticipantDonationsRoute
   '/participant/exams': typeof ParticipantExamsRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/admin/results': typeof AdminResultsRoute
   '/admin/subjects': typeof AdminSubjectsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/api/mayar-webhook': typeof ApiMayarWebhookRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/participant/donations': typeof ParticipantDonationsRoute
   '/participant/exams': typeof ParticipantExamsRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/subjects'
     | '/admin/users'
+    | '/api/mayar-webhook'
     | '/exam/$attemptId'
     | '/participant/donations'
     | '/participant/exams'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/subjects'
     | '/admin/users'
+    | '/api/mayar-webhook'
     | '/exam/$attemptId'
     | '/participant/donations'
     | '/participant/exams'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/subjects'
     | '/admin/users'
+    | '/api/mayar-webhook'
     | '/exam/$attemptId'
     | '/participant/donations'
     | '/participant/exams'
@@ -316,6 +328,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   ParticipantRoute: typeof ParticipantRouteWithChildren
+  ApiMayarWebhookRoute: typeof ApiMayarWebhookRoute
   ExamAttemptIdRoute: typeof ExamAttemptIdRoute
   ResultsAttemptIdRoute: typeof ResultsAttemptIdRoute
 }
@@ -441,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/mayar-webhook': {
+      id: '/api/mayar-webhook'
+      path: '/api/mayar-webhook'
+      fullPath: '/api/mayar-webhook'
+      preLoaderRoute: typeof ApiMayarWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exam/$attemptId': {
       id: '/exam/$attemptId'
       path: '/exam/$attemptId'
@@ -552,6 +572,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   ParticipantRoute: ParticipantRouteWithChildren,
+  ApiMayarWebhookRoute: ApiMayarWebhookRoute,
   ExamAttemptIdRoute: ExamAttemptIdRoute,
   ResultsAttemptIdRoute: ResultsAttemptIdRoute,
 }

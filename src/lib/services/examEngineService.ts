@@ -48,9 +48,7 @@ const submitExamRequestSchema = z.object({
 
 // Option Shuffling Helpers
 function generateOptionMapping(): string {
-  const keys = ["A", "B", "C", "D"];
-  const shuffled = [...keys].sort(() => Math.random() - 0.5);
-  return keys.map((k, i) => `${k}:${shuffled[i]}`).join(",");
+  return "A:A,B:B,C:C,D:D";
 }
 
 function parseOptionMapping(mappingStr: string): Record<string, string> {
@@ -351,37 +349,36 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
 
     const attemptId = res.lastInsertRowid as number;
 
-    // Fetch blueprint items
-    const items = await db.prepare("SELECT * FROM blueprint_items WHERE blueprint_id = ?").all(exam.blueprint_id);
-    let order = 1;
+    // Collect question IDs for this attempt strictly locked to exam.qualification_id
+    const selectedQuestionIds = new Set<number>();
 
-    for (const item of items) {
-      // Select random ACTIVE questions matching subject & difficulty
+    // 1. Fetch blueprint items if available
+    const items = await db.prepare("SELECT * FROM blueprint_items WHERE blueprint_id = ?").all(exam.blueprint_id);
+    const itemList = Array.isArray(items) ? items : [];
+
+    for (const item of itemList) {
       const questions = await db.prepare(`
         SELECT id FROM questions 
-        WHERE subject_id = ? AND difficulty = ? AND status = 'ACTIVE' 
+        WHERE subject_id = ? AND difficulty = ? AND status = 'ACTIVE' AND qualification_id = ?
         ORDER BY RANDOM() LIMIT ?
-      `).all(item.subject_id, item.difficulty, item.question_count);
+      `).all(item.subject_id, item.difficulty, exam.qualification_id, item.question_count);
 
-      for (const q of questions) {
-        const optionMapping = generateOptionMapping();
-        await db.prepare(`
-          INSERT INTO attempt_questions (attempt_id, question_id, display_order, option_mapping)
-          VALUES (?, ?, ?, ?)
-        `).run(attemptId, q.id, order++, optionMapping);
+      const qRows = Array.isArray(questions) ? questions : [];
+      for (const q of qRows) {
+        selectedQuestionIds.add(q.id);
       }
     }
 
-    // Fallback/Default: Select 5 questions per competency unit linked to qualification
-    const currentQuestionCount = await db.prepare("SELECT COUNT(*) as count FROM attempt_questions WHERE attempt_id = ?").get(attemptId);
-    if (Number(currentQuestionCount?.count || 0) === 0) {
-      // 1. Get all competency units linked to this qualification
+    // 2. Select questions per competency unit linked to qualification
+    if (selectedQuestionIds.size === 0) {
       const linkedUnits = await db.prepare(`
         SELECT cu.id, cu.code, cu.title, cu.subject_code, COALESCE(cu.question_count, 5) as question_count
         FROM qualification_competency_units qcu
         JOIN competency_units cu ON qcu.competency_unit_id = cu.id
         WHERE qcu.qualification_id = ?
         ORDER BY cu.code ASC
+      `).all(exam.qualification_id);
+
       let unitList = Array.isArray(linkedUnits) ? linkedUnits : [];
 
       if (exam.code) {
@@ -395,7 +392,6 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
       }
 
       if (unitList.length > 0) {
-        const selectedQuestionIds = new Set<number>();
         for (const cu of unitList) {
           const targetCount = Number(cu.question_count) || 5;
           const unitQuestions = await db.prepare(`
@@ -403,55 +399,58 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
             FROM questions q
             LEFT JOIN subjects s ON q.subject_id = s.id
             WHERE q.status = 'ACTIVE'
+              AND q.qualification_id = ?
               AND (
                 q.competency_unit_id = ?
                 OR s.competency_unit_id = ?
                 OR s.code = ?
-                OR (q.qualification_id = ? AND s.name LIKE ?)
+                OR s.name LIKE ?
               )
             ORDER BY RANDOM() LIMIT ?
-          `).all(cu.id, cu.id, cu.subject_code || '', exam.qualification_id, `%${cu.title}%`, targetCount);
+          `).all(exam.qualification_id, cu.id, cu.id, cu.subject_code || '', `%${cu.title}%`, targetCount);
 
           const qRows = Array.isArray(unitQuestions) ? unitQuestions : [];
           for (const q of qRows) {
-            if (!selectedQuestionIds.has(q.id)) {
-              selectedQuestionIds.add(q.id);
-              const optionMapping = generateOptionMapping();
-              await db.prepare(`
-                INSERT INTO attempt_questions (attempt_id, question_id, display_order, option_mapping)
-                VALUES (?, ?, ?, ?)
-              `).run(attemptId, q.id, order++, optionMapping);
-            }
+            selectedQuestionIds.add(q.id);
           }
         }
       }
+    }
 
-      // Fallback: If 0 questions were selected (e.g. no competency units attached or no tagged questions yet)
-      const reCheckCount = await db.prepare("SELECT COUNT(*) as count FROM attempt_questions WHERE attempt_id = ?").get(attemptId);
-      if (Number(reCheckCount?.count || 0) === 0) {
-        const fallbackLimit = unitList.length > 0 ? unitList.length * 5 : 40;
-        const fallbackQuestions = await db.prepare(`
-          SELECT q.id 
-          FROM questions q
-          LEFT JOIN qualification_competency_units qcu ON q.competency_unit_id = qcu.competency_unit_id
-          WHERE q.status = 'ACTIVE'
-            AND (q.qualification_id = ? OR qcu.qualification_id = ?)
-          GROUP BY q.id
-          ORDER BY RANDOM() LIMIT ?
-        `).all(exam.qualification_id, exam.qualification_id, fallbackLimit);
+    // 3. Strict fallback locked to exam.qualification_id
+    if (selectedQuestionIds.size === 0) {
+      const fallbackLimit = (exam.code ? exam.code.split(';').filter(Boolean).length * 5 : 40);
+      const fallbackQuestions = await db.prepare(`
+        SELECT q.id 
+        FROM questions q
+        LEFT JOIN qualification_competency_units qcu ON q.competency_unit_id = qcu.competency_unit_id
+        WHERE q.status = 'ACTIVE'
+          AND (q.qualification_id = ? OR qcu.qualification_id = ?)
+        GROUP BY q.id
+        ORDER BY RANDOM() LIMIT ?
+      `).all(exam.qualification_id, exam.qualification_id, fallbackLimit);
 
-        const finalQuestions = (Array.isArray(fallbackQuestions) && fallbackQuestions.length > 0)
-          ? fallbackQuestions
-          : await db.prepare("SELECT id FROM questions WHERE status = 'ACTIVE' ORDER BY RANDOM() LIMIT ?").all(fallbackLimit);
+      const finalQuestions = (Array.isArray(fallbackQuestions) && fallbackQuestions.length > 0)
+        ? fallbackQuestions
+        : await db.prepare("SELECT id FROM questions WHERE status = 'ACTIVE' AND qualification_id = ? ORDER BY RANDOM() LIMIT ?").all(exam.qualification_id, fallbackLimit);
 
-        for (const q of finalQuestions) {
-          const optionMapping = generateOptionMapping();
-          await db.prepare(`
-            INSERT INTO attempt_questions (attempt_id, question_id, display_order, option_mapping)
-            VALUES (?, ?, ?, ?)
-          `).run(attemptId, q.id, order++, optionMapping);
-        }
+      const qRows = Array.isArray(finalQuestions) ? finalQuestions : [];
+      for (const q of qRows) {
+        selectedQuestionIds.add(q.id);
       }
+    }
+
+    // 4. Randomize question sequence ONLY (options remain A, B, C, D as written)
+    const finalQuestionList = Array.from(selectedQuestionIds);
+    finalQuestionList.sort(() => Math.random() - 0.5);
+
+    let order = 1;
+    for (const qId of finalQuestionList) {
+      const optionMapping = generateOptionMapping(); // returns "A:A,B:B,C:C,D:D"
+      await db.prepare(`
+        INSERT INTO attempt_questions (attempt_id, question_id, display_order, option_mapping)
+        VALUES (?, ?, ?, ?)
+      `).run(attemptId, qId, order++, optionMapping);
     }
 
 

@@ -66,11 +66,16 @@ export async function seedDatabase(db: any) {
     VALUES (?, ?)
   `).run(participantId, canhutId);
 
-  // 3. Seed Subjects for CANHUT
+  // 3. Seed Subjects for CANHUT based on official Master Data
   const subjects = [
-    { qualificationId: canhutId, code: "CAN-INV", name: "Inventarisasi Hutan", weight: 40 },
-    { qualificationId: canhutId, code: "CAN-MEB", name: "Pengukuran & Pemetaan", weight: 30 },
-    { qualificationId: canhutId, code: "CAN-SIL", name: "Silvikultur & Pembinaan", weight: 30 },
+    { qualificationId: canhutId, code: "K3", name: "Menerapkan Keselamatan, dan Kesehatan Kerja (K3)", weight: 12.5 },
+    { qualificationId: canhutId, code: "Org-Job", name: "Mengorganisasikan Pekerjaan", weight: 12.5 },
+    { qualificationId: canhutId, code: "Kom-Tif", name: "Melakukan komunikasi efektif.", weight: 12.5 },
+    { qualificationId: canhutId, code: "Ren-Inven", name: "Menyusun Rencana Kerja Inventarisasi Tegakan Hutan", weight: 12.5 },
+    { qualificationId: canhutId, code: "Lak-Inven", name: "Melaksanakan Inventarisasi Tegakan Hutan", weight: 12.5 },
+    { qualificationId: canhutId, code: "Lap-Inven", name: "Menyusun Laporan Hasil Inventarisasi Tegakan Hutan", weight: 12.5 },
+    { qualificationId: canhutId, code: "RPHJP-Kayu", name: "Menyusun Rencana Pengelolaan Jangka Panjang Pemanfaatan Hasil Hutan Kayu", weight: 12.5 },
+    { qualificationId: canhutId, code: "RKTPH-Kayu", name: "Menyusun Rencana Kerja Tahunan Pemanfaatan Hasil Hutan Kayu", weight: 12.5 },
   ];
 
   const subMap: Record<string, number> = {};
@@ -82,12 +87,12 @@ export async function seedDatabase(db: any) {
     subMap[s.code] = res.lastInsertRowid;
   }
 
-  // 4. Seed Questions under CANHUT Subjects
+  // 4. Seed Questions under CANHUT Subjects (Official Master Data)
   // Inventarisasi Hutan Questions
   const questionsList = [
     {
       qualId: canhutId,
-      subId: subMap["CAN-INV"],
+      subId: subMap["Lak-Inven"],
       text: "Inventarisasi hutan merupakan kegiatan untuk mengetahui potensi, kondisi, dan karakteristik...",
       a: "Hanya tegakan kayu komersial bernilai tinggi",
       b: "Sumber daya hutan secara menyeluruh beserta lingkungannya",
@@ -99,7 +104,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-INV"],
+      subId: subMap["Lak-Inven"],
       text: "Metode sampling yang paling umum digunakan dalam inventarisasi hutan dengan topografi homogen adalah...",
       a: "Stratified Random Sampling",
       b: "Systematic Line Plot Sampling",
@@ -111,7 +116,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-INV"],
+      subId: subMap["Lak-Inven"],
       text: "Penerapan teknik penginderaan jauh (Remote Sensing) dalam perencanaan kehutanan terutama digunakan untuk...",
       a: "Menghitung volume kayu per pohon secara mikroskopis",
       b: "Klasifikasi tutupan lahan dan pemantauan deforestasi secara berkala",
@@ -124,7 +129,7 @@ export async function seedDatabase(db: any) {
     // Pengukuran & Pemetaan Questions
     {
       qualId: canhutId,
-      subId: subMap["CAN-MEB"],
+      subId: subMap["Lak-Inven"],
       text: "Pengukuran diameter pohon setinggi dada (Diameter at Breast Height / DBH) dilakukan pada ketinggian standar...",
       a: "1.00 meter dari permukaan tanah",
       b: "1.30 meter dari permukaan tanah",
@@ -136,7 +141,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-MEB"],
+      subId: subMap["Lak-Inven"],
       text: "Alat yang paling tepat digunakan untuk mengukur tinggi pohon secara tidak langsung dengan prinsip klinometer adalah...",
       a: "Pita diameter (phi-band)",
       b: "Haga Hypsometer",
@@ -148,7 +153,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-MEB"],
+      subId: subMap["Lak-Inven"],
       text: "Sistem proyeksi peta koordinat nasional yang saat ini digunakan secara resmi di Indonesia untuk pemetaan kehutanan adalah...",
       a: "Universal Transverse Mercator (UTM) WGS 84",
       b: "Conical Orthomorphic",
@@ -161,7 +166,7 @@ export async function seedDatabase(db: any) {
     // Silvikultur & Pembinaan Questions
     {
       qualId: canhutId,
-      subId: subMap["CAN-SIL"],
+      subId: subMap["Ren-Inven"],
       text: "Sistem silvikultur Tebang Pilih Tanam Indonesia (TPTI) terutama ditujukan untuk pengelolaan...",
       a: "Hutan hujan tropis dataran rendah bekas tebangan",
       b: "Hutan tanaman industri monokultur jati",
@@ -173,7 +178,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-SIL"],
+      subId: subMap["Ren-Inven"],
       text: "Tujuan utama pelaksanaan penjarangan (thinning) pada tegakan hutan tanaman adalah...",
       a: "Memotong semak belukar yang mengganggu akses",
       b: "Membuka ruang tumbuh bagi pohon prima dengan menebang pohon inferior",
@@ -185,7 +190,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-SIL"],
+      subId: subMap["Ren-Inven"],
       text: "Kriteria pohon yang ditetapkan sebagai pohon inti dalam sistem silvikultur TPTI adalah...",
       a: "Pohon komersial berdiameter 20 cm ke atas dengan tajuk sehat",
       b: "Pohon pelindung jenis pioneer berdiameter bebas",
@@ -197,12 +202,10 @@ export async function seedDatabase(db: any) {
     },
   ];
 
-  // Add extra filler questions to satisfy minimum blueprint size if needed
-  // We'll add 3 more questions to CAN-INV, CAN-MEB, CAN-SIL
   const extraQuestions = [
     {
       qualId: canhutId,
-      subId: subMap["CAN-INV"],
+      subId: subMap["Lak-Inven"],
       text: "Dalam metode sampling sistematik dengan arah strip (line), jarak antar jalur rintisan ditentukan oleh...",
       a: "Kerapatan vegetasi semak belukar saja",
       b: "Luas kawasan hutan dan target sampling intensity",
@@ -214,7 +217,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-INV"],
+      subId: subMap["Lak-Inven"],
       text: "Kesalahan non-sampling dalam inventarisasi hutan umumnya disebabkan oleh...",
       a: "Jumlah plot sampel yang kurang banyak",
       b: "Ketidakakuratan alat ukur dan kesalahan entri data surveyor",
@@ -226,7 +229,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-MEB"],
+      subId: subMap["Org-Job"],
       text: "Pada kompas silva, fungsi jarum penunjuk utara magnetis berwarna merah adalah...",
       a: "Mencatat kemiringan lereng lereng",
       b: "Menunjukkan arah kutub utara magnetik bumi",
@@ -238,7 +241,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-MEB"],
+      subId: subMap["Org-Job"],
       text: "Skala peta kehutanan 1:50.000 memiliki makna bahwa jarak 1 cm di peta sama dengan...",
       a: "50 meter di lapangan",
       b: "500 meter di lapangan",
@@ -250,7 +253,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-SIL"],
+      subId: subMap["Org-Job"],
       text: "Tindakan silvikultur berupa perintisan (pruning) cabang pohon tegakan ditujukan untuk...",
       a: "Mencegah kebakaran tajuk menjalar ke bawah",
       b: "Meningkatkan kualitas kayu bebas mata kayu pada batang bebas cabang",
@@ -262,7 +265,7 @@ export async function seedDatabase(db: any) {
     },
     {
       qualId: canhutId,
-      subId: subMap["CAN-SIL"],
+      subId: subMap["Org-Job"],
       text: "Jenis tanaman kehutanan berikut yang dikenal sangat toleran (dapat tumbuh baik di bawah naungan) adalah...",
       a: "Meranti (Shorea spp.) pada stadia anakan/semai",
       b: "Sengon (Falcataria moluccana) pelopor cepat tumbuh",

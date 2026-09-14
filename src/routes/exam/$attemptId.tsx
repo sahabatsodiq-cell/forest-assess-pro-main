@@ -123,6 +123,35 @@ function ExaminationEnginePage() {
     }
   };
 
+  // Per-question 100-second timer
+  const [questionSeconds, setQuestionSeconds] = useState<number>(100);
+
+  // Reset per-question timer whenever current question changes
+  useEffect(() => {
+    setQuestionSeconds(100);
+  }, [currentIndex]);
+
+  // Question Timer Countdown Effect (100 seconds per question)
+  useEffect(() => {
+    if (questionSeconds <= 0) return;
+
+    const qInterval = setInterval(() => {
+      setQuestionSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(qInterval);
+          if (currentIndex < questions.length - 1) {
+            toast.info(`Waktu 100 detik untuk Soal ${currentIndex + 1} habis. Berpindah ke nomor berikutnya.`);
+            setCurrentIndex((curr) => Math.min(questions.length - 1, curr + 1));
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(qInterval);
+  }, [questionSeconds, currentIndex, questions.length]);
+
   const handleSelectAnswer = async (attemptQuestionId: number, answerKey: "A" | "B" | "C" | "D") => {
     // Optimistic UI update
     setQuestions((prev) =>
@@ -145,13 +174,6 @@ function ExaminationEnginePage() {
         toast.error(res.error);
         if (res.error.includes("habis")) {
           navigate({ to: `/results/${attemptId}` as any });
-        }
-      } else {
-        // Auto-advance to next question if not at the end
-        if (currentIndex < questions.length - 1) {
-          setTimeout(() => {
-            setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1));
-          }, 250);
         }
       }
     } catch (err) {
@@ -250,9 +272,9 @@ function ExaminationEnginePage() {
         <div className="rounded-xl border border-border/50 bg-white p-5 shadow-xs space-y-3 dark:bg-charcoal dark:border-charcoal/60">
           <div className="flex flex-wrap items-center justify-between text-xs text-muted-foreground dark:text-forest-100/70">
             <div className="flex items-center gap-4 font-medium">
-              <span>{totalQuestions} Soal</span>
+              <span>{totalQuestions} Soal (100s / Soal)</span>
               <span>•</span>
-              <span>{attempt.duration_minutes} Menit</span>
+              <span>Total {attempt.duration_minutes} Menit</span>
               <span>•</span>
               <span>Passing Grade {attempt.passing_grade}%</span>
             </div>
@@ -273,9 +295,19 @@ function ExaminationEnginePage() {
         {/* Single Question Card */}
         <div className="rounded-xl border border-border/60 bg-white p-6 sm:p-8 shadow-xs space-y-6 dark:bg-charcoal dark:border-charcoal/60">
           <div className="flex items-center justify-between border-b border-border/30 pb-3 dark:border-charcoal/60">
-            <span className="text-xs font-bold uppercase tracking-wider text-forest-800 dark:text-forest-300">
-              Soal {currentIndex + 1}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-forest-800 dark:text-forest-300">
+                Soal {currentIndex + 1} dari {totalQuestions}
+              </span>
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-mono font-bold border transition-colors ${
+                questionSeconds <= 15
+                  ? "bg-red-50 text-red-700 border-red-300 animate-pulse dark:bg-red-950/60 dark:text-red-300"
+                  : "bg-forest-50 text-forest-900 border-forest-200 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700"
+              }`}>
+                <Clock className="h-3 w-3" />
+                <span>Waktu Soal: {questionSeconds}s</span>
+              </span>
+            </div>
             {saving ? (
               <span className="text-[10px] font-semibold text-emerald-600 animate-pulse dark:text-emerald-400">
                 Menyimpan...

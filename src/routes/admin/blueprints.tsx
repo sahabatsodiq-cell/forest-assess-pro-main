@@ -165,7 +165,7 @@ function AdminBlueprintsPage() {
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: Blueprint Ujian Standar CANHUT 50 Soal"
+                  placeholder="Contoh: Blueprint Ujian Standar (5 Soal/Unit Kompetensi)"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"

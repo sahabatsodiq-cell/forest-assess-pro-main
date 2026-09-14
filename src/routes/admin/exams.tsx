@@ -373,7 +373,7 @@ function AdminExamsPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Durasi (Menit)</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Durasi & Jumlah Soal</label>
                   <input
                     type="number"
                     readOnly
@@ -383,7 +383,7 @@ function AdminExamsPage() {
                     title="Dihitung otomatis: jumlah unit kompetensi x 5 x 100 detik"
                   />
                   <span className="text-[10px] text-muted-foreground block mt-0.5 font-medium">
-                    (Otomatis: {selectedUnits.length} unit × 5 × 100s)
+                    {selectedUnits.length} unit × 5 = <strong className="text-forest-900 font-bold">{selectedUnits.length * 5} Soal</strong> ({durationMinutes}m)
                   </span>
                 </div>
                 <div>
@@ -516,7 +516,7 @@ function AdminExamsPage() {
 
             <div className="grid grid-cols-2 gap-3">
                <div>
-                 <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Durasi (Menit)</label>
+                 <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground/90">Durasi & Jumlah Soal</label>
                  <input
                    type="number"
                    readOnly
@@ -526,7 +526,7 @@ function AdminExamsPage() {
                    title="Dihitung otomatis: jumlah unit kompetensi x 5 x 100 detik"
                  />
                  <span className="text-[10px] text-muted-foreground block mt-0.5 font-medium">
-                   (Otomatis: {editSelectedUnits.length} unit × 5 × 100s)
+                   {editSelectedUnits.length} unit × 5 = <strong className="text-forest-900 font-bold">{editSelectedUnits.length * 5} Soal</strong> ({editDurationMinutes}m)
                  </span>
                </div>
                <div>

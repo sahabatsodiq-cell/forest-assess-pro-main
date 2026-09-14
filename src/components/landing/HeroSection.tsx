@@ -91,7 +91,7 @@ function ExamMockup() {
 
         {/* Stats row */}
         <div className="flex items-center justify-between border-b border-border/50 px-5 py-2.5 text-xs text-muted-foreground">
-          <span>50 Soal</span>
+          <span>5 Soal / Unit</span>
           <span>60 Menit</span>
           <span className="font-semibold text-forest-900">
             Passing Grade: 61

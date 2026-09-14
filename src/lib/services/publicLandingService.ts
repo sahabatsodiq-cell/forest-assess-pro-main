@@ -163,7 +163,7 @@ export async function getLandingPreviewDataRaw(): Promise<LandingPreviewData> {
       qualCode: latestPackage.qual_code,
       durationMinutes: latestPackage.duration_minutes,
       passingGrade: latestPackage.passing_grade,
-      totalQuestions: totalBlueprintCount || 50,
+      totalQuestions: totalBlueprintCount || 40,
       blueprintDistribution: blueprintItems.map((bi: any) => {
         const count = bi.question_count || 0;
         const pct = totalBlueprintCount > 0 ? Math.round((count / totalBlueprintCount) * 100) : 0;
@@ -223,7 +223,7 @@ export async function getLandingPreviewDataRaw(): Promise<LandingPreviewData> {
       id: a.id,
       name: a.participant_name,
       code: a.qual_code,
-      count: `${totalQ || 50} Soal`,
+      count: `${totalQ || 40} Soal`,
       score: a.score || 0,
       status: isPassed ? "Lulus" : "Tidak Lulus",
     };

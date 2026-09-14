@@ -863,13 +863,23 @@ export const getExamsFn = createServerFn({ method: "POST" })
     verifyAdminSession(data.token);
     const db = await getDb();
     const res = await db.prepare(`
-      SELECT p.*, q.code as qualification_code, COALESCE(b.name, 'Default Blueprint') as blueprint_name, COALESCE(b.total_questions, 50) as total_questions
+      SELECT p.*, q.code as qualification_code, COALESCE(b.name, 'Default Blueprint') as blueprint_name,
+             b.total_questions as bp_total_questions
       FROM exam_packages p
       JOIN qualifications q ON p.qualification_id = q.id
       LEFT JOIN exam_blueprints b ON p.blueprint_id = b.id
       ORDER BY p.id DESC
     `).all();
-    return Array.isArray(res) ? res : [];
+
+    const list = Array.isArray(res) ? res : [];
+    return list.map((p) => {
+      const units = p.code ? p.code.split(';').map((s: string) => s.trim()).filter(Boolean) : [];
+      const computedQuestions = units.length > 0 ? units.length * 5 : (p.bp_total_questions || 40);
+      return {
+        ...p,
+        total_questions: computedQuestions,
+      };
+    });
   });
 
 export const createExamFn = createServerFn({ method: "POST" })
@@ -894,19 +904,25 @@ export const createExamFn = createServerFn({ method: "POST" })
     if (existing) return { success: false, error: "Kode paket ujian sudah digunakan." };
 
     let bpId = data.blueprint_id;
+    const unitCodes = data.code ? data.code.split(';').map((s) => s.trim()).filter(Boolean) : [];
+    const calculatedTotalQuestions = unitCodes.length > 0 ? unitCodes.length * 5 : 40;
+
     if (!bpId) {
       const existingBp = await db.prepare("SELECT id FROM exam_blueprints WHERE qualification_id = ? ORDER BY id ASC").get(data.qualification_id);
       if (existingBp) {
         bpId = existingBp.id;
+        await db.prepare("UPDATE exam_blueprints SET total_questions = ? WHERE id = ?").run(calculatedTotalQuestions, bpId);
       } else {
         const qual = await db.prepare("SELECT code, name FROM qualifications WHERE id = ?").get(data.qualification_id);
         const newBp = await db.prepare(`
           INSERT INTO exam_blueprints (qualification_id, name, description, total_questions)
-          VALUES (?, ?, 'Blueprint Otomatis', 50)
+          VALUES (?, ?, 'Blueprint Otomatis (5 Soal/Unit)', ?)
           RETURNING id
-        `).run(data.qualification_id, `Blueprint ${qual?.code || 'Kualifikasi'}`);
+        `).run(data.qualification_id, `Blueprint ${qual?.code || 'Kualifikasi'}`, calculatedTotalQuestions);
         bpId = (newBp as any).lastInsertRowid;
       }
+    } else {
+      await db.prepare("UPDATE exam_blueprints SET total_questions = ? WHERE id = ?").run(calculatedTotalQuestions, bpId);
     }
 
     const nowIso = new Date().toISOString();
@@ -981,6 +997,9 @@ export const updateExamFn = createServerFn({ method: "POST" })
     const exam = await db.prepare("SELECT * FROM exam_packages WHERE id = ?").get(data.id);
     if (!exam) return { success: false, error: "Paket ujian tidak ditemukan." };
 
+    const unitCodes = data.code ? data.code.split(';').map((s) => s.trim()).filter(Boolean) : [];
+    const calculatedTotalQuestions = unitCodes.length > 0 ? unitCodes.length * 5 : 40;
+
     await db.prepare(`
       UPDATE exam_packages SET
         qualification_id = ?,
@@ -1004,6 +1023,10 @@ export const updateExamFn = createServerFn({ method: "POST" })
       data.status || null,
       data.id
     );
+
+    if (exam.blueprint_id) {
+      await db.prepare("UPDATE exam_blueprints SET total_questions = ? WHERE id = ?").run(calculatedTotalQuestions, exam.blueprint_id);
+    }
 
     await logAudit(session.userId, "UPDATE_EXAM", "exam_packages", data.id, { code: data.code });
     return { success: true };

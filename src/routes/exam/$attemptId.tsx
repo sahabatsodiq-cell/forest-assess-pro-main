@@ -196,18 +196,21 @@ function ExaminationEnginePage() {
   const timeFormatted = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   // Option list depending on question type
-  const isTrueFalse = currentQ?.question_type === "TRUE_FALSE";
+  const isTrueFalse =
+    currentQ?.question_type === "TRUE_FALSE" ||
+    (currentQ?.question_text && /\[benar\s*\/\s*salah\]/i.test(currentQ.question_text));
+
   const options = isTrueFalse
     ? [
-        { key: "A", text: currentQ?.option_a || "BENAR" },
-        { key: "B", text: currentQ?.option_b || "SALAH" },
+        { key: "A", text: currentQ?.option_a && currentQ.option_a !== "-" ? currentQ.option_a : "Benar" },
+        { key: "B", text: currentQ?.option_b && currentQ.option_b !== "-" ? currentQ.option_b : "Salah" },
       ]
     : [
         { key: "A", text: currentQ?.option_a },
         { key: "B", text: currentQ?.option_b },
         { key: "C", text: currentQ?.option_c },
         { key: "D", text: currentQ?.option_d },
-      ].filter((o) => o.text !== null && o.text !== undefined && o.text !== "");
+      ].filter((o) => o.text !== null && o.text !== undefined && o.text !== "" && o.text.trim() !== "-");
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F7F2] text-charcoal dark:bg-charcoal dark:text-forest-100 font-sans pb-16">

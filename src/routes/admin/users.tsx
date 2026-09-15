@@ -6,6 +6,7 @@ import {
   updateUserFn, 
   toggleUserStatusFn, 
   deleteUserFn, 
+  bulkDeleteUsersFn,
   verifyUserFn, 
   adminResetUserPasswordFn,
   getQualificationsFn 
@@ -59,6 +60,11 @@ function AdminUsersPage() {
   const [resetPasswordTarget, setResetPasswordTarget] = useState<any | null>(null);
   const [resetNewPass, setResetNewPass] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
+
+  // Bulk Selection States
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // Create Form State
   const [name, setName] = useState("");
@@ -252,6 +258,7 @@ function AdminUsersPage() {
       const res = await deleteUserFn({ data: { token, id: deleteTarget.id } });
       if (res.success) {
         toast.success(`Akun ${deleteTarget.name} berhasil dihapus permanen.`);
+        setSelectedIds((prev) => prev.filter((id) => id !== deleteTarget.id));
         setDeleteTarget(null);
         loadData();
       }
@@ -309,6 +316,51 @@ function AdminUsersPage() {
   });
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  // Selection Logic
+  const isAllPaginatedSelected =
+    paginated.length > 0 && paginated.every((u) => selectedIds.includes(u.id));
+
+  const handleSelectAllPaginated = () => {
+    if (isAllPaginatedSelected) {
+      const pageIds = paginated.map((u) => u.id);
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    } else {
+      const pageIds = paginated.map((u) => u.id);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const handleToggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkDeleting(true);
+    const token = localStorage.getItem("askganis_token") || "";
+
+    try {
+      const res = await bulkDeleteUsersFn({
+        data: { token, ids: selectedIds },
+      });
+
+      if (res.success) {
+        toast.success(`✓ Berhasil menghapus ${res.count} pengguna secara permanen.`);
+        setBulkDeleteOpen(false);
+        setSelectedIds([]);
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menghapus pengguna terpilih.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat hapus massal.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -481,6 +533,35 @@ function AdminUsersPage() {
         </select>
       </div>
 
+      {/* Sticky Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50/95 p-3.5 px-4 shadow-md backdrop-blur-md">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-red-900">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-extrabold text-white">
+              {selectedIds.length}
+            </span>
+            <span>pengguna terpilih</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-charcoal hover:bg-gray-100 transition-colors"
+            >
+              Batalkan
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-700 shadow-xs transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Hapus Terpilih ({selectedIds.length})</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Users Table */}
       <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
         {loading ? (
@@ -491,6 +572,15 @@ function AdminUsersPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border/30 bg-forest-50/10 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <th scope="col" className="px-4 py-3.5 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isAllPaginatedSelected}
+                        onChange={handleSelectAllPaginated}
+                        className="h-4 w-4 rounded border-gray-300 text-forest-900 focus:ring-forest-500 cursor-pointer"
+                        title="Pilih Semua di Halaman Ini"
+                      />
+                    </th>
                     <th className="px-6 py-3.5">NAMA PENGGUNA</th>
                     <th className="px-4 py-3.5">Role</th>
                     <th className="px-4 py-3.5">Nomor Registrasi (Username)</th>
@@ -502,15 +592,24 @@ function AdminUsersPage() {
                 <tbody className="divide-y divide-border/20 text-xs">
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
                         Tidak ada pengguna yang sesuai.
                       </td>
                     </tr>
                   ) : (
                     paginated.map((u) => {
                       const isPending = !u.is_active && u.role === "PESERTA";
+                      const isSelected = selectedIds.includes(u.id);
                       return (
-                        <tr key={u.id} className="hover:bg-forest-50/10 transition-colors">
+                        <tr key={u.id} className={`hover:bg-forest-50/10 transition-colors ${isSelected ? 'bg-red-50/30' : ''}`}>
+                          <td className="px-4 py-3.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelect(u.id)}
+                              className="h-4 w-4 rounded border-gray-300 text-forest-900 focus:ring-forest-500 cursor-pointer"
+                            />
+                          </td>
                           <td className="px-6 py-3.5">
                             <div className="font-bold text-charcoal">{u.name}</div>
                             <div className="text-[11px] text-muted-foreground font-mono">{u.email}</div>
@@ -969,6 +1068,49 @@ function AdminUsersPage() {
           </DialogContent>
         </Dialog>
       )}
+      {/* ------------------------------------------------------------------ */}
+      {/* MODAL KONFIRMASI HAPUS MASSAL PENGGUNA                             */}
+      {/* ------------------------------------------------------------------ */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent className="max-w-md bg-white p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-base font-bold text-red-700 flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              Konfirmasi Hapus Massal Pengguna
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-3 space-y-3 text-xs">
+            <p className="text-charcoal leading-relaxed">
+              Apakah Anda yakin ingin menghapus <strong className="text-red-700 font-extrabold">{selectedIds.length}</strong> pengguna terpilih secara permanen?
+            </p>
+
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-red-900 text-[11px] leading-relaxed">
+              <strong>⚠️ Peringatan:</strong> Tindakan ini akan menghapus seluruh data relasi pengguna (penugasan kualifikasi, pendaftaran ujian, dan riwayat attempt) secara permanen. Tindakan ini tidak dapat dibatalkan.
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                disabled={bulkDeleting}
+                onClick={() => setBulkDeleteOpen(false)}
+                className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-semibold text-charcoal hover:bg-gray-100 disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={bulkDeleting}
+                onClick={handleBulkDelete}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                {bulkDeleting ? "Menghapus..." : `Hapus ${selectedIds.length} Pengguna`}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

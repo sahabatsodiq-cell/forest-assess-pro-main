@@ -254,6 +254,38 @@ export const deleteUserFn = createServerFn({ method: "POST" })
     return { success: true };
   });
 
+export const bulkDeleteUsersFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; ids: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    if (!Array.isArray(data.ids) || data.ids.length === 0) {
+      return { success: false, error: "Tidak ada pengguna yang dipilih untuk dihapus.", count: 0 };
+    }
+
+    // Filter out session user ID to prevent self-deletion
+    const targetIds = data.ids.filter((id) => id !== session.userId);
+
+    if (targetIds.length === 0) {
+      return { success: false, error: "Tidak dapat menghapus akun Anda sendiri.", count: 0 };
+    }
+
+    const placeholders = targetIds.map(() => "?").join(", ");
+
+    // Clean up dependent foreign keys
+    await db.prepare(`DELETE FROM user_qualifications WHERE user_id IN (${placeholders})`).run(...targetIds);
+    await db.prepare(`DELETE FROM user_ganisph_assignments WHERE user_id IN (${placeholders})`).run(...targetIds);
+    await db.prepare(`DELETE FROM exam_enrollments WHERE user_id IN (${placeholders})`).run(...targetIds);
+    await db.prepare(`DELETE FROM exam_attempts WHERE user_id IN (${placeholders})`).run(...targetIds);
+
+    // Delete user records
+    await db.prepare(`DELETE FROM users WHERE id IN (${placeholders})`).run(...targetIds);
+
+    await logAudit(session.userId, "BULK_DELETE_USERS", "users", 0, { count: targetIds.length, targetIds });
+    return { success: true, count: targetIds.length };
+  });
+
 export const adminResetUserPasswordFn = createServerFn({ method: "POST" })
   .validator((data: { token: string; id: number; newPassword?: string | undefined }) => data)
   .handler(async ({ data }) => {

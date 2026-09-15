@@ -297,7 +297,7 @@ function AdminExamsPage() {
               Buat Paket Ujian
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-md bg-white p-6">
+          <DialogContent className="max-w-md bg-white p-6 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-base font-bold text-charcoal">
                 Buat Paket Ujian Baru
@@ -447,7 +447,7 @@ function AdminExamsPage() {
 
       {/* Edit Modal */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md bg-white p-6">
+        <DialogContent className="max-w-md bg-white p-6 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-base font-bold text-charcoal">
               Edit Paket Ujian Asesmen

@@ -498,6 +498,11 @@ function ParticipantExamsPage() {
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Mendaftarkan...
                           </>
+                        ) : exam.is_retake ? (
+                          <>
+                            <PlusCircle className="h-4 w-4" />
+                            Ajukan Ujian Ulang
+                          </>
                         ) : (
                           <>
                             <PlusCircle className="h-4 w-4" />

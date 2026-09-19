@@ -216,7 +216,11 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
       JOIN qualifications q ON p.qualification_id = q.id
       LEFT JOIN exam_blueprints b ON p.blueprint_id = b.id
       JOIN exam_enrollments e ON (e.exam_id = p.id AND e.user_id = ?)
-      LEFT JOIN exam_attempts a ON (a.exam_id = p.id AND a.user_id = ?)
+      LEFT JOIN exam_attempts a ON a.id = (
+        SELECT id FROM exam_attempts a2 
+        WHERE a2.exam_id = p.id AND a2.user_id = e.user_id 
+        ORDER BY id DESC LIMIT 1
+      )
       WHERE (p.status = 'PUBLISHED' OR p.status = 'ACTIVE')
       ORDER BY p.id DESC
     `).all(session.userId, session.userId);
@@ -265,16 +269,26 @@ export const getAvailableExamsFn = createServerFn({ method: "POST" })
     // but are NOT yet enrolled (either manually or already visible via qual match)
     const rawAvailable = await db.prepare(`
       SELECT DISTINCT p.*, q.code as qualification_code, q.name as qualification_name,
-             b.total_questions as bp_total_questions
+             b.total_questions as bp_total_questions,
+             CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END as is_retake
       FROM exam_packages p
       JOIN qualifications q ON p.qualification_id = q.id
       LEFT JOIN exam_blueprints b ON p.blueprint_id = b.id
+      LEFT JOIN exam_enrollments e ON e.exam_id = p.id AND e.user_id = ?
       WHERE (p.status = 'PUBLISHED' OR p.status = 'ACTIVE')
         AND p.qualification_id IN (
           SELECT qualification_id FROM user_qualifications WHERE user_id = ?
         )
-        AND p.id NOT IN (
-          SELECT exam_id FROM exam_enrollments WHERE user_id = ?
+        AND (
+          e.id IS NULL
+          OR (
+            e.status != 'PENDING'
+            AND (
+              SELECT status FROM exam_attempts a 
+              WHERE a.user_id = e.user_id AND a.exam_id = e.exam_id 
+              ORDER BY id DESC LIMIT 1
+            ) IN ('SUBMITTED', 'AUTO_SUBMITTED')
+          )
         )
       ORDER BY p.id DESC
     `).all(session.userId, session.userId);
@@ -314,11 +328,25 @@ export const selfEnrollFn = createServerFn({ method: "POST" })
       return { success: false, error: "Kualifikasi Anda tidak sesuai dengan paket ujian ini." };
     }
 
-    // 3. Check if already enrolled or already has access via qualification
+    // 3. Check if already enrolled
     const existing = await db.prepare(
-      "SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?"
+      "SELECT id, status FROM exam_enrollments WHERE exam_id = ? AND user_id = ?"
     ).get(data.exam_id, session.userId);
+
     if (existing) {
+      const latestAttempt = await db.prepare(
+        "SELECT status FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY id DESC LIMIT 1"
+      ).get(session.userId, data.exam_id);
+
+      if (latestAttempt && (latestAttempt.status === 'SUBMITTED' || latestAttempt.status === 'AUTO_SUBMITTED')) {
+        if (existing.status === 'PENDING') {
+          return { success: false, error: "Pengajuan ujian ulang Anda sedang menunggu persetujuan Admin." };
+        }
+        await db.prepare("UPDATE exam_enrollments SET status = 'PENDING' WHERE id = ?").run(existing.id);
+        await logAudit(session.userId, "REQUEST_RETAKE", "exam_enrollments", existing.id, { exam_id: data.exam_id });
+        return { success: true, message: "Pengajuan ujian ulang berhasil dikirim ke Admin." };
+      }
+
       return { success: false, error: "Anda sudah terdaftar pada paket ujian ini." };
     }
 
@@ -366,8 +394,7 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
 
 
     // 3. Check existing attempt
-    // 3. Check existing attempt
-    const existingAttempt = await db.prepare("SELECT * FROM exam_attempts WHERE exam_id = ? AND user_id = ?").get(data.exam_id, session.userId);
+    const existingAttempt = await db.prepare("SELECT * FROM exam_attempts WHERE exam_id = ? AND user_id = ? ORDER BY id DESC LIMIT 1").get(data.exam_id, session.userId);
     if (existingAttempt) {
       if (existingAttempt.status === "SUBMITTED" || existingAttempt.status === "AUTO_SUBMITTED") {
         return { success: false, error: "Anda sudah menyelesaikan ujian ini." };

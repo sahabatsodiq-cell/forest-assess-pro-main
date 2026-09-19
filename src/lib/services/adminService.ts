@@ -1186,10 +1186,20 @@ export const getEnrollmentsFn = createServerFn({ method: "POST" })
       FROM exam_enrollments e
       JOIN users u ON e.user_id = u.id
       JOIN exam_packages p ON e.exam_id = p.id
+      WHERE e.status = 'PENDING'
+         OR (
+           e.status = 'APPROVED'
+           AND COALESCE(
+             (SELECT status FROM exam_attempts a 
+              WHERE a.user_id = e.user_id AND a.exam_id = e.exam_id 
+              ORDER BY id DESC LIMIT 1), 
+             'NONE'
+           ) NOT IN ('SUBMITTED', 'AUTO_SUBMITTED')
+         )
     `;
     const params: any[] = [];
     if (data.exam_id) {
-      query += " WHERE e.exam_id = ?";
+      query += " AND e.exam_id = ?";
       params.push(data.exam_id);
     }
     query += " ORDER BY e.id DESC";
@@ -1230,7 +1240,16 @@ export const approveEnrollmentFn = createServerFn({ method: "POST" })
     const { ensureEnrollmentSchema } = await import("./examEngineService");
     await ensureEnrollmentSchema(db);
 
-    await db.prepare("UPDATE exam_enrollments SET status = 'APPROVED' WHERE id = ?").run(data.id);
+    const enrollment = await db.prepare("SELECT * FROM exam_enrollments WHERE id = ?").get(data.id);
+    if (enrollment) {
+      await db.prepare("UPDATE exam_enrollments SET status = 'APPROVED' WHERE id = ?").run(data.id);
+      
+      const latestAttempt = await db.prepare("SELECT status FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY id DESC LIMIT 1").get(enrollment.user_id, enrollment.exam_id);
+      if (latestAttempt && (latestAttempt.status === 'SUBMITTED' || latestAttempt.status === 'AUTO_SUBMITTED')) {
+        await db.prepare("INSERT INTO exam_attempts (exam_id, user_id, status) VALUES (?, ?, 'NOT_STARTED')").run(enrollment.exam_id, enrollment.user_id);
+      }
+    }
+
     await logAudit(session.userId, "APPROVE_ENROLLMENT", "exam_enrollments", data.id);
     return { success: true };
   });
@@ -1247,7 +1266,19 @@ export const bulkApproveEnrollmentsFn = createServerFn({ method: "POST" })
     if (targetIds.length === 0) return { success: false, error: "Tidak ada pendaftaran terpilih." };
 
     const placeholders = targetIds.map(() => "?").join(",");
+    
+    // For retakes in bulk, we need to handle them one by one or fetch them
+    const enrollments = await db.prepare(`SELECT * FROM exam_enrollments WHERE id IN (${placeholders})`).all(...targetIds) as any[];
+    
     await db.prepare(`UPDATE exam_enrollments SET status = 'APPROVED' WHERE id IN (${placeholders})`).run(...targetIds);
+    
+    for (const enr of enrollments) {
+      const latestAttempt = await db.prepare("SELECT status FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY id DESC LIMIT 1").get(enr.user_id, enr.exam_id);
+      if (latestAttempt && (latestAttempt.status === 'SUBMITTED' || latestAttempt.status === 'AUTO_SUBMITTED')) {
+        await db.prepare("INSERT INTO exam_attempts (exam_id, user_id, status) VALUES (?, ?, 'NOT_STARTED')").run(enr.exam_id, enr.user_id);
+      }
+    }
+
     await logAudit(session.userId, "BULK_APPROVE_ENROLLMENTS", "exam_enrollments", 0, { count: targetIds.length });
     return { success: true, count: targetIds.length };
   });

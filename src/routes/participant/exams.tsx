@@ -35,6 +35,8 @@ export const Route = createFileRoute("/participant/exams")({
   component: ParticipantExamsPage,
 });
 
+const APPROVAL_REQUIRED_MESSAGE = "Akses ujian ini belum dibuka, silahkan hubungi Admin untuk mendapatkan persetujuan mengikuti Paket Ujian";
+
 function ParticipantExamsPage() {
   const [data, setData] = useState<any>(null);
   const [availableExams, setAvailableExams] = useState<any[]>([]);
@@ -78,8 +80,9 @@ function ParticipantExamsPage() {
 
   const handleStartExam = async (examId: number, enrollmentStatus?: string) => {
     if (enrollmentStatus !== "APPROVED") {
+      window.alert(APPROVAL_REQUIRED_MESSAGE);
       setApprovalWarningOpen(true);
-      toast.error("Akses ujian ini belum dibuka, silahkan hubungi Admin untuk mendapatkan persetujuan mengikuti Paket Ujian");
+      toast.error(APPROVAL_REQUIRED_MESSAGE);
       return;
     }
 
@@ -90,10 +93,20 @@ function ParticipantExamsPage() {
       if (res.success && res.attemptId) {
         navigate({ to: `/exam/${res.attemptId}` as any });
       } else {
-        toast.error(res.error || "Gagal memulai sesi ujian.");
+        const message = res.error || "Gagal memulai sesi ujian.";
+        if (message.includes("Akses ujian ini belum dibuka")) {
+          window.alert(APPROVAL_REQUIRED_MESSAGE);
+          setApprovalWarningOpen(true);
+        }
+        toast.error(message);
       }
     } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan.");
+      const message = err.message || "Terjadi kesalahan.";
+      if (message.includes("Akses ujian ini belum dibuka")) {
+        window.alert(APPROVAL_REQUIRED_MESSAGE);
+        setApprovalWarningOpen(true);
+      }
+      toast.error(message);
     } finally {
       setActionLoading(null);
     }

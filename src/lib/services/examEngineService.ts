@@ -142,6 +142,45 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
       `).run(userId, matchedQual.id, mItem.registration_number || null);
     }
   }
+
+  // Ensure exam_enrollments exist as PENDING candidates for matching active exam packages
+  await syncUserExamEnrollments(db, userId);
+}
+
+export async function ensureEnrollmentSchema(db: any) {
+  try {
+    await db.prepare("ALTER TABLE exam_enrollments ADD COLUMN status VARCHAR(20) DEFAULT 'PENDING'").run();
+  } catch {
+    try {
+      await db.prepare("ALTER TABLE exam_enrollments ADD COLUMN status TEXT DEFAULT 'PENDING'").run();
+    } catch {
+      // Column exists
+    }
+  }
+}
+
+export async function syncUserExamEnrollments(db: any, userId: number) {
+  await ensureEnrollmentSchema(db);
+
+  const matchingExams = await db.prepare(`
+    SELECT DISTINCT p.id as exam_id
+    FROM exam_packages p
+    JOIN user_qualifications uq ON p.qualification_id = uq.qualification_id
+    WHERE uq.user_id = ? AND (p.status = 'PUBLISHED' OR p.status = 'ACTIVE')
+  `).all(userId);
+
+  const examList = Array.isArray(matchingExams) ? matchingExams : [];
+  for (const ex of examList) {
+    const existing = await db.prepare(
+      "SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?"
+    ).get(ex.exam_id, userId);
+
+    if (!existing) {
+      await db.prepare(
+        "INSERT INTO exam_enrollments (exam_id, user_id, status) VALUES (?, ?, 'PENDING')"
+      ).run(ex.exam_id, userId);
+    }
+  }
 }
 
 // ------------------------------------------------------------------
@@ -155,6 +194,7 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
 
     // Auto-sync qualifications from master_ganisph first!
     await syncMasterGanisphQualifications(db, session.userId);
+    await syncUserExamEnrollments(db, session.userId);
 
     // Get user details & qualification
     const user = await db.prepare(`
@@ -165,22 +205,22 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
       WHERE u.id = ?
     `).get(session.userId);
 
-    // Get published exams for matching user qualifications OR explicit enrollment
+    // Get published exams matching enrollments with approval status
     const rawEnrolledExams = await db.prepare(`
       SELECT DISTINCT p.*, q.code as qualification_code, q.name as qualification_name,
              b.total_questions as bp_total_questions,
+             e.id as enrollment_id,
+             COALESCE(e.status, 'PENDING') as enrollment_status,
              a.id as attempt_id, a.status as attempt_status, a.score as attempt_score
       FROM exam_packages p
       JOIN qualifications q ON p.qualification_id = q.id
       LEFT JOIN exam_blueprints b ON p.blueprint_id = b.id
+      JOIN exam_enrollments e ON (e.exam_id = p.id AND e.user_id = ?)
       LEFT JOIN exam_attempts a ON (a.exam_id = p.id AND a.user_id = ?)
       WHERE (p.status = 'PUBLISHED' OR p.status = 'ACTIVE')
-        AND (
-          p.qualification_id IN (SELECT qualification_id FROM user_qualifications WHERE user_id = ?)
-          OR p.id IN (SELECT exam_id FROM exam_enrollments WHERE user_id = ?)
-        )
       ORDER BY p.id DESC
-    `).all(session.userId, session.userId, session.userId);
+    `).all(session.userId, session.userId);
+
 
     const enrolledList = Array.isArray(rawEnrolledExams) ? rawEnrolledExams : [];
     const enrolledExams = enrolledList.map((p: any) => {
@@ -312,13 +352,18 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
       return { success: false, error: "Ujian tidak aktif atau belum dipublikasikan." };
     }
 
-    // 2. Check enrollment or matching qualification
-    const userQual = await db.prepare("SELECT qualification_id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?").get(session.userId, exam.qualification_id);
-    const enrollment = await db.prepare("SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?").get(data.exam_id, session.userId);
+    // 2. Check enrollment & admin approval status
+    await ensureEnrollmentSchema(db);
+    const enrollment = await db.prepare("SELECT id, status FROM exam_enrollments WHERE exam_id = ? AND user_id = ?").get(data.exam_id, session.userId);
+    const enrollmentStatus = enrollment?.status || "PENDING";
 
-    if (!userQual && !enrollment) {
-      return { success: false, error: "Anda tidak terdaftar atau tidak memiliki kualifikasi untuk ujian ini." };
+    if (enrollmentStatus !== "APPROVED") {
+      return {
+        success: false,
+        error: "Akses ujian ini belum dibuka, silahkan hubungi Admin untuk mendapatkan persetujuan mengikuti Paket Ujian",
+      };
     }
+
 
     // 3. Check existing attempt
     // 3. Check existing attempt

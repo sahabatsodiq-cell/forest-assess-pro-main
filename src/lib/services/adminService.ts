@@ -1086,8 +1086,13 @@ export const getEnrollmentsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
+    const { ensureEnrollmentSchema } = await import("./examEngineService");
+    await ensureEnrollmentSchema(db);
+
     let query = `
-      SELECT e.*, u.name as user_name, u.email as user_email, u.participant_number, p.name as exam_name, p.code as exam_code
+      SELECT e.id, e.exam_id, e.user_id, COALESCE(e.status, 'PENDING') as status, e.created_at,
+             u.name as user_name, u.email as user_email, u.participant_number,
+             p.name as exam_name, p.code as exam_code
       FROM exam_enrollments e
       JOIN users u ON e.user_id = u.id
       JOIN exam_packages p ON e.exam_id = p.id
@@ -1097,6 +1102,7 @@ export const getEnrollmentsFn = createServerFn({ method: "POST" })
       query += " WHERE e.exam_id = ?";
       params.push(data.exam_id);
     }
+    query += " ORDER BY e.id DESC";
     const res = await db.prepare(query).all(...params);
     return Array.isArray(res) ? res : [];
   });
@@ -1106,6 +1112,8 @@ export const enrollParticipantFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
+    const { ensureEnrollmentSchema } = await import("./examEngineService");
+    await ensureEnrollmentSchema(db);
 
     // Verify participant qualification matches exam qualification
     const exam = await db.prepare("SELECT qualification_id FROM exam_packages WHERE id = ?").get(data.exam_id);
@@ -1116,12 +1124,42 @@ export const enrollParticipantFn = createServerFn({ method: "POST" })
     }
 
     try {
-      const res = await db.prepare("INSERT INTO exam_enrollments (exam_id, user_id) VALUES (?, ?)").run(data.exam_id, data.user_id);
+      const res = await db.prepare("INSERT INTO exam_enrollments (exam_id, user_id, status) VALUES (?, ?, 'APPROVED')").run(data.exam_id, data.user_id);
       await logAudit(session.userId, "ENROLL_PARTICIPANT", "exam_enrollments", res.lastInsertRowid as number, { exam_id: data.exam_id, user_id: data.user_id });
       return { success: true };
     } catch (e: any) {
       return { success: false, error: "Peserta sudah terdaftar dalam ujian ini." };
     }
+  });
+
+export const approveEnrollmentFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; id: number }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+    const { ensureEnrollmentSchema } = await import("./examEngineService");
+    await ensureEnrollmentSchema(db);
+
+    await db.prepare("UPDATE exam_enrollments SET status = 'APPROVED' WHERE id = ?").run(data.id);
+    await logAudit(session.userId, "APPROVE_ENROLLMENT", "exam_enrollments", data.id);
+    return { success: true };
+  });
+
+export const bulkApproveEnrollmentsFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; ids: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+    const { ensureEnrollmentSchema } = await import("./examEngineService");
+    await ensureEnrollmentSchema(db);
+
+    const targetIds = data.ids.filter((id) => typeof id === "number" && !isNaN(id));
+    if (targetIds.length === 0) return { success: false, error: "Tidak ada pendaftaran terpilih." };
+
+    const placeholders = targetIds.map(() => "?").join(",");
+    await db.prepare(`UPDATE exam_enrollments SET status = 'APPROVED' WHERE id IN (${placeholders})`).run(...targetIds);
+    await logAudit(session.userId, "BULK_APPROVE_ENROLLMENTS", "exam_enrollments", 0, { count: targetIds.length });
+    return { success: true, count: targetIds.length };
   });
 
 export const deleteEnrollmentFn = createServerFn({ method: "POST" })
@@ -1133,6 +1171,7 @@ export const deleteEnrollmentFn = createServerFn({ method: "POST" })
     await logAudit(session.userId, "DELETE_ENROLLMENT", "exam_enrollments", data.id);
     return { success: true };
   });
+
 
 // ------------------------------------------------------------------
 // RESULTS & AUDIT LOGS

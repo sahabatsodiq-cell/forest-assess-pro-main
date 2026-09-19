@@ -5,13 +5,15 @@ import {
   enrollParticipantFn,
   deleteEnrollmentFn,
   bulkDeleteEnrollmentsFn,
+  approveEnrollmentFn,
+  bulkApproveEnrollmentsFn,
   getExamsFn,
   getUsersFn,
   getExamRegistrationRequestsFn,
   approveExamRequestFn,
   rejectExamRequestFn,
 } from "@/lib/services/adminService";
-import { UserCheck, Plus, Trash2, Search, Inbox, Check, X, Clock, Loader2, AlertTriangle } from "lucide-react";
+import { UserCheck, Plus, Trash2, Search, Inbox, Check, X, Clock, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { toast } from "sonner";
@@ -44,6 +46,8 @@ function AdminEnrollmentsPage() {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkApproving, setBulkApproving] = useState(false);
+
 
   // Form State
   const [examId, setExamId] = useState<number | "">("");
@@ -149,6 +153,49 @@ function AdminEnrollmentsPage() {
       setBulkDeleting(false);
     }
   };
+
+  const handleApproveEnrollment = async (id: number) => {
+    setActionLoadingId(id);
+    const token = localStorage.getItem("askganis_token") || "";
+    try {
+      const res = await approveEnrollmentFn({ data: { token, id } });
+      if (res.success) {
+        toast.success("Persetujuan peserta berhasil diberikan.");
+        loadData();
+      } else {
+        toast.error("Gagal menyetujui pendaftaran.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleBulkApproveEnrollments = async () => {
+    if (selectedIds.length === 0) return;
+    setBulkApproving(true);
+    const token = localStorage.getItem("askganis_token") || "";
+
+    try {
+      const res = await bulkApproveEnrollmentsFn({
+        data: { token, ids: selectedIds },
+      });
+
+      if (res.success) {
+        toast.success(`Berhasil menyetujui ${res.count} calon peserta.`);
+        setSelectedIds([]);
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menyetujui pendaftaran terpilih.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat menyetujui massal.");
+    } finally {
+      setBulkApproving(false);
+    }
+  };
+
 
   const handleApproveRequest = async (requestId: number) => {
     setActionLoadingId(requestId);
@@ -317,9 +364,9 @@ function AdminEnrollmentsPage() {
 
       {/* Bulk Action Toolbar Bar */}
       {activeTab === "enrolled" && selectedIds.length > 0 && (
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50/90 p-3.5 px-4 shadow-sm">
-          <div className="flex items-center gap-2.5 text-xs font-semibold text-red-900">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-extrabold text-white">
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-forest-200 bg-forest-50/90 p-3.5 px-4 shadow-sm">
+          <div className="flex items-center gap-2.5 text-xs font-semibold text-forest-900">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-forest-700 text-[10px] font-extrabold text-white">
               {selectedIds.length}
             </span>
             <span>pendaftaran terpilih</span>
@@ -331,6 +378,15 @@ function AdminEnrollmentsPage() {
               className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-black/5"
             >
               Batalkan
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkApproveEnrollments}
+              disabled={bulkApproving}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-forest-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-forest-700 transition-colors disabled:opacity-50"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              {bulkApproving ? "Menyetujui..." : `Setujui Terpilih (${selectedIds.length})`}
             </button>
             <button
               type="button"
@@ -419,13 +475,14 @@ function AdminEnrollmentsPage() {
                     <th className="px-4 py-3.5">No. Registrasi / Email</th>
                     <th className="px-4 py-3.5">Paket Ujian</th>
                     <th className="px-4 py-3.5">Tanggal Terdaftar</th>
+                    <th className="px-4 py-3.5">Status Persetujuan</th>
                     <th className="px-6 py-3.5 text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20 text-xs">
                   {filteredEnrollments.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
                         Belum ada pendaftaran peserta.
                       </td>
                     </tr>
@@ -456,9 +513,33 @@ function AdminEnrollmentsPage() {
                             <div className="text-[10px] text-forest-700 font-mono">{e.exam_code}</div>
                           </td>
                           <td className="px-4 py-3.5 text-muted-foreground">
-                            {new Date(e.enrolled_at).toLocaleDateString("id-ID")}
+                            {e.enrolled_at ? new Date(e.enrolled_at).toLocaleDateString("id-ID") : "-"}
                           </td>
-                          <td className="px-6 py-3.5 text-right">
+                          <td className="px-4 py-3.5">
+                            {e.status === "APPROVED" ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-[10px] font-bold text-green-700 border border-green-200">
+                                <CheckCircle2 className="h-3 w-3 text-green-600" />
+                                Disetujui
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
+                                <Clock className="h-3 w-3 text-amber-600 animate-pulse" />
+                                Belum Disetujui
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-3.5 text-right flex items-center justify-end gap-1.5">
+                            {e.status !== "APPROVED" && (
+                              <button
+                                onClick={() => handleApproveEnrollment(e.id)}
+                                disabled={actionLoadingId === e.id}
+                                className="inline-flex items-center gap-1 rounded bg-forest-900 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-forest-700 disabled:opacity-50 transition-colors cursor-pointer"
+                                title="Setujui Peserta Ujian Ini"
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                                Approve
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDelete(e.id)}
                               className="rounded p-1.5 text-red-600 hover:bg-red-50 hover:text-red-800 transition-colors"
@@ -474,6 +555,7 @@ function AdminEnrollmentsPage() {
                 </tbody>
               </table>
             </div>
+
             <DataTablePagination
               currentPage={page}
               pageSize={pageSize}

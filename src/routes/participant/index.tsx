@@ -31,7 +31,12 @@ function ParticipantDashboardIndex() {
     loadData();
   }, []);
 
-  const handleStartExam = async (examId: number) => {
+  const handleStartExam = async (examId: number, enrollmentStatus?: string) => {
+    if (enrollmentStatus && enrollmentStatus !== "APPROVED") {
+      toast.error("Akses ujian ini belum dibuka, silahkan hubungi Admin untuk mendapatkan persetujuan mengikuti Paket Ujian");
+      return;
+    }
+
     setActionLoading(examId);
     const token = localStorage.getItem("askganis_token") || "";
 
@@ -56,7 +61,7 @@ function ParticipantDashboardIndex() {
   const user = data?.user;
   const enrolledExams = Array.isArray(data?.enrolledExams) ? data.enrolledExams : [];
 
-  const availableCount = enrolledExams.filter((e: any) => !e.attempt_status || e.attempt_status === "NOT_STARTED").length;
+  const availableCount = enrolledExams.filter((e: any) => (!e.attempt_status || e.attempt_status === "NOT_STARTED") && e.enrollment_status === "APPROVED").length;
   const inProgressCount = enrolledExams.filter((e: any) => e.attempt_status === "IN_PROGRESS").length;
   const completedCount = enrolledExams.filter((e: any) => e.attempt_status === "SUBMITTED" || e.attempt_status === "AUTO_SUBMITTED").length;
 
@@ -139,6 +144,7 @@ function ParticipantDashboardIndex() {
             {enrolledExams.map((exam: any) => {
               const isSubmitted = exam.attempt_status === "SUBMITTED" || exam.attempt_status === "AUTO_SUBMITTED";
               const isInProgress = exam.attempt_status === "IN_PROGRESS";
+              const isApproved = exam.enrollment_status === "APPROVED";
 
               return (
                 <div key={exam.id} className="rounded-xl border border-border/50 bg-forest-50/20 p-5 space-y-3 dark:bg-charcoal/60 dark:border-charcoal/60">
@@ -153,6 +159,10 @@ function ParticipantDashboardIndex() {
                     ) : isInProgress ? (
                       <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-700 animate-pulse dark:bg-amber-950/40 dark:text-amber-300">
                         BERLANGSUNG
+                      </span>
+                    ) : !isApproved ? (
+                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-bold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300">
+                        MENUNGGU VERIFIKASI ADMIN
                       </span>
                     ) : (
                       <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
@@ -174,9 +184,9 @@ function ParticipantDashboardIndex() {
                       </Link>
                     ) : (
                       <button
-                        onClick={() => handleStartExam(exam.id)}
+                        onClick={() => handleStartExam(exam.id, exam.enrollment_status)}
                         disabled={actionLoading === exam.id}
-                        className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
+                        className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500 cursor-pointer"
                       >
                         <Play className="h-3.5 w-3.5" />
                         {actionLoading === exam.id ? "Menyiapkan..." : isInProgress ? "Lanjutkan Ujian" : "Mulai Ujian"}
@@ -188,6 +198,7 @@ function ParticipantDashboardIndex() {
             })}
           </div>
         )}
+
       </div>
     </div>
   );

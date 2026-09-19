@@ -75,7 +75,12 @@ function ParticipantExamsPage() {
     loadData();
   }, []);
 
-  const handleStartExam = async (examId: number) => {
+  const handleStartExam = async (examId: number, enrollmentStatus?: string) => {
+    if (enrollmentStatus && enrollmentStatus !== "APPROVED") {
+      toast.error("Akses ujian ini belum dibuka, silahkan hubungi Admin untuk mendapatkan persetujuan mengikuti Paket Ujian");
+      return;
+    }
+
     setActionLoading(examId);
     const token = localStorage.getItem("askganis_token") || "";
     try {
@@ -299,6 +304,7 @@ function ParticipantExamsPage() {
               {enrolledExams.map((exam: any) => {
                 const isSubmitted = exam.attempt_status === "SUBMITTED" || exam.attempt_status === "AUTO_SUBMITTED";
                 const isInProgress = exam.attempt_status === "IN_PROGRESS";
+                const isApproved = exam.enrollment_status === "APPROVED";
 
                 return (
                   <div
@@ -318,6 +324,11 @@ function ParticipantExamsPage() {
                         ) : isInProgress ? (
                           <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[9px] font-bold text-amber-700 animate-pulse dark:bg-amber-950/40 dark:text-amber-300">
                             BERLANGSUNG
+                          </span>
+                        ) : !isApproved ? (
+                          <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[9px] font-bold text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 flex items-center gap-1">
+                            <Clock className="h-2.5 w-2.5 text-amber-600 animate-pulse" />
+                            MENUNGGU VERIFIKASI ADMIN
                           </span>
                         ) : (
                           <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
@@ -359,9 +370,9 @@ function ParticipantExamsPage() {
                         </Link>
                       ) : (
                         <button
-                          onClick={() => handleStartExam(exam.id)}
+                          onClick={() => handleStartExam(exam.id, exam.enrollment_status)}
                           disabled={actionLoading === exam.id}
-                          className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 transition-colors dark:bg-forest-700 dark:hover:bg-forest-500"
+                          className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 transition-colors dark:bg-forest-700 dark:hover:bg-forest-500 cursor-pointer"
                         >
                           {actionLoading === exam.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -378,6 +389,7 @@ function ParticipantExamsPage() {
             </div>
           )}
         </>
+
       )}
 
       {/* ============================= */}

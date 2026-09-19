@@ -433,9 +433,90 @@ export const deleteMasterGanisphFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
+
+    // 1. Find all users linked to this master_ganisph record before deleting
+    const affectedAssignments = await db.prepare(
+      "SELECT DISTINCT user_id FROM user_ganisph_assignments WHERE master_ganisph_id = ?"
+    ).all(data.id) as { user_id: number }[];
+    const affectedUserIds = (Array.isArray(affectedAssignments) ? affectedAssignments : []).map((r: { user_id: number }) => r.user_id);
+
+    // 2. Cascade delete: remove assignments linked to this master record
+    await db.prepare("DELETE FROM user_ganisph_assignments WHERE master_ganisph_id = ?").run(data.id);
+
+    // 3. Delete the master record itself
     await db.prepare("DELETE FROM master_ganisph WHERE id = ?").run(data.id);
+
+    // 4. For each affected user, clean up orphaned user_qualifications
+    //    (qualifications whose master_ganisph no longer exists for this user)
+    for (const userId of affectedUserIds) {
+      await db.prepare(`
+        DELETE FROM user_qualifications
+        WHERE user_id = ?
+          AND qualification_id NOT IN (
+            SELECT DISTINCT mg.qualification_id
+            FROM user_ganisph_assignments uga
+            JOIN master_ganisph mg ON uga.master_ganisph_id = mg.id
+            JOIN qualifications q ON q.name LIKE '%' || mg.qualification_name || '%'
+            WHERE uga.user_id = ?
+          )
+          AND qualification_id IN (
+            SELECT id FROM qualifications
+          )
+      `).run(userId, userId);
+    }
+
     await logAudit(session.userId, "DELETE_MASTER_GANISPH", "master_ganisph", data.id);
     return { success: true, error: undefined as string | undefined };
+  });
+
+export const bulkDeleteMasterGanisphFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; ids: number[] }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyAdminSession(data.token);
+    const db = await getDb();
+
+    if (!data.ids || data.ids.length === 0) {
+      return { success: false, error: "Tidak ada data yang dipilih.", count: 0 };
+    }
+
+    const placeholders = data.ids.map(() => "?").join(",");
+
+    // 1. Find all users linked to these master records before deleting
+    const affectedAssignments = await db.prepare(
+      `SELECT DISTINCT user_id FROM user_ganisph_assignments WHERE master_ganisph_id IN (${placeholders})`
+    ).all(...data.ids) as { user_id: number }[];
+    const affectedUserIds = (Array.isArray(affectedAssignments) ? affectedAssignments : []).map((r: { user_id: number }) => r.user_id);
+
+    // 2. Cascade delete: remove assignments linked to these master records
+    await db.prepare(
+      `DELETE FROM user_ganisph_assignments WHERE master_ganisph_id IN (${placeholders})`
+    ).run(...data.ids);
+
+    // 3. Delete the master records
+    await db.prepare(
+      `DELETE FROM master_ganisph WHERE id IN (${placeholders})`
+    ).run(...data.ids);
+
+    // 4. For each affected user, clean up orphaned user_qualifications
+    for (const userId of affectedUserIds) {
+      await db.prepare(`
+        DELETE FROM user_qualifications
+        WHERE user_id = ?
+          AND qualification_id NOT IN (
+            SELECT DISTINCT mg.qualification_id
+            FROM user_ganisph_assignments uga
+            JOIN master_ganisph mg ON uga.master_ganisph_id = mg.id
+            JOIN qualifications q ON q.name LIKE '%' || mg.qualification_name || '%'
+            WHERE uga.user_id = ?
+          )
+          AND qualification_id IN (
+            SELECT id FROM qualifications
+          )
+      `).run(userId, userId);
+    }
+
+    await logAudit(session.userId, "BULK_DELETE_MASTER_GANISPH", "master_ganisph", 0, { count: data.ids.length });
+    return { success: true, count: data.ids.length, error: undefined as string | undefined };
   });
 
 export const createQualificationFn = createServerFn({ method: "POST" })
@@ -1408,20 +1489,6 @@ export const bulkDeleteCompetencyUnitsFn = createServerFn({ method: "POST" })
     return { success: true, count: data.ids.length };
   });
 
-export const bulkDeleteMasterGanisphFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; ids: number[] }) => data)
-  .handler(async ({ data }) => {
-    const session = verifyAdminSession(data.token);
-    if (!Array.isArray(data.ids) || data.ids.length === 0) {
-      return { success: false, error: "Tidak ada ID yang dipilih." };
-    }
-    const db = await getDb();
-    for (const id of data.ids) {
-      await db.prepare("DELETE FROM master_ganisph WHERE id = ?").run(id);
-      await logAudit(session.userId, "BULK_DELETE_MASTER_GANISPH", "master_ganisph", id);
-    }
-    return { success: true, count: data.ids.length };
-  });
 
 export const bulkDeleteEnrollmentsFn = createServerFn({ method: "POST" })
   .validator((data: { token: string; ids: number[] }) => data)

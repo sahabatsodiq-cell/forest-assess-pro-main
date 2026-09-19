@@ -840,6 +840,109 @@ export const addParticipantQualificationFn = createServerFn({ method: "POST" })
     return { success: true, error: undefined as string | undefined };
   });
 
+export const checkMasterGanisphDataFn = createServerFn({ method: "POST" })
+  .validator((data: { token: string; qualification_id: number; registration_number: string }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    const qual = await db.prepare("SELECT id, code, name FROM qualifications WHERE id = ?").get(data.qualification_id);
+    if (!qual) {
+      return { success: false, found: false, error: "Kualifikasi tidak ditemukan." };
+    }
+
+    const regNo = (data.registration_number || "").trim();
+    if (!regNo) {
+      return { success: false, found: false, error: "Nomor register harus diisi." };
+    }
+
+    const masterRows = await db.prepare(`
+      SELECT * FROM master_ganisph
+      WHERE registration_number IS NOT NULL AND registration_number = ?
+    `).all(regNo);
+
+    const masterList = Array.isArray(masterRows) ? masterRows : [];
+
+    if (masterList.length > 0) {
+      return {
+        success: true,
+        found: true,
+        qualificationName: qual.name,
+        qualificationCode: qual.code,
+        masterData: masterList[0],
+      };
+    }
+
+    return {
+      success: true,
+      found: false,
+      qualificationName: qual.name,
+      qualificationCode: qual.code,
+    };
+  });
+
+export const addParticipantQualificationWithMasterFn = createServerFn({ method: "POST" })
+  .validator((data: {
+    token: string;
+    qualification_id: number;
+    registration_number: string;
+    company_name: string;
+    assignment_type: string;
+    register_active_end: string;
+    assignment_active_end: string;
+    regency_city: string;
+  }) => data)
+  .handler(async ({ data }) => {
+    const session = verifyParticipantSession(data.token);
+    const db = await getDb();
+
+    const user = await db.prepare("SELECT id, name, email FROM users WHERE id = ?").get(session.userId);
+    if (!user) {
+      return { success: false, error: "User tidak ditemukan." };
+    }
+
+    const qual = await db.prepare("SELECT id, code, name FROM qualifications WHERE id = ?").get(data.qualification_id);
+    if (!qual) {
+      return { success: false, error: "Kualifikasi tidak ditemukan." };
+    }
+
+    const qualName = `GANISPH ${qual.code} (${qual.name})`;
+
+    const res = await db.prepare(`
+      INSERT INTO master_ganisph (
+        company_name, assignment_type, name, qualification_name,
+        email, registration_number, register_active_end, assignment_active_end, regency_city
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      data.company_name.trim(),
+      data.assignment_type.trim(),
+      user.name || "Peserta GANISPH",
+      qualName,
+      user.email,
+      data.registration_number.trim(),
+      data.register_active_end.trim(),
+      data.assignment_active_end.trim(),
+      data.regency_city.trim()
+    );
+
+    await logAudit(session.userId, "CREATE_MASTER_GANISPH_SELF", "master_ganisph", res.lastInsertRowid as number, {
+      qualification_name: qualName,
+      registration_number: data.registration_number,
+    });
+
+    await db.prepare(`
+      INSERT INTO user_qualifications (user_id, qualification_id, registration_number)
+      VALUES (?, ?, ?)
+      ON CONFLICT (user_id, qualification_id) DO UPDATE SET
+        registration_number = EXCLUDED.registration_number
+    `).run(session.userId, data.qualification_id, data.registration_number.trim());
+
+    await syncMasterGanisphQualifications(db, session.userId);
+
+    return { success: true, error: undefined as string | undefined };
+  });
+
+
 export const updateParticipantQualificationRegNoFn = createServerFn({ method: "POST" })
   .validator((data: { token: string; qualification_id: number; registration_number: string }) => data)
   .handler(async ({ data }) => {

@@ -6,8 +6,10 @@ import {
   addParticipantQualificationFn,
   updateParticipantQualificationRegNoFn,
   removeParticipantQualificationFn,
+  checkMasterGanisphDataFn,
+  addParticipantQualificationWithMasterFn,
 } from "@/lib/services/examEngineService";
-import { User, Mail, Hash, Award, KeyRound, Save, Plus, Trash2, Check, Edit2, ShieldCheck, Building2, Briefcase, CalendarCheck, CalendarClock, MapPin, RefreshCw } from "lucide-react";
+import { User, Mail, Hash, Award, KeyRound, Save, Plus, Trash2, Check, Edit2, ShieldCheck, Building2, Briefcase, CalendarCheck, CalendarClock, MapPin, RefreshCw, AlertCircle, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -32,6 +34,26 @@ function ParticipantProfilePage() {
   const [selectedQualId, setSelectedQualId] = useState<string>("");
   const [newQualRegNo, setNewQualRegNo] = useState<string>("");
   const [addQualLoading, setAddQualLoading] = useState(false);
+
+  // Manual Assignment Details State (Step 2 if data not found in master_ganisph)
+  const [isManualStep, setIsManualStep] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [assignmentType, setAssignmentType] = useState("B1");
+  const [registerActiveEnd, setRegisterActiveEnd] = useState("");
+  const [assignmentActiveEnd, setAssignmentActiveEnd] = useState("");
+  const [regencyCity, setRegencyCity] = useState("");
+
+  const resetAddQualForm = () => {
+    setSelectedQualId("");
+    setNewQualRegNo("");
+    setIsManualStep(false);
+    setCompanyName("");
+    setAssignmentType("B1");
+    setRegisterActiveEnd("");
+    setAssignmentActiveEnd("");
+    setRegencyCity("");
+    setAddQualLoading(false);
+  };
 
   // Edit Qualification Registration Number Modal State
   const [editQualOpen, setEditQualOpen] = useState(false);
@@ -118,38 +140,96 @@ function ParticipantProfilePage() {
     }
   };
 
-  // 2. Add Qualification Handler
-  const handleAddQualification = async (e: React.FormEvent) => {
+  // 2. Add Qualification Handler (Step 1: Check Master GANISPH)
+  const handleAddQualificationCheck = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedQualId) return;
+    if (!selectedQualId || !newQualRegNo.trim()) {
+      toast.error("Pilih kualifikasi dan isi Nomor Register GANISPH.");
+      return;
+    }
 
     setAddQualLoading(true);
     const token = localStorage.getItem("askganis_token") || "";
 
     try {
-      const qualData: any = {
-        token,
-        qualification_id: Number(selectedQualId),
-      };
-      if (newQualRegNo.trim()) qualData.registration_number = newQualRegNo.trim();
+      const checkRes = await checkMasterGanisphDataFn({
+        data: {
+          token,
+          qualification_id: Number(selectedQualId),
+          registration_number: newQualRegNo.trim(),
+        },
+      });
 
-      const res = await addParticipantQualificationFn({ data: qualData });
+      if (checkRes.found) {
+        // Record exists in master_ganisph! Direct sync & save
+        const res = await addParticipantQualificationFn({
+          data: {
+            token,
+            qualification_id: Number(selectedQualId),
+            registration_number: newQualRegNo.trim(),
+          },
+        });
 
-      if (res.success) {
-        toast.success("Kualifikasi GANISPH & Nomor Register berhasil ditambahkan!");
-        setAddQualOpen(false);
-        setSelectedQualId("");
-        setNewQualRegNo("");
-        loadData();
+        if (res.success) {
+          toast.success("Kualifikasi GANISPH terhubung dengan data Master GANISPH!");
+          setAddQualOpen(false);
+          resetAddQualForm();
+          loadData();
+        } else {
+          toast.error("Gagal menambahkan kualifikasi.");
+        }
       } else {
-        toast.error("Gagal menambahkan kualifikasi.");
+        // Record not found! Show manual form step
+        setIsManualStep(true);
+        toast.info("Nomor Register belum ada di database. Silakan lengkapi detail penugasan manual.");
       }
     } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan.");
+      toast.error(err.message || "Terjadi kesalahan saat memeriksa data.");
     } finally {
       setAddQualLoading(false);
     }
   };
+
+  // 2b. Manual Assignment Save Handler (Step 2: Save to Master GANISPH + Link User)
+  const handleSaveManualQualification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyName.trim() || !assignmentType.trim() || !registerActiveEnd || !assignmentActiveEnd || !regencyCity.trim()) {
+      toast.error("Harap isi semua kolom detail penugasan.");
+      return;
+    }
+
+    setAddQualLoading(true);
+    const token = localStorage.getItem("askganis_token") || "";
+
+    try {
+      const res = await addParticipantQualificationWithMasterFn({
+        data: {
+          token,
+          qualification_id: Number(selectedQualId),
+          registration_number: newQualRegNo.trim(),
+          company_name: companyName.trim(),
+          assignment_type: assignmentType.trim(),
+          register_active_end: registerActiveEnd,
+          assignment_active_end: assignmentActiveEnd,
+          regency_city: regencyCity.trim(),
+        },
+      });
+
+      if (res.success) {
+        toast.success("Kualifikasi & Penugasan manual berhasil disimpan ke Master GANISPH!");
+        setAddQualOpen(false);
+        resetAddQualForm();
+        loadData();
+      } else {
+        toast.error(res.error || "Gagal menyimpan penugasan manual.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Terjadi kesalahan saat menyimpan data.");
+    } finally {
+      setAddQualLoading(false);
+    }
+  };
+
 
   // 3. Edit Qualification Registration Number Handler
   const openEditRegNoModal = (qItem: any) => {
@@ -439,7 +519,10 @@ function ParticipantProfilePage() {
           </div>
 
           {/* Add Qualification Dialog */}
-          <Dialog open={addQualOpen} onOpenChange={setAddQualOpen}>
+          <Dialog open={addQualOpen} onOpenChange={(open) => {
+            setAddQualOpen(open);
+            if (!open) resetAddQualForm();
+          }}>
             <DialogTrigger asChild>
               <button 
                 onClick={() => setAddQualOpen(true)}
@@ -449,68 +532,183 @@ function ParticipantProfilePage() {
                 Tambah Kualifikasi GANISPH
               </button>
             </DialogTrigger>
-            <DialogContent className="max-w-md bg-white p-6 dark:bg-charcoal dark:border-charcoal/60">
+            <DialogContent className="max-w-lg bg-white p-6 dark:bg-charcoal dark:border-charcoal/60 max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-forest-100">
-                  Tambah Kualifikasi GANISPH Ke Profil
+                <DialogTitle className="font-display text-base font-bold text-charcoal dark:text-forest-100 flex items-center gap-2">
+                  <Award className="h-5 w-5 text-forest-700 dark:text-forest-400" />
+                  {isManualStep ? "Form Penugasan GANISPH (Manual)" : "Tambah Kualifikasi GANISPH Ke Profil"}
                 </DialogTitle>
               </DialogHeader>
 
-              <form onSubmit={handleAddQualification} className="mt-4 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">
-                    Pilih Kualifikasi GANISPH
-                  </label>
-                  <select
-                    required
-                    value={selectedQualId}
-                    onChange={(e) => setSelectedQualId(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100 font-bold"
-                  >
-                    <option value="">-- Pilih Kualifikasi GANISPH --</option>
-                    {(availableToSelect.length > 0 ? availableToSelect : allQualifications).map((q: any) => (
-                      <option key={q.id} value={q.id}>
-                        {q.code} — {q.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {!isManualStep ? (
+                /* Step 1: Input Qualification & Registration Number */
+                <form onSubmit={handleAddQualificationCheck} className="mt-4 space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">
+                      Pilih Kualifikasi GANISPH
+                    </label>
+                    <select
+                      required
+                      value={selectedQualId}
+                      onChange={(e) => setSelectedQualId(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100 font-bold"
+                    >
+                      <option value="">-- Pilih Kualifikasi GANISPH --</option>
+                      {(availableToSelect.length > 0 ? availableToSelect : allQualifications).map((q: any) => (
+                        <option key={q.id} value={q.id}>
+                          {q.code} — {q.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">
-                    Nomor Register GANISPH
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Contoh: 04200000783"
-                    value={newQualRegNo}
-                    onChange={(e) => setNewQualRegNo(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100">
+                      Nomor Register GANISPH
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: 04200000783"
+                      value={newQualRegNo}
+                      onChange={(e) => setNewQualRegNo(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                    />
+                  </div>
 
-                <p className="text-[11px] text-muted-foreground dark:text-forest-100/70 leading-relaxed">
-                  Pilihlah skema kualifikasi Tenaga Teknis Kehutanan dan sertakan Nomor Register resminya agar sistem mendaftarkan paket ujian yang sesuai.
-                </p>
+                  <p className="text-[11px] text-muted-foreground dark:text-forest-100/70 leading-relaxed">
+                    Sistem akan mengecek ketersediaan data Anda di database Master GANISPH berdasarkan Nomor Register yang dimasukkan.
+                  </p>
 
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setAddQualOpen(false)}
-                    className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={addQualLoading || !selectedQualId}
-                    className="flex-1 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
-                  >
-                    {addQualLoading ? "Menambahkan..." : "Tambahkan"}
-                  </button>
-                </div>
-              </form>
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddQualOpen(false);
+                        resetAddQualForm();
+                      }}
+                      className="flex-1 rounded-lg border border-border py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={addQualLoading || !selectedQualId || !newQualRegNo.trim()}
+                      className="flex-1 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
+                    >
+                      {addQualLoading ? "Memeriksa..." : "Tambahkan / Cek Data"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* Step 2: Form Input Penugasan Manual */
+                <form onSubmit={handleSaveManualQualification} className="mt-3 space-y-4">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200 flex items-start gap-2.5">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                    <div>
+                      <p className="font-bold">Data Belum Terdaftar di Master GANISPH</p>
+                      <p className="mt-0.5 text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                        Nomor Register <span className="font-mono font-extrabold">{newQualRegNo}</span> tidak ditemukan. Silakan isi rincian penugasan di bawah ini untuk didaftarkan.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100 flex items-center gap-1.5">
+                      <Building2 className="h-3.5 w-3.5 text-forest-700 dark:text-forest-400" />
+                      Nama Perusahaan / Instansi
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: PT. Timber Utama Kehutanan"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100 flex items-center gap-1.5">
+                      <Briefcase className="h-3.5 w-3.5 text-forest-700 dark:text-forest-400" />
+                      Jenis Penugasan
+                    </label>
+                    <select
+                      required
+                      value={assignmentType}
+                      onChange={(e) => setAssignmentType(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                    >
+                      <option value="B1">B1 - Kelompok Penugasan B1</option>
+                      <option value="B2">B2 - Kelompok Penugasan B2</option>
+                      <option value="B3">B3 - Kelompok Penugasan B3</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100 flex items-center gap-1.5">
+                        <CalendarCheck className="h-3.5 w-3.5 text-forest-700 dark:text-forest-400" />
+                        Masa Aktif Register End
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={registerActiveEnd}
+                        onChange={(e) => setRegisterActiveEnd(e.target.value)}
+                        className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100 flex items-center gap-1.5">
+                        <CalendarClock className="h-3.5 w-3.5 text-forest-700 dark:text-forest-400" />
+                        Masa Aktif Penugasan End
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={assignmentActiveEnd}
+                        onChange={(e) => setAssignmentActiveEnd(e.target.value)}
+                        className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs font-mono font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-charcoal dark:text-forest-100 flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-forest-700 dark:text-forest-400" />
+                      Kabupaten / Kota
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: Kab. Kutai Kartanegara"
+                      value={regencyCity}
+                      onChange={(e) => setRegencyCity(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-xs font-bold focus:border-forest-700 focus:outline-none dark:border-charcoal/60 dark:bg-charcoal/80 dark:text-forest-100"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-3 border-t border-border/40 dark:border-charcoal/60">
+                    <button
+                      type="button"
+                      onClick={() => setIsManualStep(false)}
+                      className="flex items-center justify-center gap-1.5 rounded-lg border border-border px-4 py-2 text-xs font-semibold text-charcoal hover:bg-gray-50 dark:border-charcoal/60 dark:text-forest-100 dark:hover:bg-charcoal/60"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      Kembali
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={addQualLoading}
+                      className="flex-1 rounded-lg bg-forest-900 py-2 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50 dark:bg-forest-700 dark:hover:bg-forest-500"
+                    >
+                      {addQualLoading ? "Menyimpan Penugasan..." : "Simpan & Dapatkan Penugasan"}
+                    </button>
+                  </div>
+                </form>
+              )}
             </DialogContent>
           </Dialog>
         </div>

@@ -1167,11 +1167,20 @@ export const getEnrollmentsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     verifyAdminSession(data.token);
     const db = await getDb();
-    const { ensureEnrollmentSchema } = await import("./examEngineService");
+    const { ensureEnrollmentSchema, syncUserExamEnrollments } = await import("./examEngineService");
     await ensureEnrollmentSchema(db);
 
+    const participantRows = await db.prepare(`
+      SELECT DISTINCT user_id
+      FROM user_qualifications
+    `).all() as { user_id: number }[];
+
+    for (const row of Array.isArray(participantRows) ? participantRows : []) {
+      await syncUserExamEnrollments(db, row.user_id);
+    }
+
     let query = `
-      SELECT e.id, e.exam_id, e.user_id, COALESCE(e.status, 'PENDING') as status, e.created_at,
+      SELECT e.id, e.exam_id, e.user_id, COALESCE(e.status, 'PENDING') as status, e.enrolled_at,
              u.name as user_name, u.email as user_email, u.participant_number,
              p.name as exam_name, p.code as exam_code
       FROM exam_enrollments e

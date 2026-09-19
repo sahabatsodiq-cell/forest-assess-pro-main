@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getParticipantDashboardFn, startExamAttemptFn } from "@/lib/services/examEngineService";
-import { GraduationCap, Activity, CheckCircle2, ArrowRight, Play, Award } from "lucide-react";
+import { GraduationCap, Activity, CheckCircle2, ArrowRight, Play, Award, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/participant/")({
   component: ParticipantDashboardIndex,
@@ -12,6 +13,7 @@ function ParticipantDashboardIndex() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [approvalWarningOpen, setApprovalWarningOpen] = useState(false);
   const navigate = useNavigate();
 
   const loadData = async () => {
@@ -32,7 +34,8 @@ function ParticipantDashboardIndex() {
   }, []);
 
   const handleStartExam = async (examId: number, enrollmentStatus?: string) => {
-    if (enrollmentStatus && enrollmentStatus !== "APPROVED") {
+    if (enrollmentStatus !== "APPROVED") {
+      setApprovalWarningOpen(true);
       toast.error("Akses ujian ini belum dibuka, silahkan hubungi Admin untuk mendapatkan persetujuan mengikuti Paket Ujian");
       return;
     }
@@ -200,6 +203,30 @@ function ParticipantDashboardIndex() {
         )}
 
       </div>
+
+      <Dialog open={approvalWarningOpen} onOpenChange={setApprovalWarningOpen}>
+        <DialogContent className="max-w-md border-amber-200 bg-white p-6 shadow-2xl dark:border-amber-800/50 dark:bg-charcoal">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-display text-base font-black text-amber-800 dark:text-amber-300">
+              <AlertCircle className="h-5 w-5" />
+              Akses Ujian Belum Dibuka
+            </DialogTitle>
+          </DialogHeader>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold leading-relaxed text-amber-900 dark:border-amber-800/50 dark:bg-amber-950/30 dark:text-amber-200">
+            Akses ujian ini belum dibuka, silahkan hubungi Admin untuk mendapatkan persetujuan mengikuti Paket Ujian.
+          </div>
+          <p className="text-xs leading-relaxed text-muted-foreground dark:text-forest-100/70">
+            Setelah Admin menyetujui pendaftaran Anda, tombol <strong>Mulai Ujian</strong> akan dapat digunakan untuk masuk ke halaman ujian.
+          </p>
+          <button
+            type="button"
+            onClick={() => setApprovalWarningOpen(false)}
+            className="mt-2 w-full rounded-lg bg-forest-900 py-2.5 text-xs font-bold text-white transition-colors hover:bg-forest-700 dark:bg-forest-700 dark:hover:bg-forest-500"
+          >
+            Saya Mengerti
+          </button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

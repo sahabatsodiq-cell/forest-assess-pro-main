@@ -1,7 +1,5 @@
 // check_enrollment_pg.mjs - run from project root
 import postgres from 'postgres';
-import { config } from 'dotenv';
-config({ path: '.env' });
 
 const dbUrl = process.env.DATABASE_URL;
 if (!dbUrl) {

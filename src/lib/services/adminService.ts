@@ -1240,14 +1240,23 @@ export const approveEnrollmentFn = createServerFn({ method: "POST" })
     const { ensureEnrollmentSchema } = await import("./examEngineService");
     await ensureEnrollmentSchema(db);
 
+    console.log("[DEBUG approveEnrollmentFn] Approving enrollment ID:", data.id);
+    
     const enrollment = await db.prepare("SELECT * FROM exam_enrollments WHERE id = ?").get(data.id);
+    console.log("[DEBUG approveEnrollmentFn] Enrollment before approval:", enrollment);
+    
     if (enrollment) {
       await db.prepare("UPDATE exam_enrollments SET status = 'APPROVED' WHERE id = ?").run(data.id);
+      
+      const updatedEnrollment = await db.prepare("SELECT * FROM exam_enrollments WHERE id = ?").get(data.id);
+      console.log("[DEBUG approveEnrollmentFn] Enrollment after approval:", updatedEnrollment);
       
       const latestAttempt = await db.prepare("SELECT status FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY id DESC LIMIT 1").get(enrollment.user_id, enrollment.exam_id);
       if (latestAttempt && (latestAttempt.status === 'SUBMITTED' || latestAttempt.status === 'AUTO_SUBMITTED')) {
         await db.prepare("INSERT INTO exam_attempts (exam_id, user_id, status) VALUES (?, ?, 'NOT_STARTED')").run(enrollment.exam_id, enrollment.user_id);
       }
+    } else {
+      console.log("[DEBUG approveEnrollmentFn] Enrollment not found for ID:", data.id);
     }
 
     await logAudit(session.userId, "APPROVE_ENROLLMENT", "exam_enrollments", data.id);

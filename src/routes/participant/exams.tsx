@@ -64,6 +64,7 @@ function ParticipantExamsPage() {
         getAvailableExamsFn({ data: { token } }),
         getMyExamRequestsFn({ data: { token } }),
       ]);
+      console.log("[DEBUG FRONTEND DASHRES]", dashRes);
       setData(dashRes);
       setAvailableExams(availRes);
       setMyRequests(Array.isArray(reqRes) ? reqRes : []);
@@ -201,36 +202,32 @@ function ParticipantExamsPage() {
       <div className="flex gap-1 rounded-xl border border-border/50 bg-white p-1 shadow-sm dark:bg-charcoal dark:border-charcoal/60 w-fit">
         <button
           onClick={() => setActiveTab("enrolled")}
-          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-200 ${
-            activeTab === "enrolled"
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-200 ${activeTab === "enrolled"
               ? "bg-forest-900 text-white shadow-sm dark:bg-forest-700"
               : "text-muted-foreground hover:text-charcoal dark:hover:text-forest-100"
-          }`}
+            }`}
         >
           <ListChecks className="h-3.5 w-3.5" />
           Ujian Saya
           {enrolledExams.length > 0 && (
-            <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-black ${
-              activeTab === "enrolled" ? "bg-white/20 text-white" : "bg-forest-100 text-forest-900"
-            }`}>
+            <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-black ${activeTab === "enrolled" ? "bg-white/20 text-white" : "bg-forest-100 text-forest-900"
+              }`}>
               {enrolledExams.length}
             </span>
           )}
         </button>
         <button
           onClick={() => setActiveTab("available")}
-          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-200 ${
-            activeTab === "available"
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all duration-200 ${activeTab === "available"
               ? "bg-forest-900 text-white shadow-sm dark:bg-forest-700"
               : "text-muted-foreground hover:text-charcoal dark:hover:text-forest-100"
-          }`}
+            }`}
         >
           <BookOpen className="h-3.5 w-3.5" />
           Paket Tersedia
           {availableExams.length > 0 && (
-            <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-black ${
-              activeTab === "available" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-800"
-            }`}>
+            <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-black ${activeTab === "available" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-800"
+              }`}>
               {availableExams.length}
             </span>
           )}
@@ -281,13 +278,12 @@ function ParticipantExamsPage() {
                   {myRequests.map((req: any) => (
                     <div
                       key={req.id}
-                      className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-xs ${
-                        req.status === "PENDING"
+                      className={`flex items-center justify-between rounded-lg border px-3 py-2.5 text-xs ${req.status === "PENDING"
                           ? "border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800/50"
                           : req.status === "APPROVED"
-                          ? "border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800/50"
-                          : "border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800/50"
-                      }`}
+                            ? "border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800/50"
+                            : "border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-800/50"
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         {req.status === "PENDING" && <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" />}
@@ -302,11 +298,10 @@ function ParticipantExamsPage() {
                           </p>
                         </div>
                       </div>
-                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                        req.status === "PENDING" ? "bg-amber-100 text-amber-800" :
-                        req.status === "APPROVED" ? "bg-green-100 text-green-800" :
-                        "bg-red-100 text-red-800"
-                      }`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${req.status === "PENDING" ? "bg-amber-100 text-amber-800" :
+                          req.status === "APPROVED" ? "bg-green-100 text-green-800" :
+                            "bg-red-100 text-red-800"
+                        }`}>
                         {req.status === "PENDING" ? "MENUNGGU" : req.status === "APPROVED" ? "DISETUJUI" : "DITOLAK"}
                       </span>
                     </div>
@@ -553,13 +548,12 @@ function ParticipantExamsPage() {
                 return (
                   <label
                     key={uq.qualification_id}
-                    className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all ${
-                      alreadyPending || alreadyApproved
+                    className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all ${alreadyPending || alreadyApproved
                         ? "opacity-50 cursor-not-allowed border-border bg-gray-50 dark:bg-charcoal/40"
                         : selectedQualId === uq.qualification_id
-                        ? "border-forest-900 bg-forest-50 dark:border-forest-500 dark:bg-forest-900/20"
-                        : "border-border hover:border-forest-400 bg-white dark:bg-charcoal dark:border-charcoal/60"
-                    }`}
+                          ? "border-forest-900 bg-forest-50 dark:border-forest-500 dark:bg-forest-900/20"
+                          : "border-border hover:border-forest-400 bg-white dark:bg-charcoal dark:border-charcoal/60"
+                      }`}
                   >
                     <input
                       type="radio"

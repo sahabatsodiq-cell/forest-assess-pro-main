@@ -74,6 +74,8 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
   const user = await db.prepare("SELECT id, name, email, participant_number FROM users WHERE id = ?").get(userId);
   if (!user) return;
 
+  console.log("[DEBUG syncMasterGanisphQualifications] User:", { userId, email: user.email, participant_number: user.participant_number });
+
   // Collect registration numbers already attached to this user's qualifications
   const userQualsRegs = await db.prepare(`
     SELECT registration_number FROM user_qualifications 
@@ -97,6 +99,10 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
 
   const masterRows = await db.prepare(query).all(...params);
   const masterList = Array.isArray(masterRows) ? masterRows : [];
+
+  console.log("[DEBUG syncMasterGanisphQualifications] Master GANISPH rows found:", masterList.length);
+  console.log("[DEBUG syncMasterGanisphQualifications] Master data:", masterList);
+
   if (masterList.length === 0) return;
 
   // Auto-set name from master_ganisph if user's name is empty or generic
@@ -113,6 +119,8 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
   const allQuals = await db.prepare("SELECT id, code, name FROM qualifications").all();
   const qualArray = Array.isArray(allQuals) ? allQuals : [];
 
+  console.log("[DEBUG syncMasterGanisphQualifications] Available qualifications:", qualArray);
+
   for (const mItem of masterList) {
     // Populate bridge table: user_ganisph_assignments
     await db.prepare(`
@@ -123,15 +131,29 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
 
     // Sync qualification to user_qualifications
     const mQualNameUpper = (mItem.qualification_name || '').toUpperCase();
+    console.log("[DEBUG syncMasterGanisphQualifications] Trying to match:", mQualNameUpper);
+
     const matchedQual = qualArray.find((q: any) => {
       const qCodeUpper = (q.code || '').toUpperCase();
       const qNameUpper = (q.name || '').toUpperCase();
-      return (
-        mQualNameUpper.includes(qCodeUpper) ||
-        mQualNameUpper.includes(qNameUpper) ||
-        qNameUpper.includes(mQualNameUpper.replace('GANISPH ', ''))
-      );
+
+      // Try multiple matching strategies
+      const codeMatch = mQualNameUpper.includes(qCodeUpper) || qCodeUpper.includes(mQualNameUpper);
+      const nameMatch = mQualNameUpper.includes(qNameUpper) || qNameUpper.includes(mQualNameUpper);
+      const cleanedMatch = qNameUpper.includes(mQualNameUpper.replace('GANISPH ', ''));
+
+      console.log("[DEBUG syncMasterGanisphQualifications] Testing qual:", {
+        code: qCodeUpper,
+        name: qNameUpper,
+        codeMatch,
+        nameMatch,
+        cleanedMatch
+      });
+
+      return codeMatch || nameMatch || cleanedMatch;
     });
+
+    console.log("[DEBUG syncMasterGanisphQualifications] Matched qualification:", matchedQual);
 
     if (matchedQual) {
       await db.prepare(`
@@ -140,6 +162,14 @@ async function syncMasterGanisphQualifications(db: any, userId: number) {
         ON CONFLICT (user_id, qualification_id) DO UPDATE SET
           registration_number = COALESCE(user_qualifications.registration_number, EXCLUDED.registration_number)
       `).run(userId, matchedQual.id, mItem.registration_number || null);
+
+      console.log("[DEBUG syncMasterGanisphQualifications] User qualification inserted:", {
+        userId,
+        qualificationId: matchedQual.id,
+        registrationNumber: mItem.registration_number
+      });
+    } else {
+      console.log("[DEBUG syncMasterGanisphQualifications] NO MATCH FOUND for:", mQualNameUpper);
     }
   }
 
@@ -223,9 +253,12 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
       )
       WHERE (p.status = 'PUBLISHED' OR p.status = 'ACTIVE')
       ORDER BY p.id DESC
-    `).all(session.userId, session.userId);
+    `).all(session.userId);
 
-
+    console.log("[DEBUG ENROLLED EXAMS]", {
+      userId: session.userId,
+      rawEnrolledExams,
+    });
     const enrolledList = Array.isArray(rawEnrolledExams) ? rawEnrolledExams : [];
     const enrolledExams = enrolledList.map((p: any) => {
       const units = p.code ? p.code.split(';').map((s: string) => s.trim()).filter(Boolean) : [];
@@ -265,12 +298,32 @@ export const getAvailableExamsFn = createServerFn({ method: "POST" })
     // Auto-sync qualifications from master_ganisph first
     await syncMasterGanisphQualifications(db, session.userId);
 
+    // DEBUG: Check user's qualifications
+    const userQuals = await db.prepare(`
+      SELECT uq.qualification_id, q.code, q.name 
+      FROM user_qualifications uq 
+      JOIN qualifications q ON uq.qualification_id = q.id 
+      WHERE uq.user_id = ?
+    `).all(session.userId);
+    console.log("[DEBUG getAvailableExamsFn] User qualifications:", userQuals);
+
+    // DEBUG: Check enrollments for this user
+    const userEnrollments = await db.prepare(`
+      SELECT e.id, e.exam_id, e.status, e.user_id, p.name as exam_name
+      FROM exam_enrollments e
+      JOIN exam_packages p ON e.exam_id = p.id
+      WHERE e.user_id = ?
+    `).all(session.userId);
+    console.log("[DEBUG getAvailableExamsFn] User enrollments:", userEnrollments);
+
     // Get published exams that match the user's qualifications
-    // but are NOT yet enrolled (either manually or already visible via qual match)
+    // Show if: no enrollment, OR enrollment is APPROVED (with or without attempts), OR retake allowed
     const rawAvailable = await db.prepare(`
       SELECT DISTINCT p.*, q.code as qualification_code, q.name as qualification_name,
              b.total_questions as bp_total_questions,
-             CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END as is_retake
+             CASE WHEN e.id IS NOT NULL THEN 1 ELSE 0 END as is_retake,
+             e.id as enrollment_id,
+             e.status as enrollment_status
       FROM exam_packages p
       JOIN qualifications q ON p.qualification_id = q.id
       LEFT JOIN exam_blueprints b ON p.blueprint_id = b.id
@@ -281,17 +334,12 @@ export const getAvailableExamsFn = createServerFn({ method: "POST" })
         )
         AND (
           e.id IS NULL
-          OR (
-            e.status != 'PENDING'
-            AND (
-              SELECT status FROM exam_attempts a 
-              WHERE a.user_id = e.user_id AND a.exam_id = e.exam_id 
-              ORDER BY id DESC LIMIT 1
-            ) IN ('SUBMITTED', 'AUTO_SUBMITTED')
-          )
+          OR e.status = 'APPROVED'
         )
       ORDER BY p.id DESC
     `).all(session.userId, session.userId);
+
+    console.log("[DEBUG getAvailableExamsFn] Raw available exams:", rawAvailable);
 
     const availList = Array.isArray(rawAvailable) ? rawAvailable : [];
     return availList.map((p: any) => {
@@ -313,16 +361,29 @@ export const selfEnrollFn = createServerFn({ method: "POST" })
     const session = verifyParticipantSession(data.token);
     const db = await getDb();
 
+    console.log("[DEBUG selfEnrollFn] User attempting to enroll:", { userId: session.userId, examId: data.exam_id });
+
     // 1. Verify exam is published/active
     const exam = await db.prepare("SELECT * FROM exam_packages WHERE id = ?").get(data.exam_id) as any;
+    console.log("[DEBUG selfEnrollFn] Exam found:", exam);
+
     if (!exam || (exam.status !== "PUBLISHED" && exam.status !== "ACTIVE")) {
       return { success: false, error: "Paket ujian tidak aktif atau belum dipublikasikan." };
     }
+
+    // Check user's qualifications
+    const userQuals = await db.prepare(
+      "SELECT qualification_id FROM user_qualifications WHERE user_id = ?"
+    ).all(session.userId);
+    console.log("[DEBUG selfEnrollFn] User qualifications:", userQuals);
+    console.log("[DEBUG selfEnrollFn] Exam requires qualification_id:", exam.qualification_id);
 
     // 2. Verify user's qualification matches exam qualification
     const userQual = await db.prepare(
       "SELECT qualification_id FROM user_qualifications WHERE user_id = ? AND qualification_id = ?"
     ).get(session.userId, Number(exam.qualification_id));
+
+    console.log("[DEBUG selfEnrollFn] Matching qualification found:", userQual);
 
     if (!userQual) {
       return { success: false, error: "Kualifikasi Anda tidak sesuai dengan paket ujian ini." };

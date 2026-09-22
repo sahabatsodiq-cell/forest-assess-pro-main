@@ -78,7 +78,7 @@ export const getAdminStatsFn = createServerFn({ method: "POST" })
     const db = await getDb();
 
     // Ensure legacy/unspecified passing grades are synced to 61 (PAHAM threshold)
-    await db.prepare("UPDATE exam_packages SET passing_grade = 61 WHERE passing_grade = 70 OR passing_grade IS NULL").run().catch(() => {});
+    await db.prepare("UPDATE exam_packages SET passing_grade = 61 WHERE passing_grade = 70 OR passing_grade IS NULL").run().catch(() => { });
 
     const totalUsers = (await db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'PESERTA'").get())?.count || 0;
     const totalQuals = (await db.prepare("SELECT COUNT(*) as count FROM qualifications WHERE status = 'ACTIVE'").get())?.count || 0;
@@ -87,7 +87,7 @@ export const getAdminStatsFn = createServerFn({ method: "POST" })
     const activeExams = (await db.prepare("SELECT COUNT(*) as count FROM exam_packages WHERE status = 'PUBLISHED' OR status = 'ACTIVE'").get())?.count || 0;
     const totalAttempts = (await db.prepare("SELECT COUNT(*) as count FROM exam_attempts WHERE status IN ('SUBMITTED', 'AUTO_SUBMITTED')").get())?.count || 0;
     const passedAttempts = (await db.prepare("SELECT COUNT(*) as count FROM exam_attempts a JOIN exam_packages p ON a.exam_id = p.id WHERE a.status IN ('SUBMITTED', 'AUTO_SUBMITTED') AND a.score >= p.passing_grade").get())?.count || 0;
-    
+
     const passingGradeRes = await db.prepare("SELECT AVG(passing_grade) as avg_grade FROM exam_packages WHERE status IN ('PUBLISHED', 'ACTIVE')").get();
     const passingGrade = passingGradeRes?.avg_grade ? Math.round(Number(passingGradeRes.avg_grade)) : 61;
 
@@ -1241,16 +1241,16 @@ export const approveEnrollmentFn = createServerFn({ method: "POST" })
     await ensureEnrollmentSchema(db);
 
     console.log("[DEBUG approveEnrollmentFn] Approving enrollment ID:", data.id);
-    
+
     const enrollment = await db.prepare("SELECT * FROM exam_enrollments WHERE id = ?").get(data.id);
     console.log("[DEBUG approveEnrollmentFn] Enrollment before approval:", enrollment);
-    
+
     if (enrollment) {
       await db.prepare("UPDATE exam_enrollments SET status = 'APPROVED' WHERE id = ?").run(data.id);
-      
+
       const updatedEnrollment = await db.prepare("SELECT * FROM exam_enrollments WHERE id = ?").get(data.id);
       console.log("[DEBUG approveEnrollmentFn] Enrollment after approval:", updatedEnrollment);
-      
+
       const latestAttempt = await db.prepare("SELECT status FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY id DESC LIMIT 1").get(enrollment.user_id, enrollment.exam_id);
       if (latestAttempt && (latestAttempt.status === 'SUBMITTED' || latestAttempt.status === 'AUTO_SUBMITTED')) {
         await db.prepare("INSERT INTO exam_attempts (exam_id, user_id, status) VALUES (?, ?, 'NOT_STARTED')").run(enrollment.exam_id, enrollment.user_id);
@@ -1275,12 +1275,12 @@ export const bulkApproveEnrollmentsFn = createServerFn({ method: "POST" })
     if (targetIds.length === 0) return { success: false, error: "Tidak ada pendaftaran terpilih." };
 
     const placeholders = targetIds.map(() => "?").join(",");
-    
+
     // For retakes in bulk, we need to handle them one by one or fetch them
     const enrollments = await db.prepare(`SELECT * FROM exam_enrollments WHERE id IN (${placeholders})`).all(...targetIds) as any[];
-    
+
     await db.prepare(`UPDATE exam_enrollments SET status = 'APPROVED' WHERE id IN (${placeholders})`).run(...targetIds);
-    
+
     for (const enr of enrollments) {
       const latestAttempt = await db.prepare("SELECT status FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY id DESC LIMIT 1").get(enr.user_id, enr.exam_id);
       if (latestAttempt && (latestAttempt.status === 'SUBMITTED' || latestAttempt.status === 'AUTO_SUBMITTED')) {
@@ -1383,19 +1383,16 @@ export const approveExamRequestFn = createServerFn({ method: "POST" })
       return { success: false, error: "Pengajuan ini sudah diproses atau ditolak." };
     }
 
-    // Cari paket ujian untuk kualifikasi ini jika tidak ada exam_package_id yang diberikan
+    // Cari paket ujian aktif untuk kualifikasi ini jika tidak ada exam_package_id yang diberikan
     let examPackageId = data.exam_package_id ? Number(data.exam_package_id) : undefined;
+
     if (!examPackageId) {
       const pkg = await db.prepare(
-        "SELECT id, status FROM exam_packages WHERE qualification_id = ? ORDER BY id DESC LIMIT 1"
+        "SELECT id, status FROM exam_packages WHERE qualification_id = ? AND (status = 'PUBLISHED' OR status = 'ACTIVE') ORDER BY id DESC LIMIT 1"
       ).get(Number(req.qualification_id)) as any;
 
       if (pkg) {
         examPackageId = pkg.id;
-        // Jika paket masih DRAFT, otomatis ubah ke PUBLISHED agar peserta bisa langsung ujian
-        if (pkg.status === "DRAFT") {
-          await db.prepare("UPDATE exam_packages SET status = 'PUBLISHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(pkg.id);
-        }
       }
     }
 

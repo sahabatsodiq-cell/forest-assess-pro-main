@@ -131,13 +131,17 @@ function ParticipantExamsPage() {
     }
   };
 
-  const openRequestModal = () => {
+  const openRequestModal = (qualificationId?: number) => {
     const userQuals = data?.userQualifications || [];
-    if (userQuals.length === 1) {
+
+    if (qualificationId) {
+      setSelectedQualId(qualificationId);
+    } else if (userQuals.length === 1) {
       setSelectedQualId(userQuals[0].qualification_id);
     } else {
       setSelectedQualId(null);
     }
+
     setRequestNotes("");
     setRequestModalOpen(true);
   };
@@ -182,6 +186,22 @@ function ParticipantExamsPage() {
   const enrolledExams = Array.isArray(data?.enrolledExams) ? data.enrolledExams : [];
   const userQualifications = Array.isArray(data?.userQualifications) ? data.userQualifications : [];
   const pendingRequests = myRequests.filter((r: any) => r.status === "PENDING");
+  const availableQualificationIds = new Set(
+    availableExams.map((exam: any) => Number(exam.qualification_id))
+  );
+
+  const enrolledQualificationIds = new Set(
+    enrolledExams.map((exam: any) => Number(exam.qualification_id))
+  );
+
+  const missingPackageQualifications = userQualifications.filter((uq: any) => {
+    const qualificationId = Number(uq.qualification_id);
+
+    return (
+      !availableQualificationIds.has(qualificationId) &&
+      !enrolledQualificationIds.has(qualificationId)
+    );
+  });
   const showDaftarkanSayaBtn = enrolledExams.length === 0 && availableExams.length === 0;
 
   return (
@@ -224,10 +244,10 @@ function ParticipantExamsPage() {
         >
           <BookOpen className="h-3.5 w-3.5" />
           Paket Tersedia
-          {availableExams.length > 0 && (
+          {(availableExams.length + missingPackageQualifications.length) > 0 && (
             <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-black ${activeTab === "available" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-800"
               }`}>
-              {availableExams.length}
+              {availableExams.length + missingPackageQualifications.length}
             </span>
           )}
         </button>
@@ -249,19 +269,19 @@ function ParticipantExamsPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
-                {availableExams.length > 0 && (
+                {(availableExams.length + missingPackageQualifications.length) > 0 && (
                   <button
                     onClick={() => setActiveTab("available")}
                     className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700 transition-colors"
                   >
                     <PlusCircle className="h-3.5 w-3.5" />
-                    Lihat {availableExams.length} Paket Tersedia
+                    Lihat {availableExams.length + missingPackageQualifications.length} Pilihan Ujian
                   </button>
                 )}
 
                 {showDaftarkanSayaBtn && pendingRequests.length === 0 && (
                   <button
-                    onClick={openRequestModal}
+                    onClick={() => openRequestModal()}
                     className="inline-flex items-center gap-2 rounded-lg border-2 border-forest-900 px-4 py-2 text-xs font-semibold text-forest-900 hover:bg-forest-900 hover:text-white transition-all duration-200 dark:border-forest-500 dark:text-forest-300 dark:hover:bg-forest-700 dark:hover:text-white"
                   >
                     <Send className="h-3.5 w-3.5" />
@@ -406,7 +426,7 @@ function ParticipantExamsPage() {
       {/* ============================= */}
       {activeTab === "available" && (
         <>
-          {availableExams.length === 0 ? (
+          {(availableExams.length + missingPackageQualifications.length) === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-10 text-center dark:border-charcoal/60 dark:bg-charcoal/40 space-y-4">
               <BookOpen className="mx-auto h-10 w-10 text-gray-300 mb-2" />
               <div>
@@ -418,7 +438,7 @@ function ParticipantExamsPage() {
 
               {showDaftarkanSayaBtn && pendingRequests.length === 0 && (
                 <button
-                  onClick={openRequestModal}
+                  onClick={() => openRequestModal()}
                   className="inline-flex items-center gap-2 rounded-lg border-2 border-forest-900 px-4 py-2 text-xs font-semibold text-forest-900 hover:bg-forest-900 hover:text-white transition-all duration-200 dark:border-forest-500 dark:text-forest-300 dark:hover:bg-forest-700 dark:hover:text-white"
                 >
                   <Send className="h-3.5 w-3.5" />
@@ -507,6 +527,70 @@ function ParticipantExamsPage() {
                     </div>
                   </div>
                 ))}
+                {missingPackageQualifications.map((uq: any) => {
+                  const pendingRequest = myRequests.find(
+                    (r: any) =>
+                      Number(r.qualification_id) === Number(uq.qualification_id) &&
+                      r.status === "PENDING"
+                  );
+                  const approvedRequest = myRequests.find(
+                    (r: any) =>
+                      Number(r.qualification_id) === Number(uq.qualification_id) &&
+                      r.status === "APPROVED"
+                  );
+                  return (
+                    <div
+                      key={`qualification-${uq.qualification_id}`}
+                      className="rounded-xl border border-amber-200 bg-white p-6 shadow-sm flex flex-col justify-between space-y-4 dark:bg-charcoal dark:border-amber-800/50"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="rounded bg-forest-50 px-2.5 py-0.5 text-xs font-bold text-forest-900 border border-forest-100 dark:bg-forest-900/40 dark:text-forest-100 dark:border-forest-700/50">
+                            {uq.code}
+                          </span>
+
+                          <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[9px] font-bold text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700/50">
+                            BELUM TERSEDIA
+                          </span>
+                        </div>
+
+                        <h3 className="mt-3 font-display text-base font-bold text-charcoal dark:text-forest-100">
+                          {uq.name}
+                        </h3>
+
+                        <p className="mt-2 text-xs text-muted-foreground dark:text-forest-100/70">
+                          Belum tersedia paket ujian aktif untuk kualifikasi ini.
+                          Anda dapat mengajukan permohonan kepada Admin.
+                        </p>
+                      </div>
+
+                      <div className="border-t border-border/20 pt-3 dark:border-charcoal/60">
+                        <button
+                          onClick={() => openRequestModal(Number(uq.qualification_id))}
+                          disabled={Boolean(pendingRequest || approvedRequest)}
+                          className="w-full inline-flex items-center justify-center gap-2 rounded-lg border-2 border-forest-900 bg-transparent py-2.5 text-xs font-bold text-forest-900 hover:bg-forest-900 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 dark:border-forest-500 dark:text-forest-300 dark:hover:bg-forest-700 dark:hover:text-white"
+                        >
+                          {pendingRequest ? (
+                            <>
+                              <AlertCircle className="h-4 w-4" />
+                              Menunggu Persetujuan Admin
+                            </>
+                          ) : approvedRequest ? (
+                            <>
+                              <CheckCheck className="h-4 w-4" />
+                              Disetujui — Menunggu Paket Ujian
+                            </>
+                          ) : (
+                            <>
+                              <Send className="h-4 w-4" />
+                              Ajukan Permohonan Ujian
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </>
           )}

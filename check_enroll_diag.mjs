@@ -11,8 +11,12 @@ const sql = postgres(dbUrl, { ssl: 'require', max: 1 });
 
 async function run() {
   // 1. Find Adit Akbar
-  const users = await sql`SELECT id, name, email, participant_number FROM users WHERE name ILIKE '%adit%'`;
-  console.log('\n=== Users named Adit ===');
+  const users = await sql`
+  SELECT id, name, email, participant_number
+  FROM users
+  WHERE name ILIKE '%syasya%'
+`;
+  console.log('\n=== Users named Syasya ===');
   console.log(JSON.stringify([...users], null, 2));
 
   if (users.length === 0) {

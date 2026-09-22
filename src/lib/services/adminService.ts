@@ -1087,6 +1087,29 @@ export const publishExamFn = createServerFn({ method: "POST" })
 
     await db.prepare("UPDATE exam_packages SET status = 'PUBLISHED', updated_at = CURRENT_TIMESTAMP WHERE id = ?").run(data.exam_id);
     await logAudit(session.userId, "PUBLISH_EXAM", "exam_packages", data.exam_id, { code: exam.code });
+    // Buat enrollment PENDING untuk peserta yang pengajuan kualifikasinya sudah disetujui
+    const approvedRequests = await db.prepare(`
+  SELECT DISTINCT user_id
+  FROM exam_registration_requests
+  WHERE qualification_id = ?
+    AND status = 'APPROVED'
+`).all(Number(exam.qualification_id));
+
+    const approvedRequestList = Array.isArray(approvedRequests)
+      ? approvedRequests
+      : [];
+
+    for (const request of approvedRequestList as any[]) {
+      const existingEnrollment = await db.prepare(
+        "SELECT id FROM exam_enrollments WHERE exam_id = ? AND user_id = ?"
+      ).get(data.exam_id, Number(request.user_id));
+
+      if (!existingEnrollment) {
+        await db.prepare(
+          "INSERT INTO exam_enrollments (exam_id, user_id, status) VALUES (?, ?, 'PENDING')"
+        ).run(data.exam_id, Number(request.user_id));
+      }
+    }
     return { success: true };
   });
 
@@ -1240,23 +1263,25 @@ export const approveEnrollmentFn = createServerFn({ method: "POST" })
     const { ensureEnrollmentSchema } = await import("./examEngineService");
     await ensureEnrollmentSchema(db);
 
-    console.log("[DEBUG approveEnrollmentFn] Approving enrollment ID:", data.id);
-
     const enrollment = await db.prepare("SELECT * FROM exam_enrollments WHERE id = ?").get(data.id);
-    console.log("[DEBUG approveEnrollmentFn] Enrollment before approval:", enrollment);
 
     if (enrollment) {
       await db.prepare("UPDATE exam_enrollments SET status = 'APPROVED' WHERE id = ?").run(data.id);
-
       const updatedEnrollment = await db.prepare("SELECT * FROM exam_enrollments WHERE id = ?").get(data.id);
-      console.log("[DEBUG approveEnrollmentFn] Enrollment after approval:", updatedEnrollment);
-
       const latestAttempt = await db.prepare("SELECT status FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY id DESC LIMIT 1").get(enrollment.user_id, enrollment.exam_id);
       if (latestAttempt && (latestAttempt.status === 'SUBMITTED' || latestAttempt.status === 'AUTO_SUBMITTED')) {
-        await db.prepare("INSERT INTO exam_attempts (exam_id, user_id, status) VALUES (?, ?, 'NOT_STARTED')").run(enrollment.exam_id, enrollment.user_id);
+        await db.prepare(`
+    INSERT INTO exam_attempts (
+      exam_id,
+      user_id,
+      started_at,
+      ended_at,
+      status
+    )
+    VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'NOT_STARTED')
+  `).run(enrollment.exam_id, enrollment.user_id);
       }
     } else {
-      console.log("[DEBUG approveEnrollmentFn] Enrollment not found for ID:", data.id);
     }
 
     await logAudit(session.userId, "APPROVE_ENROLLMENT", "exam_enrollments", data.id);
@@ -1284,7 +1309,16 @@ export const bulkApproveEnrollmentsFn = createServerFn({ method: "POST" })
     for (const enr of enrollments) {
       const latestAttempt = await db.prepare("SELECT status FROM exam_attempts WHERE user_id = ? AND exam_id = ? ORDER BY id DESC LIMIT 1").get(enr.user_id, enr.exam_id);
       if (latestAttempt && (latestAttempt.status === 'SUBMITTED' || latestAttempt.status === 'AUTO_SUBMITTED')) {
-        await db.prepare("INSERT INTO exam_attempts (exam_id, user_id, status) VALUES (?, ?, 'NOT_STARTED')").run(enr.exam_id, enr.user_id);
+        await db.prepare(`
+    INSERT INTO exam_attempts (
+      exam_id,
+      user_id,
+      started_at,
+      ended_at,
+      status
+    )
+    VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'NOT_STARTED')
+  `).run(enr.exam_id, enr.user_id);
       }
     }
 

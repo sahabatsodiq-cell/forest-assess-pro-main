@@ -255,10 +255,6 @@ export const getParticipantDashboardFn = createServerFn({ method: "POST" })
       ORDER BY p.id DESC
     `).all(session.userId);
 
-    console.log("[DEBUG ENROLLED EXAMS]", {
-      userId: session.userId,
-      rawEnrolledExams,
-    });
     const enrolledList = Array.isArray(rawEnrolledExams) ? rawEnrolledExams : [];
     const enrolledExams = enrolledList.map((p: any) => {
       const units = p.code ? p.code.split(';').map((s: string) => s.trim()).filter(Boolean) : [];

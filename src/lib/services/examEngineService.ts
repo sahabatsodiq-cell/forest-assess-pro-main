@@ -486,14 +486,43 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
     const itemList = Array.isArray(items) ? items : [];
 
     for (const item of itemList) {
-      const questions = await db.prepare(`
-        SELECT id FROM questions 
-        WHERE subject_id = ? AND difficulty = ? AND status = 'ACTIVE' AND qualification_id = ?
-        ORDER BY RANDOM() LIMIT ?
-      `).all(item.subject_id, item.difficulty, exam.qualification_id, item.question_count);
+      let questions: any[] = [];
 
-      const qRows = Array.isArray(questions) ? questions : [];
-      for (const q of qRows) {
+      if (item.competency_unit_id) {
+        const rows = await db.prepare(`
+      SELECT id
+      FROM questions
+      WHERE competency_unit_id = ?
+        AND status = 'ACTIVE'
+      ORDER BY RANDOM()
+      LIMIT ?
+    `).all(
+          item.competency_unit_id,
+          item.question_count
+        );
+
+        questions = Array.isArray(rows) ? rows : [];
+      } else if (item.subject_id) {
+        const rows = await db.prepare(`
+      SELECT id
+      FROM questions
+      WHERE subject_id = ?
+        AND difficulty = ?
+        AND status = 'ACTIVE'
+        AND qualification_id = ?
+      ORDER BY RANDOM()
+      LIMIT ?
+    `).all(
+          item.subject_id,
+          item.difficulty,
+          exam.qualification_id,
+          item.question_count
+        );
+
+        questions = Array.isArray(rows) ? rows : [];
+      }
+
+      for (const q of questions) {
         selectedQuestionIds.add(q.id);
       }
     }
@@ -523,21 +552,18 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
       if (unitList.length > 0) {
         for (const cu of unitList) {
           const targetCount = Number(cu.question_count) || 5;
-          const unitQuestions = await db.prepare(`
-            SELECT q.id
-            FROM questions q
-            LEFT JOIN subjects s ON q.subject_id = s.id
-            WHERE q.status = 'ACTIVE'
-              AND q.qualification_id = ?
-              AND (
-                q.competency_unit_id = ?
-                OR s.competency_unit_id = ?
-                OR s.code = ?
-                OR s.name LIKE ?
-              )
-            ORDER BY RANDOM() LIMIT ?
-          `).all(exam.qualification_id, cu.id, cu.id, cu.subject_code || '', `%${cu.title}%`, targetCount);
 
+          const unitQuestions = await db.prepare(`
+  SELECT q.id
+  FROM questions q
+  WHERE q.status = 'ACTIVE'
+    AND q.competency_unit_id = ?
+  ORDER BY RANDOM()
+  LIMIT ?
+`).all(
+            cu.id,
+            targetCount
+          );
           const qRows = Array.isArray(unitQuestions) ? unitQuestions : [];
           for (const q of qRows) {
             selectedQuestionIds.add(q.id);
@@ -546,29 +572,19 @@ export const startExamAttemptFn = createServerFn({ method: "POST" })
       }
     }
 
-    // 3. Strict fallback locked to exam.qualification_id
+    // 3. Jangan mengambil soal di luar Unit Kompetensi paket
     if (selectedQuestionIds.size === 0) {
-      const fallbackLimit = (exam.code ? exam.code.split(';').filter(Boolean).length * 5 : 40);
-      const fallbackQuestions = await db.prepare(`
-        SELECT q.id 
-        FROM questions q
-        LEFT JOIN qualification_competency_units qcu ON q.competency_unit_id = qcu.competency_unit_id
-        WHERE q.status = 'ACTIVE'
-          AND (q.qualification_id = ? OR qcu.qualification_id = ?)
-        GROUP BY q.id
-        ORDER BY RANDOM() LIMIT ?
-      `).all(exam.qualification_id, exam.qualification_id, fallbackLimit);
+      await db.prepare(
+        "DELETE FROM exam_attempts WHERE id = ?"
+      ).run(attemptId);
 
-      const finalQuestions = (Array.isArray(fallbackQuestions) && fallbackQuestions.length > 0)
-        ? fallbackQuestions
-        : await db.prepare("SELECT id FROM questions WHERE status = 'ACTIVE' AND qualification_id = ? ORDER BY RANDOM() LIMIT ?").all(exam.qualification_id, fallbackLimit);
-
-      const qRows = Array.isArray(finalQuestions) ? finalQuestions : [];
-      for (const q of qRows) {
-        selectedQuestionIds.add(q.id);
-      }
+      return {
+        success: false,
+        error:
+          "Tidak ada soal yang dapat dibuat untuk paket ujian ini. " +
+          "Periksa Unit Kompetensi dan ketersediaan bank soal.",
+      };
     }
-
     // 4. Randomize question sequence ONLY (options remain A, B, C, D as written)
     const finalQuestionList = Array.from(selectedQuestionIds);
     finalQuestionList.sort(() => Math.random() - 0.5);

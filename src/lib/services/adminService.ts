@@ -915,7 +915,20 @@ export const getBlueprintsFn = createServerFn({ method: "POST" })
     const blueprints = Array.isArray(res) ? res : [];
 
     for (const b of blueprints) {
-      const itemsRes = await db.prepare("SELECT i.*, s.name as subject_name FROM blueprint_items i JOIN subjects s ON i.subject_id = s.id WHERE i.blueprint_id = ?").all(b.id);
+      const itemsRes = await db.prepare(`
+  SELECT
+    i.*,
+    s.name AS subject_name,
+    cu.code AS competency_unit_code,
+    cu.title AS competency_unit_title
+  FROM blueprint_items i
+  LEFT JOIN subjects s
+    ON i.subject_id = s.id
+  LEFT JOIN competency_units cu
+    ON i.competency_unit_id = cu.id
+  WHERE i.blueprint_id = ?
+  ORDER BY i.id
+`).all(b.id);
       b.items = Array.isArray(itemsRes) ? itemsRes : [];
     }
 
@@ -1015,27 +1028,87 @@ export const createExamFn = createServerFn({ method: "POST" })
 
     const existing = await db.prepare("SELECT id FROM exam_packages WHERE code = ?").get(data.code);
     if (existing) return { success: false, error: "Kode paket ujian sudah digunakan." };
-
     let bpId = data.blueprint_id;
-    const unitCodes = data.code ? data.code.split(';').map((s) => s.trim()).filter(Boolean) : [];
-    const calculatedTotalQuestions = unitCodes.length > 0 ? unitCodes.length * 5 : 40;
+
+    const unitCodes = data.code
+      ? data.code.split(";").map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    if (unitCodes.length === 0) {
+      return {
+        success: false,
+        error: "Paket ujian harus memiliki minimal satu Unit Kompetensi.",
+      };
+    }
+
+    const calculatedTotalQuestions = unitCodes.length * 5;
+
+    // Validasi seluruh Unit Kompetensi memang milik kualifikasi yang dipilih
+    const selectedUnits: any[] = [];
+
+    for (const unitCode of unitCodes) {
+      const unit = await db.prepare(`
+    SELECT cu.id, cu.code, cu.title
+    FROM competency_units cu
+    JOIN qualification_competency_units qcu
+      ON qcu.competency_unit_id = cu.id
+    WHERE qcu.qualification_id = ?
+      AND cu.code = ?
+    LIMIT 1
+  `).get(data.qualification_id, unitCode);
+
+      if (!unit) {
+        return {
+          success: false,
+          error: `Unit Kompetensi ${unitCode} tidak terdaftar pada kualifikasi yang dipilih.`,
+        };
+      }
+
+      selectedUnits.push(unit);
+    }
 
     if (!bpId) {
-      const existingBp = await db.prepare("SELECT id FROM exam_blueprints WHERE qualification_id = ? ORDER BY id ASC").get(data.qualification_id);
-      if (existingBp) {
-        bpId = existingBp.id;
-        await db.prepare("UPDATE exam_blueprints SET total_questions = ? WHERE id = ?").run(calculatedTotalQuestions, bpId);
-      } else {
-        const qual = await db.prepare("SELECT code, name FROM qualifications WHERE id = ?").get(data.qualification_id);
-        const newBp = await db.prepare(`
-          INSERT INTO exam_blueprints (qualification_id, name, description, total_questions)
-          VALUES (?, ?, 'Blueprint Otomatis (5 Soal/Unit)', ?)
-          RETURNING id
-        `).run(data.qualification_id, `Blueprint ${qual?.code || 'Kualifikasi'}`, calculatedTotalQuestions);
-        bpId = (newBp as any).lastInsertRowid;
+      // Setiap paket ujian mendapat blueprint sendiri
+      const qual = await db.prepare(
+        "SELECT code, name FROM qualifications WHERE id = ?"
+      ).get(data.qualification_id);
+
+      const newBp = await db.prepare(`
+    INSERT INTO exam_blueprints (
+      qualification_id,
+      name,
+      description,
+      total_questions
+    )
+    VALUES (?, ?, 'Blueprint Otomatis Berbasis Unit Kompetensi', ?)
+    RETURNING id
+  `).run(
+        data.qualification_id,
+        `Blueprint ${qual?.code || "Kualifikasi"} - ${data.name}`,
+        calculatedTotalQuestions
+      );
+
+      bpId = (newBp as any).lastInsertRowid;
+
+      // Buat blueprint item langsung berdasarkan competency_unit_id
+      for (const unit of selectedUnits) {
+        await db.prepare(`
+      INSERT INTO blueprint_items (
+        blueprint_id,
+        subject_id,
+        competency_unit_id,
+        difficulty,
+        question_count
+      )
+      VALUES (?, NULL, ?, 'MEDIUM', 5)
+    `).run(bpId, unit.id);
       }
     } else {
-      await db.prepare("UPDATE exam_blueprints SET total_questions = ? WHERE id = ?").run(calculatedTotalQuestions, bpId);
+      await db.prepare(`
+    UPDATE exam_blueprints
+    SET total_questions = ?
+    WHERE id = ?
+  `).run(calculatedTotalQuestions, bpId);
     }
 
     const nowIso = new Date().toISOString();
@@ -1077,11 +1150,44 @@ export const publishExamFn = createServerFn({ method: "POST" })
     const items = await db.prepare("SELECT * FROM blueprint_items WHERE blueprint_id = ?").all(exam.blueprint_id);
     const itemsList = Array.isArray(items) ? items : [];
 
+    if (itemsList.length === 0) {
+      return {
+        success: false,
+        error: "Blueprint paket ujian belum memiliki Unit Kompetensi.",
+      };
+    }
+
     for (const item of itemsList) {
-      const availRow = await db.prepare("SELECT COUNT(*) as count FROM questions WHERE subject_id = ? AND difficulty = ? AND status = 'ACTIVE'").get(item.subject_id, item.difficulty);
+      if (!item.competency_unit_id) {
+        return {
+          success: false,
+          error: "Blueprint masih menggunakan struktur lama dan belum terikat ke Unit Kompetensi.",
+        };
+      }
+
+      const unit = await db.prepare(`
+    SELECT code, title
+    FROM competency_units
+    WHERE id = ?
+  `).get(item.competency_unit_id);
+
+      const availRow = await db.prepare(`
+    SELECT COUNT(*) AS count
+    FROM questions
+    WHERE competency_unit_id = ?
+      AND status = 'ACTIVE'
+  `).get(item.competency_unit_id);
+
       const avail = Number(availRow?.count || 0);
-      if (avail < item.question_count) {
-        return { success: false, error: "Tidak dapat mempublikasikan ujian. Soal dalam bank soal tidak mencukupi untuk blueprint." };
+
+      if (avail < Number(item.question_count)) {
+        return {
+          success: false,
+          error:
+            `Soal untuk Unit Kompetensi ${unit?.code || item.competency_unit_id}` +
+            ` - ${unit?.title || ""} tidak mencukupi. ` +
+            `Tersedia: ${avail}, dibutuhkan: ${item.question_count}.`,
+        };
       }
     }
 

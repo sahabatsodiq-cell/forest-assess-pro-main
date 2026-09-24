@@ -831,7 +831,13 @@ export const createQuestionFn = createServerFn({ method: "POST" })
   });
 
 export const importQuestionsCsvFn = createServerFn({ method: "POST" })
-  .validator((data: { token: string; qualification_id: number; subject_id: number; csvContent: string }) => data)
+  .validator((data: {
+    token: string;
+    qualification_id: number;
+    competency_unit_id: number;
+    subject_id: number;
+    csvContent: string;
+  }) => data)
   .handler(async ({ data }) => {
     const session = verifyAdminSession(data.token);
     const db = await getDb();
@@ -841,7 +847,7 @@ export const importQuestionsCsvFn = createServerFn({ method: "POST" })
       return { success: false, error: "File CSV kosong atau tidak memiliki baris data." };
     }
 
-    let compUnitId: number | null = null;
+    let compUnitId: number | null = data.competency_unit_id || null;
     if (data.subject_id) {
       const subRow = await db.prepare("SELECT code FROM subjects WHERE id = ?").get(data.subject_id) as any;
       if (subRow && subRow.code) {

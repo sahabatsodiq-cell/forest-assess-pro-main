@@ -59,6 +59,7 @@ function AdminQuestionsPage() {
 
   // Import Form State
   const [importQualId, setImportQualId] = useState<number | "">("");
+  const [importCompetencyUnitId, setImportCompetencyUnitId] = useState<number | "">("");
   const [importSubId, setImportSubId] = useState<number | "">("");
   const [csvContent, setCsvContent] = useState("");
   const [importResult, setImportResult] = useState<any>(null);
@@ -110,7 +111,35 @@ function AdminQuestionsPage() {
       Number(s.qualification_id) === Number(qualificationId)
     );
   });
-  const importAvailableSubjects = subjects.filter((s) => !importQualId || s.qualification_id === Number(importQualId));
+  const importAvailableSubjects = subjects.filter((s) => {
+    if (!importQualId || !importCompetencyUnitId) return false;
+
+    const selectedUnit = competencyUnits.find(
+      (cu) => cu.id === Number(importCompetencyUnitId)
+    );
+
+    const linkedToSelectedUnit =
+      Number(s.competency_unit_id) === Number(importCompetencyUnitId) ||
+      (selectedUnit?.subject_code && s.code === selectedUnit.subject_code);
+
+    if (linkedToSelectedUnit) return true;
+
+    const hasUnitLink =
+      s.competency_unit_id ||
+      competencyUnits.some((cu) => cu.subject_code && cu.subject_code === s.code);
+
+    return (
+      !hasUnitLink &&
+      Number(s.qualification_id) === Number(importQualId)
+    );
+  });
+  const importAvailableCompetencyUnits = competencyUnits.filter(
+    (cu) =>
+      !importQualId ||
+      cu.qualification_codes?.split(", ").includes(
+        qualifications.find((q) => q.id === Number(importQualId))?.code
+      )
+  );
   const availableCompetencyUnits = competencyUnits.filter(
     (cu) => !qualificationId || cu.qualification_codes?.split(", ").includes(
       qualifications.find((q) => q.id === Number(qualificationId))?.code
@@ -170,8 +199,10 @@ function AdminQuestionsPage() {
 
   const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!importQualId || !importSubId) {
-      setImportResult({ error: "Pilih kualifikasi dan materi target terlebih dahulu." });
+    if (!importQualId || !importCompetencyUnitId || !importSubId) {
+      setImportResult({
+        error: "Pilih kualifikasi, unit kompetensi, dan materi target terlebih dahulu."
+      });
       return;
     }
 
@@ -184,6 +215,7 @@ function AdminQuestionsPage() {
         data: {
           token,
           qualification_id: Number(importQualId),
+          competency_unit_id: Number(importCompetencyUnitId),
           subject_id: Number(importSubId),
           csvContent,
         },
@@ -272,12 +304,37 @@ function AdminQuestionsPage() {
                       <select
                         required
                         value={importQualId}
-                        onChange={(e) => setImportQualId(Number(e.target.value))}
+                        onChange={(e) => {
+                          setImportQualId(Number(e.target.value));
+                          setImportCompetencyUnitId("");
+                          setImportSubId("");
+                        }}
                         className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
                       >
                         <option value="">Pilih Kualifikasi...</option>
                         {qualifications.map((q) => (
                           <option key={q.id} value={q.id}>{q.code}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">
+                        Target Unit Kompetensi
+                      </label>
+                      <select
+                        required
+                        value={importCompetencyUnitId}
+                        onChange={(e) => {
+                          setImportCompetencyUnitId(Number(e.target.value));
+                          setImportSubId("");
+                        }}
+                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                      >
+                        <option value="">Pilih Unit Kompetensi...</option>
+                        {importAvailableCompetencyUnits.map((cu) => (
+                          <option key={cu.id} value={cu.id}>
+                            {cu.code} - {cu.title}
+                          </option>
                         ))}
                       </select>
                     </div>

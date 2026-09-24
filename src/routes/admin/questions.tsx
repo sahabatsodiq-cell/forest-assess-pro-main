@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getQuestionsFn, createQuestionFn, importQuestionsCsvFn, getQualificationsFn, getSubjectsFn } from "@/lib/services/adminService";
+import {
+  getQuestionsFn,
+  createQuestionFn,
+  importQuestionsCsvFn,
+  getQualificationsFn,
+  getSubjectsFn,
+  getCompetencyUnitsFn,
+} from "@/lib/services/adminService";
 import { Database, Plus, Upload, Filter, Search, FileSpreadsheet, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DataTablePagination } from "@/components/DataTablePagination";
@@ -21,6 +28,7 @@ function AdminQuestionsPage() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [qualifications, setQualifications] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [competencyUnits, setCompetencyUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -36,6 +44,7 @@ function AdminQuestionsPage() {
 
   // Create Form State
   const [qualificationId, setQualificationId] = useState<number | "">("");
+  const [competencyUnitId, setCompetencyUnitId] = useState<number | "">("");
   const [subjectId, setSubjectId] = useState<number | "">("");
   const [questionText, setQuestionText] = useState("");
   const [optionA, setOptionA] = useState("");
@@ -58,14 +67,16 @@ function AdminQuestionsPage() {
     const token = localStorage.getItem("askganis_token");
     if (!token) return;
     try {
-      const [qData, qualData, subData] = await Promise.all([
+      const [qData, qualData, subData, competencyUnitData] = await Promise.all([
         getQuestionsFn({ data: { token } }),
         getQualificationsFn({ data: { token } }),
         getSubjectsFn({ data: { token } }),
+        getCompetencyUnitsFn({ data: { token } }),
       ]);
       setQuestions(qData);
       setQualifications(qualData);
       setSubjects(subData);
+      setCompetencyUnits(competencyUnitData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -77,13 +88,39 @@ function AdminQuestionsPage() {
     loadData();
   }, []);
 
-  const availableSubjects = subjects.filter((s) => !qualificationId || s.qualification_id === Number(qualificationId));
+  const availableSubjects = subjects.filter((s) => {
+    if (!qualificationId || !competencyUnitId) return false;
+
+    const selectedUnit = competencyUnits.find(
+      (cu) => cu.id === Number(competencyUnitId)
+    );
+
+    const linkedToSelectedUnit =
+      Number(s.competency_unit_id) === Number(competencyUnitId) ||
+      (selectedUnit?.subject_code && s.code === selectedUnit.subject_code);
+
+    if (linkedToSelectedUnit) return true;
+
+    const hasUnitLink =
+      s.competency_unit_id ||
+      competencyUnits.some((cu) => cu.subject_code && cu.subject_code === s.code);
+
+    return (
+      !hasUnitLink &&
+      Number(s.qualification_id) === Number(qualificationId)
+    );
+  });
   const importAvailableSubjects = subjects.filter((s) => !importQualId || s.qualification_id === Number(importQualId));
+  const availableCompetencyUnits = competencyUnits.filter(
+    (cu) => !qualificationId || cu.qualification_codes?.split(", ").includes(
+      qualifications.find((q) => q.id === Number(qualificationId))?.code
+    )
+  );
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!qualificationId || !subjectId) {
-      setFormError("Pilih kualifikasi dan materi terlebih dahulu.");
+    if (!qualificationId || !competencyUnitId || !subjectId) {
+      setFormError("Pilih kualifikasi, unit kompetensi, dan materi terlebih dahulu.");
       return;
     }
 
@@ -97,6 +134,7 @@ function AdminQuestionsPage() {
           token,
           qualification_id: Number(qualificationId),
           subject_id: Number(subjectId),
+          competency_unit_id: Number(competencyUnitId),
           question_text: questionText,
           option_a: optionA,
           option_b: optionB,
@@ -110,6 +148,9 @@ function AdminQuestionsPage() {
 
       if (res.success) {
         setCreateOpen(false);
+        setQualificationId("");
+        setCompetencyUnitId("");
+        setSubjectId("");
         setQuestionText("");
         setOptionA("");
         setOptionB("");
@@ -199,236 +240,257 @@ function AdminQuestionsPage() {
                   <span>Import CSV</span>
                 </button>
               </DialogTrigger>
-            <DialogContent className="max-w-xl bg-white p-6">
-              <DialogHeader>
-                <DialogTitle className="font-display text-base font-bold text-charcoal">
-                  Import Bank Soal (CSV Massal)
-                </DialogTitle>
-              </DialogHeader>
+              <DialogContent className="max-w-xl bg-white p-6">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-base font-bold text-charcoal">
+                    Import Bank Soal (CSV Massal)
+                  </DialogTitle>
+                </DialogHeader>
 
-              {importResult && (
-                <div className={`rounded-lg p-3 text-xs font-semibold ${
-                  importResult.success ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
-                }`}>
-                  {importResult.success ? (
-                    <div>✓ Berhasil mengimpor {importResult.importedCount} soal.</div>
-                  ) : (
-                    <div>{importResult.error || "Gagal melakukan impor."}</div>
-                  )}
-                  {importResult.errors && importResult.errors.length > 0 && (
-                    <ul className="mt-2 space-y-1 list-disc pl-4 text-[11px] font-normal">
-                      {importResult.errors.map((err: string, idx: number) => (
-                        <li key={idx}>{err}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              )}
+                {importResult && (
+                  <div className={`rounded-lg p-3 text-xs font-semibold ${importResult.success ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
+                    }`}>
+                    {importResult.success ? (
+                      <div>✓ Berhasil mengimpor {importResult.importedCount} soal.</div>
+                    ) : (
+                      <div>{importResult.error || "Gagal melakukan impor."}</div>
+                    )}
+                    {importResult.errors && importResult.errors.length > 0 && (
+                      <ul className="mt-2 space-y-1 list-disc pl-4 text-[11px] font-normal">
+                        {importResult.errors.map((err: string, idx: number) => (
+                          <li key={idx}>{err}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
 
-              <form onSubmit={handleImport} className="mt-2 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <form onSubmit={handleImport} className="mt-2 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Target Kualifikasi</label>
+                      <select
+                        required
+                        value={importQualId}
+                        onChange={(e) => setImportQualId(Number(e.target.value))}
+                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                      >
+                        <option value="">Pilih Kualifikasi...</option>
+                        {qualifications.map((q) => (
+                          <option key={q.id} value={q.id}>{q.code}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Target Materi</label>
+                      <select
+                        required
+                        value={importSubId}
+                        onChange={(e) => setImportSubId(Number(e.target.value))}
+                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                      >
+                        <option value="">Pilih Materi...</option>
+                        {importAvailableSubjects.map((s) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Target Kualifikasi</label>
-                    <select
-                      required
-                      value={importQualId}
-                      onChange={(e) => setImportQualId(Number(e.target.value))}
-                      className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                    >
-                      <option value="">Pilih Kualifikasi...</option>
-                      {qualifications.map((q) => (
-                        <option key={q.id} value={q.id}>{q.code}</option>
-                      ))}
-                    </select>
+                    <label className="block text-xs font-bold uppercase text-charcoal">Upload File CSV</label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleFileUpload}
+                      className="mt-1 block w-full text-xs text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-forest-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-forest-900 hover:file:bg-forest-100"
+                    />
                   </div>
+
                   <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Target Materi</label>
-                    <select
-                      required
-                      value={importSubId}
-                      onChange={(e) => setImportSubId(Number(e.target.value))}
-                      className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                    >
-                      <option value="">Pilih Materi...</option>
-                      {importAvailableSubjects.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
+                    <label className="block text-xs font-bold uppercase text-charcoal">Atau Tempel Teks CSV</label>
+                    <textarea
+                      rows={6}
+                      placeholder="question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation"
+                      value={csvContent}
+                      onChange={(e) => setCsvContent(e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border px-3 py-2 text-xs font-mono"
+                    />
+                    <div className="mt-1 text-[10px] text-muted-foreground">
+                      Format: <code>pertanyaan, opsi_a, opsi_b, opsi_c, opsi_d, jawaban_benar(A/B/C/D), tingkat(EASY/MEDIUM/HARD), pembahasan</code>
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Upload File CSV</label>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileUpload}
-                    className="mt-1 block w-full text-xs text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-forest-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-forest-900 hover:file:bg-forest-100"
-                  />
-                </div>
+                  <button
+                    type="submit"
+                    disabled={formLoading}
+                    className="w-full rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
+                  >
+                    {formLoading ? "Mengimpor..." : "Proses Impor CSV"}
+                  </button>
+                </form>
+              </DialogContent>
+            </Dialog>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Atau Tempel Teks CSV</label>
-                  <textarea
-                    rows={6}
-                    placeholder="question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation"
-                    value={csvContent}
-                    onChange={(e) => setCsvContent(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-2 text-xs font-mono"
-                  />
-                  <div className="mt-1 text-[10px] text-muted-foreground">
-                    Format: <code>pertanyaan, opsi_a, opsi_b, opsi_c, opsi_d, jawaban_benar(A/B/C/D), tingkat(EASY/MEDIUM/HARD), pembahasan</code>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={formLoading}
-                  className="w-full rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
-                >
-                  {formLoading ? "Mengimpor..." : "Proses Impor CSV"}
+            {/* Create Question Modal */}
+            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+              <DialogTrigger asChild>
+                <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700">
+                  <Plus className="h-4 w-4" />
+                  Tambah Soal
                 </button>
-              </form>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg bg-white p-6 max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="font-display text-base font-bold text-charcoal">
+                    Tambah Soal Ujian Baru
+                  </DialogTitle>
+                </DialogHeader>
 
-          {/* Create Question Modal */}
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <button className="inline-flex items-center gap-2 rounded-lg bg-forest-900 px-4 py-2 text-xs font-semibold text-white hover:bg-forest-700">
-                <Plus className="h-4 w-4" />
-                Tambah Soal
-              </button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg bg-white p-6 max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="font-display text-base font-bold text-charcoal">
-                  Tambah Soal Ujian Baru
-                </DialogTitle>
-              </DialogHeader>
+                {formError && (
+                  <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700 border border-red-100">
+                    {formError}
+                  </div>
+                )}
 
-              {formError && (
-                <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700 border border-red-100">
-                  {formError}
-                </div>
-              )}
+                <form onSubmit={handleCreate} className="mt-2 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Kualifikasi</label>
+                      <select
+                        required
+                        value={qualificationId}
+                        onChange={(e) => {
+                          setQualificationId(Number(e.target.value));
+                          setCompetencyUnitId("");
+                          setSubjectId("");
+                        }}
+                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                      >
+                        <option value="">Pilih Kualifikasi...</option>
+                        {qualifications.map((q) => (
+                          <option key={q.id} value={q.id}>{q.code}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">
+                        Unit Kompetensi
+                      </label>
+                      <select
+                        required
+                        value={competencyUnitId}
+                        onChange={(e) => {
+                          setCompetencyUnitId(Number(e.target.value));
+                          setSubjectId("");
+                        }}
+                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                      >
+                        <option value="">Pilih Unit Kompetensi...</option>
+                        {availableCompetencyUnits.map((cu) => (
+                          <option key={cu.id} value={cu.id}>
+                            {cu.code} - {cu.title}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Materi / Subjek</label>
+                      <select
+                        required
+                        value={subjectId}
+                        onChange={(e) => setSubjectId(Number(e.target.value))}
+                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                      >
+                        <option value="">Pilih Materi...</option>
+                        {availableSubjects.map((s) => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-              <form onSubmit={handleCreate} className="mt-2 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Kualifikasi</label>
-                    <select
+                    <label className="block text-xs font-bold uppercase text-charcoal">Teks Pertanyaan</label>
+                    <textarea
                       required
-                      value={qualificationId}
-                      onChange={(e) => {
-                        setQualificationId(Number(e.target.value));
-                        setSubjectId("");
-                      }}
+                      rows={3}
+                      placeholder="Tuliskan pertanyaan soal..."
+                      value={questionText}
+                      onChange={(e) => setQuestionText(e.target.value)}
                       className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                    >
-                      <option value="">Pilih Kualifikasi...</option>
-                      {qualifications.map((q) => (
-                        <option key={q.id} value={q.id}>{q.code}</option>
-                      ))}
-                    </select>
+                    />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Pilihan A</label>
+                      <input type="text" required value={optionA} onChange={(e) => setOptionA(e.target.value)} className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Pilihan B</label>
+                      <input type="text" required value={optionB} onChange={(e) => setOptionB(e.target.value)} className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Pilihan C</label>
+                      <input type="text" required value={optionC} onChange={(e) => setOptionC(e.target.value)} className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Pilihan D</label>
+                      <input type="text" required value={optionD} onChange={(e) => setOptionD(e.target.value)} className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Jawaban Benar</label>
+                      <select
+                        value={correctAnswer}
+                        onChange={(e) => setCorrectAnswer(e.target.value as any)}
+                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold text-forest-900"
+                      >
+                        <option value="A">Opsi A</option>
+                        <option value="B">Opsi B</option>
+                        <option value="C">Opsi C</option>
+                        <option value="D">Opsi D</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase text-charcoal">Tingkat Kesulitan</label>
+                      <select
+                        value={difficulty}
+                        onChange={(e) => setDifficulty(e.target.value as any)}
+                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
+                      >
+                        <option value="EASY">EASY</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="HARD">HARD</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Materi / Subjek</label>
-                    <select
-                      required
-                      value={subjectId}
-                      onChange={(e) => setSubjectId(Number(e.target.value))}
+                    <label className="block text-xs font-bold uppercase text-charcoal">Pembahasan / Penjelasan (Opsional)</label>
+                    <textarea
+                      rows={2}
+                      placeholder="Penjelasan jawaban..."
+                      value={explanation}
+                      onChange={(e) => setExplanation(e.target.value)}
                       className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                    >
-                      <option value="">Pilih Materi...</option>
-                      {availableSubjects.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}</option>
-                      ))}
-                    </select>
+                    />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Teks Pertanyaan</label>
-                  <textarea
-                    required
-                    rows={3}
-                    placeholder="Tuliskan pertanyaan soal..."
-                    value={questionText}
-                    onChange={(e) => setQuestionText(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Pilihan A</label>
-                    <input type="text" required value={optionA} onChange={(e) => setOptionA(e.target.value)} className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Pilihan B</label>
-                    <input type="text" required value={optionB} onChange={(e) => setOptionB(e.target.value)} className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Pilihan C</label>
-                    <input type="text" required value={optionC} onChange={(e) => setOptionC(e.target.value)} className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Pilihan D</label>
-                    <input type="text" required value={optionD} onChange={(e) => setOptionD(e.target.value)} className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Jawaban Benar</label>
-                    <select
-                      value={correctAnswer}
-                      onChange={(e) => setCorrectAnswer(e.target.value as any)}
-                      className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs font-bold text-forest-900"
-                    >
-                      <option value="A">Opsi A</option>
-                      <option value="B">Opsi B</option>
-                      <option value="C">Opsi C</option>
-                      <option value="D">Opsi D</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-charcoal">Tingkat Kesulitan</label>
-                    <select
-                      value={difficulty}
-                      onChange={(e) => setDifficulty(e.target.value as any)}
-                      className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                    >
-                      <option value="EASY">EASY</option>
-                      <option value="MEDIUM">MEDIUM</option>
-                      <option value="HARD">HARD</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold uppercase text-charcoal">Pembahasan / Penjelasan (Opsional)</label>
-                  <textarea
-                    rows={2}
-                    placeholder="Penjelasan jawaban..."
-                    value={explanation}
-                    onChange={(e) => setExplanation(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={formLoading}
-                  className="w-full rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
-                >
-                  {formLoading ? "Menyimpan..." : "Simpan Soal"}
-                </button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+                  <button
+                    type="submit"
+                    disabled={formLoading}
+                    className="w-full rounded-lg bg-forest-900 py-2.5 text-xs font-semibold text-white hover:bg-forest-700 disabled:opacity-50"
+                  >
+                    {formLoading ? "Menyimpan..." : "Simpan Soal"}
+                  </button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
 

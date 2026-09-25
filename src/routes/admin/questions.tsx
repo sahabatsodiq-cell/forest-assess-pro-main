@@ -36,7 +36,7 @@ function AdminQuestionsPage() {
   // Filters
   const [search, setSearch] = useState("");
   const [qualFilter, setQualFilter] = useState("ALL");
-  const [difficultyFilter, setDifficultyFilter] = useState("ALL");
+  const [subjectFilter, setSubjectFilter] = useState("ALL");
 
   // Modals State
   const [createOpen, setCreateOpen] = useState(false);
@@ -52,7 +52,7 @@ function AdminQuestionsPage() {
   const [optionC, setOptionC] = useState("");
   const [optionD, setOptionD] = useState("");
   const [correctAnswer, setCorrectAnswer] = useState<"A" | "B" | "C" | "D">("A");
-  const [difficulty, setDifficulty] = useState<"EASY" | "MEDIUM" | "HARD">("MEDIUM");
+  const difficulty: "MEDIUM" = "MEDIUM";
   const [explanation, setExplanation] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -247,8 +247,9 @@ function AdminQuestionsPage() {
   const filtered = questions.filter((q) => {
     const matchesSearch = q.question_text.toLowerCase().includes(search.toLowerCase());
     const matchesQual = qualFilter === "ALL" || String(q.qualification_id) === qualFilter;
-    const matchesDiff = difficultyFilter === "ALL" || q.difficulty === difficultyFilter;
-    return matchesSearch && matchesQual && matchesDiff;
+    const matchesSubject = subjectFilter === "ALL" || String(q.subject_id) === subjectFilter;
+
+    return matchesSearch && matchesQual && matchesSubject;
   });
 
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -258,7 +259,7 @@ function AdminQuestionsPage() {
       {/* Page Header */}
       <PageHeader
         title="Bank Soal Terstruktur"
-        description="Kelola soal ujian teori berdasarkan skema kualifikasi, bidang materi, dan tingkat kesulitan."
+        description="Kelola soal ujian teori berdasarkan skema kualifikasi, unit kompetensi, dan materi/subjek."
         icon={Database}
         breadcrumbs={[{ label: "Bank Soal" }]}
         badgeText={`${questions.length} Soal`}
@@ -368,13 +369,13 @@ function AdminQuestionsPage() {
                     <label className="block text-xs font-bold uppercase text-charcoal">Atau Tempel Teks CSV</label>
                     <textarea
                       rows={6}
-                      placeholder="question_text, option_a, option_b, option_c, option_d, correct_answer, difficulty, explanation"
+                      placeholder="question_text, option_a, option_b, option_c, option_d, correct_answer, explanation"
                       value={csvContent}
                       onChange={(e) => setCsvContent(e.target.value)}
                       className="mt-1 w-full rounded-md border border-border px-3 py-2 text-xs font-mono"
                     />
                     <div className="mt-1 text-[10px] text-muted-foreground">
-                      Format: <code>pertanyaan, opsi_a, opsi_b, opsi_c, opsi_d, jawaban_benar(A/B/C/D), tingkat(EASY/MEDIUM/HARD), pembahasan</code>
+                      Format: <code>pertanyaan, opsi_a, opsi_b, opsi_c, opsi_d, jawaban_benar(A/B/C/D), pembahasan</code>
                     </div>
                   </div>
 
@@ -512,18 +513,7 @@ function AdminQuestionsPage() {
                         <option value="D">Opsi D</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold uppercase text-charcoal">Tingkat Kesulitan</label>
-                      <select
-                        value={difficulty}
-                        onChange={(e) => setDifficulty(e.target.value as any)}
-                        className="mt-1 w-full rounded-md border border-border px-3 py-1.5 text-xs"
-                      >
-                        <option value="EASY">EASY</option>
-                        <option value="MEDIUM">MEDIUM</option>
-                        <option value="HARD">HARD</option>
-                      </select>
-                    </div>
+
                   </div>
 
                   <div>
@@ -571,6 +561,7 @@ function AdminQuestionsPage() {
           value={qualFilter}
           onChange={(e) => {
             setQualFilter(e.target.value);
+            setSubjectFilter("ALL");
             setPage(1);
           }}
           className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-charcoal"
@@ -582,17 +573,28 @@ function AdminQuestionsPage() {
         </select>
 
         <select
-          value={difficultyFilter}
+          value={subjectFilter}
           onChange={(e) => {
-            setDifficultyFilter(e.target.value);
+            setSubjectFilter(e.target.value);
             setPage(1);
           }}
           className="rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-medium text-charcoal"
         >
-          <option value="ALL">Semua Tingkat</option>
-          <option value="EASY">EASY</option>
-          <option value="MEDIUM">MEDIUM</option>
-          <option value="HARD">HARD</option>
+          <option value="ALL">Semua Kode Materi</option>
+          {subjects
+            .filter((s) =>
+              qualFilter === "ALL" ||
+              questions.some(
+                (q) =>
+                  String(q.qualification_id) === qualFilter &&
+                  Number(q.subject_id) === Number(s.id)
+              )
+            )
+            .map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.code} - {s.name}
+              </option>
+            ))}
         </select>
       </div>
 

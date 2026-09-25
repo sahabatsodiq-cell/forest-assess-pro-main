@@ -870,9 +870,9 @@ export const importQuestionsCsvFn = createServerFn({ method: "POST" })
         continue;
       }
 
-      const [question_text, option_a, option_b, option_c, option_d, correct_answer, difficultyStr, explanation] = parts;
+      const [question_text, option_a, option_b, option_c, option_d, correct_answer, explanation] = parts;
       const correct = correct_answer?.toUpperCase() as "A" | "B" | "C" | "D";
-      const difficulty = (difficultyStr?.toUpperCase() || "MEDIUM") as "EASY" | "MEDIUM" | "HARD";
+      const difficulty: "MEDIUM" = "MEDIUM";
 
       if (!["A", "B", "C", "D"].includes(correct)) {
         errors.push(`Baris ${idx + 1}: Jawaban benar ('${correct_answer}') harus A, B, C, atau D.`);
